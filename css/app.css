@@ -1430,8 +1430,8 @@ picture{display:block;line-height:0}
 /* ---------- the plate on the real drawing (js/circ-draw.js) ---------- */
 .cp__veil{opacity:0;transition:opacity .45s ease;pointer-events:none}
 .cp.is-lighting .cp__veil{opacity:1}
-.cp__lit{display:none;pointer-events:none}
-.cp.is-lighting .cp__lit{display:inline}
+.cp__tubes{pointer-events:none;opacity:0;transition:opacity .45s ease}
+.cp.is-lighting .cp__tubes{opacity:1}
 .cp__lito{pointer-events:none}
 .cp__flow{pointer-events:none}
 .cp__f{transition:opacity .45s ease}
@@ -1455,6 +1455,8 @@ picture{display:block;line-height:0}
 .cp-lab__txt{fill:#F1F5F7;font-family:var(--sans,Inter,sans-serif);font-weight:500;letter-spacing:.01em}
 .cp-lab.is-beyond .cp-lab__txt{fill:#C9D6DE;font-style:italic}
 .cp-lab.is-beyond .cp-lab__pill{stroke-dasharray:3 2}
+/* a name outside the station's light stays, quieter, while there is room for it */
+.cp-lab.is-dim{opacity:.5}
 
 /* the plate's tools: whole body, zoom, the names */
 .tool-zoom{display:inline-flex;gap:0}
@@ -1465,4 +1467,4 @@ picture{display:block;line-height:0}
 .tool--t:disabled{opacity:.45;cursor:default}
 .platecol__tools{flex-wrap:wrap;row-gap:6px}
 @media (max-width:1000px){ .platecol__hint{display:none} .tool--t{font-size:11px} }
-@media (prefers-reduced-motion:reduce){ .cp__veil,.cp__f,.cp__lens,.cp__lens [data-part]{transition:none} }
+@media (prefers-reduced-motion:reduce){ .cp__veil,.cp__tubes,.cp__f,.cp__lens,.cp__lens [data-part]{transition:none} }

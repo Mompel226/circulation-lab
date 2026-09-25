@@ -10,6 +10,7 @@
   'use strict';
 
   var draw = null, svg, map, tag, said, whole, hint, col, bench, sim;
+  var shown = null;                 /* what is lit now: { name, n } — a station's parts, or one part clicked */
   var onPick = function () {};
   var current = null;
   var still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -82,6 +83,7 @@
     draw.setRate(s.rate || 72);
     if (hint) hint.textContent = 'Click a part to open its station · scroll or pinch to zoom';
     var r = draw.light(ids);
+    shown = { name: st.name, n: ids.length };
     var names = ids.map(function (id) { return draw.G[id] ? draw.G[id].label.toLowerCase() : id; });
     /* a station that lights many parts says what they are in a few words (plate.say) instead of listing them */
     say(st.name, s.say || (names.length ? names.join(' · ') : 'the whole circulation'), r.colour);
@@ -89,11 +91,14 @@
     draw.flyTo(box);
   }
 
-  /* one part, named and framed: the student clicked it on the body or in the text */
+  /* one part, named and framed: the student clicked it on the body or in the text. An organ comes
+     with the vessels that bring its blood and take it away: the liver with its three */
   function focus(id) {
     if (!draw || !draw.G[id]) return;
     var g = draw.G[id];
-    var r = draw.light([id]);
+    var lit = draw.organVessels(id) || [id];
+    var r = draw.light(lit);
+    shown = { name: g.label, n: lit.length };
     say(g.label, g.note || '', r.colour);
     if (CHAMBER[id] || id === 'heart') draw.lens('section');
     draw.flyTo(draw.boxOf(id, 40), function () { var e = draw.elFor(id); if (e) draw.pin(e, g.label, r.colour); });
@@ -103,10 +108,7 @@
     if (!draw) return;
     if (tag) tag.classList.remove('on');
     draw.flyTo(draw.FULL);
-    if (current) {
-      var ids = spec(current).light || [];
-      say(current.name, ids.length ? 'the whole body · ' + ids.length + (ids.length === 1 ? ' part lit' : ' parts lit') : 'the whole circulation', null);
-    }
+    if (shown) say(shown.name, shown.n ? 'the whole body · ' + shown.n + (shown.n === 1 ? ' part lit' : ' parts lit') : 'the whole circulation', null);
   }
 
   function stageSim(on) {
