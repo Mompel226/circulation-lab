@@ -3,6 +3,12 @@
    The body with its electrodes and the magnified heart sit on the plate's dark ink; the ECG on pale
    red squared paper.
    ============================================================ */
+/* the whole widget is beyond the syllabus, so it wears the extension's purple from edge to edge (Daniel,
+   25 Sep: "make sure that the background colour ... more purplish so that it's clear that the whole thing is
+   beyond the syllabus"); the boxes inside it stay white */
+.widget.es{background:#F6F1FC;border-color:#D9CCEC;border-left:5px solid #7B5BA8}
+.es .widget__h{color:#5B3F86}
+.es .widget__h .widget__try{background:#7B5BA8}
 .es__beyond{margin:6px 0 10px;padding:8px 12px;font-size:13.5px;line-height:1.45;color:#4A3B5E;background:#F4F0FA;border:1px solid #D9CCEC;border-left:4px solid #7B5BA8;border-radius:10px}
 .es__rule{display:flex;flex-direction:column;gap:4px;margin:0 0 12px;padding:10px 14px;background:#fff;border:1.5px solid var(--edge);border-radius:var(--r,10px);font-size:14px;line-height:1.45}
 .es__rule > b{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--k-heart,#A3213A);margin-bottom:2px}

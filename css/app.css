@@ -784,6 +784,13 @@ picture{display:block;line-height:0}
   .exam-list li:has(> .photo--portrait){min-height:1px}
   .exam-list li:has(> .photo--portrait)::after{content:"";display:block;clear:both}
   .exam-list li .widget,.exam-part,.golden,.examfocus,.card__h{clear:both}
+  /* a small picture (a diagram drawn at its own size) stands on the right of its sentence, and the next
+     points run on beside it; a widget or a new block still starts below it (Daniel, 25 Sep: "it's better
+     to have the text surrounding the image") */
+  .exam-list li .photo--small:not(.photo--portrait){float:right;width:clamp(200px,34%,260px);max-width:none;margin:2px 0 10px 22px}
+  .exam-list li .photo--small:not(.photo--portrait) img{width:100%;height:auto}
+  .exam-list li .photo--small:not(.photo--portrait) figcaption{font-size:11.5px;line-height:1.42}
+  .exam-list li .media,.exam-list li .ctable,.exam-list li .photo:not(.photo--small):not(.photo--portrait){clear:both}
 }
 .wbtn{font:inherit;font-size:13px;font-weight:600;color:var(--green);background:#fff;border:1.5px solid var(--green);border-radius:var(--r-pill);padding:5px 12px;cursor:pointer;transition:.14s}
 .wbtn:hover{background:var(--green-tint)}
@@ -917,6 +924,7 @@ picture{display:block;line-height:0}
 .curio__fence{font-size:11.5px;color:var(--muted)}
 .curio__body{display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start}
 .curio--tall .curio__body{grid-template-columns:210px 1fr}
+.curio--text .curio__body{grid-template-columns:1fr}
 .curio__fig{margin:0}
 .curio__fig picture{display:block}
 .curio__fig img{width:100%;height:auto;display:block;border-radius:var(--r-md);border:1px solid #E0D3BB;background:#EFE7D8}
