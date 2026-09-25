@@ -11,6 +11,7 @@
 .es__leads{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
 .es__lead{font:inherit;display:flex;flex-direction:column;align-items:flex-start;gap:1px;min-height:44px;padding:5px 11px;border:1.5px solid var(--edge);border-radius:var(--r,10px);background:#fff;cursor:pointer;text-align:left;max-width:100%}
 .es__lead b{font-size:14px;color:var(--ink,#1A1A1A)}
+.es__tag{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--k-heart,#A3213A);background:#FBECEF;border-radius:999px;padding:1px 7px;margin-left:4px;vertical-align:1px}
 .es__lead small{font-size:11.5px;color:var(--grey,#6B6B6B);line-height:1.3}
 .es__lead:hover{border-color:#D8A3AE}
 .es__lead.is-on{border-color:var(--k-heart,#A3213A);background:#FBECEF}
@@ -25,7 +26,7 @@
 .es__spd:focus-visible{outline:2.5px solid var(--green,#14572B);outline-offset:2px}
 .es__minis{margin:14px 0 4px}
 .es__minih{margin:0 0 6px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--grey,#6B6B6B)}
-.es__minig{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.es__minig{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .es__mini{font:inherit;display:flex;flex-direction:column;align-items:stretch;padding:4px 4px 5px;border:1.5px solid var(--edge);border-radius:8px;background:#FFF7F7;cursor:pointer}
 .es__mini svg{width:100%;height:auto;display:block}
 .es__mini.is-on{border-color:var(--k-heart,#A3213A);background:#FBECEF}
@@ -120,7 +121,7 @@
 .es:not(.is-staged) .sp__steps{flex-direction:row;flex-wrap:wrap;gap:5px}
 .es:not(.is-staged) .sp__step{flex:1 1 180px}
 @media (max-width:620px){
-  .es__minig{grid-template-columns:repeat(2,minmax(0,1fr))} .es__lead small{display:none}
+  .es__lead small{display:none}
   /* the drawing is about half size here: its words grow so they stay readable, and the key of numbers
      moves out of it, into words under it */
   .es__home{margin-left:-10px;margin-right:-10px}
