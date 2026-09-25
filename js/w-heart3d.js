@@ -620,7 +620,11 @@
         var m = mode; mode = ''; setMode(m);
         showInfo(null);
       }).catch(function (e) {
-        loading = false; failed = true;
+        loading = false;
+        /* the reader left the station while the model was loading (the ECG link does this): the
+           fetch is cut off, but nothing failed that anyone sees, and the next visit loads afresh */
+        if (!box.isConnected) return;
+        failed = true;
         if (global.console) console.warn('heart3d: 3D unavailable, using the 2D section', e);
         fallback2D();
       });
