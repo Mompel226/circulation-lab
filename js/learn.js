@@ -175,9 +175,138 @@
     return f ? f(String(name).split('#')[1] || '') : '';
   }
 
-  var MAKERS = [['video', video], ['watch', watch], ['curio', curio], ['labelphoto', labelphoto]];
+  /* ---------- figure: a picture that must be read, set large ----------
+     The shared photo stands a tall picture in the margin at a quarter of the column, and the words
+     close round it. That suits a narrow diagram, but a four-panel figure with small labels becomes
+     unreadable there: Daniel, 25 Sep, on the vertebrate hearts, "it looks very ugly being so small ...
+     I'd rather be big it, and it's very informative". A figure is the same photo, across the column. */
+  function figure(spec) {
+    var f = W.widget(Object.assign({}, spec, { type: 'photo' }), {});
+    f.classList.remove('photo--portrait', 'photo--right', 'photo--small');
+    f.classList.add('photo--wide');
+    return f;
+  }
+
+  /* ---------- the plate's column, and who is standing in it ----------
+     Daniel, 25 Sep 2026, on "Follow one red blood cell": show the animation on the left, in place of
+     the body, and keep its buttons on the right, "so you don't have to be constantly scrolling up and
+     down ... I've done that in other labs and it has worked very nicely". This is the Plants Lab's
+     way. On a wide screen a staged widget's drawing lives in the plate's column, out of sight, and is
+     shown there, in place of the body, while the reader is level with the widget's controls; scroll
+     on and the body comes back. The words and the buttons never move, so the page never jumps under
+     the reader's hand. #simHost holds one thing, so one arbiter owns it: of the widgets that want it,
+     the one nearest the middle of the reading area. ---------- */
+  var STAGE = (function () {
+    var claims = [], holder = null;
+    function scrollerOf(el) {
+      var n = el && el.parentNode;
+      while (n && n.nodeType === 1) {
+        var st = global.getComputedStyle(n);
+        if (/(auto|scroll)/.test(st.overflowY) && n.scrollHeight > n.clientHeight + 4) return n;
+        n = n.parentNode;
+      }
+      return null;
+    }
+    function dist(c) {
+      var el = (c.watch && c.watch()) || c.box, r = el.getBoundingClientRect(), sc = scrollerOf(c.box), t = 0, b = global.innerHeight || 800;
+      if (sc) { var q = sc.getBoundingClientRect(); t = q.top; b = q.bottom; }
+      return Math.abs((r.top + r.bottom) / 2 - (t + b) / 2);
+    }
+    function choose() {
+      var best = null, bestD = Infinity;
+      for (var i = claims.length - 1; i >= 0; i--) {
+        var c = claims[i];
+        if (!c.box.isConnected) { claims.splice(i, 1); if (holder === c) holder = null; continue; }
+        if (!c.wants || (c.able && !c.able())) continue;
+        var d = dist(c);
+        if (d < bestD) { bestD = d; best = c; }
+      }
+      return best;
+    }
+    function apply() {
+      var win = choose();
+      if (win === holder) return;
+      var old = holder;
+      holder = win;
+      if (old && old.off) old.off();
+      if (win && win.on) win.on();
+      if (global.Plate && global.Plate.stageSim) global.Plate.stageSim(!!win);
+    }
+    return {
+      add: function (c) { c.wants = false; claims.push(c); return c; },
+      drop: function (c) {
+        var i = claims.indexOf(c); if (i >= 0) claims.splice(i, 1);
+        /* a widget reset in place gives the column back to the body; one whose panel was rebuilt (another
+           station, the Practise tab) leaves the column to whatever the new panel put there */
+        if (holder === c) { holder = null; if (c.off) c.off(); apply(); if (!holder && c.box.isConnected && global.Plate && global.Plate.stageSim) global.Plate.stageSim(false); }
+      },
+      want: function (c, v) { v = !!v; if (c.wants === v) { if (v) apply(); return; } c.wants = v; apply(); },
+      holding: function (c) { return holder === c; },
+      scrollerOf: scrollerOf
+    };
+  })();
+  /* stage(o): stand o.pack in the plate's column while the reader is level with o.watch.
+       o.box   the widget; o.spec its spec (only a spec marked onStage is staged)
+       o.home  where the pack lives when it is not staged, o.before() the node it goes before
+       o.onPlace(staged, shown)  told after every move, to fit the drawing to its new size
+     Below 1001 px, or in the Practise tab's simulation column, the pack stays in the widget. */
+  function stage(o) {
+    var wideQ = global.matchMedia ? global.matchMedia('(min-width: 1001px)') : { matches: true, addEventListener: function () {}, removeEventListener: function () {} };
+    var park = h('div', 'stg__park'); park.hidden = true; o.box.appendChild(park);
+    function host() { return document.getElementById('simHost'); }
+    function owned() { var hs = host(); return !!(hs && hs.contains(o.box)); }
+    function column() { return !!(o.spec && o.spec.onStage) && !owned() && !!host() && wideQ.matches; }
+    function place(on) {
+      var hs = host(), col = column();
+      if (col) {
+        var want = on ? hs : park;
+        if (o.pack.parentNode !== want) {
+          /* whatever else stood in the column (a widget of a station since left) makes way */
+          if (want === hs) Array.prototype.slice.call(hs.children).forEach(function (c) { if (c !== o.pack) hs.removeChild(c); });
+          want.appendChild(o.pack);
+        }
+      } else if (o.pack.parentNode !== o.home) o.home.insertBefore(o.pack, o.before ? o.before() : null);
+      o.box.classList.toggle('is-staged', col);
+      o.pack.classList.toggle('is-onstage', col && !!on);
+      if (o.onPlace) o.onPlace(col, col && !!on);
+    }
+    var claim = STAGE.add({ box: o.box, able: column, watch: o.watch, on: function () { place(true); }, off: function () { place(false); } });
+    /* one observer on the controls, which never change size when the drawing leaves: the band stops
+       a third of the way up from the bottom, as in the Plants Lab */
+    var io = null, LOWER = .35;
+    function watch() {
+      if (io) { io.disconnect(); io = null; }
+      if (!column() || !global.IntersectionObserver) { STAGE.want(claim, false); return; }
+      try {
+        io = new IntersectionObserver(function (es) {
+          if (!es || !es.length) return;
+          if (!o.box.isConnected) { detach(); return; }
+          STAGE.want(claim, !!es[es.length - 1].isIntersecting);
+        }, { root: STAGE.scrollerOf(o.box) || null, rootMargin: '-30px 0px -' + Math.round(LOWER * 100) + '% 0px', threshold: 0 });
+        io.observe(o.watch());
+      } catch (e) { io = null; }
+    }
+    function mount() { place(STAGE.holding(claim)); watch(); }
+    function detach() {
+      if (io) { io.disconnect(); io = null; }
+      if (wideQ.removeEventListener) wideQ.removeEventListener('change', onWide);
+      STAGE.drop(claim);
+      if (o.pack.parentNode && o.pack.parentNode === host()) o.pack.parentNode.removeChild(o.pack);
+    }
+    var onWide = function () { if (o.box.isConnected) mount(); else detach(); };
+    if (wideQ.addEventListener) wideQ.addEventListener('change', onWide);
+    /* the lab rebuilds the panel without telling its widgets: let go of the column once this has gone */
+    var gone = 0, tick = setInterval(function () {
+      if (o.box.isConnected) { gone = 0; return; }
+      if (++gone >= 2) { clearInterval(tick); detach(); }
+    }, 1500);
+    requestAnimationFrame(mount);
+    return { mount: mount, detach: function () { clearInterval(tick); detach(); }, staged: column, shown: function () { return STAGE.holding(claim); } };
+  }
+
+  var MAKERS = [['video', video], ['watch', watch], ['curio', curio], ['labelphoto', labelphoto], ['figure', figure]];
   global.CircLearn = { add: function (name, fn) { MAKERS.push([name, fn]); W.register(name, fn); }, diagram: function (name, fn) { DIAGRAMS[name] = fn; },
-                       h: h, esc: esc, mk: mk, head: head, svgEl: svgEl };
+                       h: h, esc: esc, mk: mk, head: head, svgEl: svgEl, stage: stage };
   MAKERS.forEach(function (m) { W.register(m[0], m[1]); });
   global.Learn = { widget: W.widget, reap: W.reap, svgFor: svgFor, DIAGRAMS: DIAGRAMS };
 })(window);

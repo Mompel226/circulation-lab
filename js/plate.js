@@ -111,11 +111,13 @@
     if (shown) say(shown.name, shown.n ? 'the whole body · ' + shown.n + (shown.n === 1 ? ' part lit' : ' parts lit') : 'the whole circulation', null);
   }
 
+  /* a Learn-tab widget standing in the column in place of the body (CircLearn.stage): the body rests */
   function stageSim(on) {
     if (col) col.classList.toggle('is-sim', !!on);
     if (sim) sim.hidden = !on;
     if (on && bench) bench.hidden = true;
     if (on && tag) tag.classList.remove('on');
+    if (draw) { if (on) draw.stop(); else draw.start(); }
     if (global.PlateFold) global.PlateFold.lend(!!on);
   }
   function showSim(on) {

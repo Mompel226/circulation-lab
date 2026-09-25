@@ -11,8 +11,9 @@
 
    Three tabs:
      Explore     turn it, zoom, cut it open along the four-chamber plane, press a part to name it
-     Blood flow  the heart see-through, beating, blood moving along paths traced through its
-                 own cavities: blue deoxygenated, red oxygenated
+     Blood flow  the heart as glass, beating, all four chambers facing you: blue deoxygenated
+                 blood in the right side, red oxygenated blood in the left, each chamber and
+                 vessel outlined and named, the blood filling and leaving each chamber by volume
      The valves  set each valve open or closed for each stage of a beat and see what the blood
                  does; then "Play the beat", one stage at a time, each holding until Next step
 
@@ -100,27 +101,27 @@
   var ARTERY = { pul: 'the pulmonary artery', aor: 'the aorta' };
   var BED = { pul: 'the lungs', aor: 'the body' };
 
-  /* What the blood does on one side with these two valves, as rates through the vein, the
-     atrioventricular valve, the semilunar valve and the artery beyond (+ forward, − backward). */
+  /* What the blood does on one side in one stage with these two valves: the volume that passes from the
+     veins into the atrium, through the atrioventricular valve, through the semilunar valve, and from the
+     artery on to the lungs or the body, as a fraction of one stroke volume (+ forward, − backward).
+     With the right valves one beat moves one stroke volume through every valve and returns every
+     chamber to where it began (the atrium gives the last quarter of the filling: OpenStax 19.3, 20-30 %),
+     so beat after beat no blood piles up anywhere. */
   function rates(key, av, sl) {
-    var r = { in: 0.55, av: 0, sl: 0, out: 0.22 };   /* the arteries' elastic recoil keeps a little flow going */
     if (key === 'A') {            /* atria contract; ventricles relaxed, at low pressure */
-      r.in = av ? 0.15 : -0.5;    /* against a shut valve the atrium pushes blood back into the veins */
-      r.av = av ? 0.65 : 0;       /* the atria top the ventricles up: about a quarter of the filling (OpenStax 19.3: 20-30 %) */
-      r.sl = sl ? -0.6 : 0;       /* an open semilunar valve lets blood fall back from the artery */
-      r.out = sl ? -0.3 : 0.22;
-    } else if (key === 'V') {     /* ventricles contract; pressure in them rises above atria and arteries */
-      r.in = 0.5;
-      r.av = av ? -0.9 : 0;       /* regurgitation into the atrium */
-      r.sl = sl ? (av ? 0.7 : 1.25) : 0;
-      r.out = sl ? r.sl : 0.22;
-    } else {                      /* ventricles relax; pressure in them falls below atria and arteries */
-      r.in = 0.55;
-      r.av = av ? 0.9 : 0;
-      r.sl = sl ? -0.7 : 0;
-      r.out = sl ? -0.35 : 0.22;
+      return { in: av ? 0 : -0.25,              /* against a shut valve the atrium pushes blood back into the veins */
+               av: av ? 0.25 : 0,               /* the atria top the ventricles up */
+               sl: sl ? -0.4 : 0,               /* an open semilunar valve lets blood fall back from the artery */
+               out: 0.16 };                     /* the arteries' elastic recoil keeps the blood moving on */
     }
-    return r;
+    if (key === 'V') {            /* ventricles contract; pressure in them rises above atria and arteries */
+      return { in: 0.4,                         /* the atria fill from the veins */
+               av: av ? (sl ? -0.5 : -1) : 0,   /* regurgitation into the atrium */
+               sl: sl ? (av ? 0.6 : 1) : 0,
+               out: sl ? 0.5 : 0.3 };
+    }
+    /* ventricles relax; pressure in them falls below atria and arteries */
+    return { in: 0.6, av: av ? 0.75 : 0, sl: sl ? -0.5 : 0, out: 0.34 };
   }
   /* the words for each wrong setting — one valve at a time, the real consequence */
   function wrongLine(key, v, isOpen) {
@@ -145,13 +146,14 @@
   }
   /* a plan the 3D view can play: one stage that holds, or the whole beat */
   var SLOW = [1.1, 2.0, 2.3], REAL = [0.1, 0.27, 0.43];   /* seconds; real: OpenStax 19.3, 75 beats a minute */
-  function seg(si, vs, dur, hold, k) {
+  function seg(si, vs, dur, hold, real) {
     var st = STAGES[si], R = rates(st.key, vs.tri, vs.pul), L = rates(st.key, vs.mit, vs.aor);
-    ['in', 'av', 'sl', 'out'].forEach(function (q) { R[q] *= k || 1; L[q] *= k || 1; });
+    /* blood reaches the veins from the body steadily: each stage's share of one stroke volume */
+    R.body = L.body = real ? REAL[si] / 0.8 : SLOW[si] / 5.4;
     return { stage: st.key, dur: dur, hold: hold, valves: vs, atria: st.atria, vent: st.vent, rates: { R: R, L: L } };
   }
   function beatPlan(real) {
-    return STAGES.map(function (st, i) { return seg(i, st.correct, real ? REAL[i] : SLOW[i], false, real ? SLOW[i] / REAL[i] : 1); });
+    return STAGES.map(function (st, i) { return seg(i, st.correct, real ? REAL[i] : SLOW[i], false, real); });
   }
   function stagePlan(si, vs) { return [seg(si, vs, 3.2, true)]; }
 
@@ -175,7 +177,11 @@
       b.addEventListener('click', function () { setMode(m[0]); });
       tabs.appendChild(b); tabBtn[m[0]] = b;
     });
-    box.appendChild(tabs);
+    /* the controls: the tabs and their panels. The stage stands between them in the text, and on a wide
+       screen in the plate's column instead, while you are level with these (CircLearn.stage) */
+    var ctrl = h('div', 'h3__ctrl');
+    ctrl.appendChild(tabs);
+    box.appendChild(ctrl);
 
     /* the stage */
     var stage = h('div', 'h3__stage');
@@ -188,7 +194,7 @@
     var viewBtn = {};
     VIEWS.forEach(function (v) {
       var b = h('button', 'h3__vb', esc(v[1])); b.type = 'button'; b.setAttribute('data-view', v[0]);
-      b.addEventListener('click', function () { if (view) { view.view(v[0]); setWhere(v[0]); } });
+      b.addEventListener('click', function () { if (view) { view.view(v[0]); setWhere(v[0] === 'section' && mode === 'flow' ? 'chambers' : v[0]); } });
       if (v[0] === 'section') b.hidden = true;
       vbar.appendChild(b); viewBtn[v[0]] = b;
     });
@@ -197,7 +203,7 @@
     stage.appendChild(hint);
     var legend = h('p', 'h3__legend', '<span class="h3__sw h3__sw--deo"></span>deoxygenated <span class="h3__sw h3__sw--oxy"></span>oxygenated');
     legend.hidden = true; stage.appendChild(legend);
-    box.appendChild(stage);
+    ctrl.appendChild(stage);
 
     /* ---------- Explore panel ---------- */
     var pEx = h('div', 'h3__panel'); pEx.setAttribute('data-for', 'explore');
@@ -223,7 +229,7 @@
     pEx.appendChild(pickRow);
     var cutNote = h('p', 'h3__note', 'The cut follows the heart’s own long axis. This cut shows all four chambers together, like the diagram in your book. The heart sits turned in the chest, so the cut is tilted from the body’s frontal plane.');
     cutNote.hidden = true; pEx.appendChild(cutNote);
-    box.appendChild(pEx);
+    ctrl.appendChild(pEx);
 
     /* ---------- Blood flow panel ---------- */
     var pFl = h('div', 'h3__panel'); pFl.setAttribute('data-for', 'flow'); pFl.hidden = true;
@@ -244,7 +250,7 @@
     pFl.appendChild(flStages);
     var flCap = h('p', 'h3__cap'); pFl.appendChild(flCap);
     pFl.appendChild(h('p', 'h3__note', 'Blue is deoxygenated blood and red is oxygenated blood, as in every diagram. Real deoxygenated blood is dark red, never blue.'));
-    box.appendChild(pFl);
+    ctrl.appendChild(pFl);
 
     /* ---------- Valves panel ---------- */
     var pVa = h('div', 'h3__panel'); pVa.setAttribute('data-for', 'valves'); pVa.hidden = true;
@@ -290,7 +296,7 @@
     beat.appendChild(bSteps);
     var bNow = h('p', 'h3__sr'); bNow.setAttribute('aria-live', 'polite'); beat.appendChild(bNow);
     pVa.appendChild(beat);
-    box.appendChild(pVa);
+    ctrl.appendChild(pVa);
 
     /* ---------- beyond the syllabus, closed ---------- */
     var more = document.createElement('details'); more.className = 'h3__beyond';
@@ -322,8 +328,10 @@
     function setWhere(v) {
       where.innerHTML = v === 'own' ? 'Your own view<span class="h3__where2"><br>press Front to return</span>'
         : v === 'back' ? 'Back view' : v === 'section' ? 'The cut face<span class="h3__where2"><br>right side on your left</span>'
+        : v === 'chambers' ? 'Four chambers facing you<span class="h3__where2"><br>right side on your left</span>'
         : 'Front view<span class="h3__where2"><br>right side on your left</span>';
-      Object.keys(viewBtn).forEach(function (k) { viewBtn[k].classList.toggle('is-on', k === v); });
+      var on = v === 'chambers' ? 'section' : v;
+      Object.keys(viewBtn).forEach(function (k) { viewBtn[k].classList.toggle('is-on', k === on); });
     }
     setWhere('front');
 
@@ -340,6 +348,8 @@
     }
     function labelList() {
       if (mode === 'valves') return ['valve_tri', 'valve_mit', 'valve_pul', 'valve_aor'];
+      /* while the blood flows, the chambers and the vessels are named, so you can say where it is */
+      if (mode === 'flow') return ['ra', 'la', 'rv', 'lv', 'vena_cava', 'pulmonary_artery', 'pulmonary_veins', 'aorta'];
       /* the valves are inside: from outside a whole heart only the wall of the aorta round them shows */
       var l = allNames ? NAME_ALL.filter(function (x) { return +cut.value > 0 || !/^valve_/.test(x); }) : [];
       if (selected) { var s = partKey(selected) === 'papillary' ? 'papillary' : selected; l = l.filter(function (x) { return x !== s && !(s.indexOf('vena_cava') === 0 && x === 'vena_cava'); }); l.unshift(selWall ? s + '#wall' : s); }
@@ -388,11 +398,16 @@
       [pEx, pFl, pVa].forEach(function (p) { p.hidden = p.getAttribute('data-for') !== m; });
       legend.hidden = m === 'explore';
       box.classList.toggle('h3--live', m !== 'explore');
-      if (m !== 'explore') { cut.value = '0'; cutVal.textContent = cutText(0); viewBtn.section.hidden = true; selected = null; selWall = false; showInfo(null); sel.value = ''; if (view) view.select(null); }
+      if (m !== 'explore') { cut.value = '0'; cutVal.textContent = cutText(0); selected = null; selWall = false; showInfo(null); sel.value = ''; if (view) view.select(null); }
+      /* the blood is easiest to follow with all four chambers facing you: the heart turned to the plane
+         of the book's diagram, not cut. The same button is the cut face in Explore. */
+      viewBtn.section.textContent = m === 'flow' ? 'Four chambers' : 'Cut face';
+      viewBtn.section.hidden = m === 'flow' ? false : m === 'explore' ? +cut.value <= 0 : true;
       if (m !== 'valves') valveNamesBack();
       if (view) {
         view.setMode(m);
-        if (m !== 'explore') { view.view('front'); setWhere('front'); }
+        if (m === 'flow') { view.view('section'); setWhere('chambers'); }
+        else if (m !== 'explore') { view.view('front'); setWhere('front'); }
         if (m === 'flow') startFlow();
         if (m === 'valves') { chooseStage(stageIdx); }
         view.labels(labelList());
@@ -410,12 +425,13 @@
       if (!view) return;
       flowPaused = false; syncFlowBtn();
       if (still()) { flowStill(0); return; }
+      view.reseed('A');                /* the beat starts where a beating heart would be as the atria contract */
       view.play(beatPlan(flowReal), { loop: true, from: STAGES[2].correct, onStep: function (k) { paintStages(k); } });
     }
     /* a stage pressed in the list: the beat stops there, on the end of that stage, until Play */
     function flowStill(i) {
       if (!view) return;
-      view.reseed();
+      view.reseed(STAGES[i].key);
       view.play([seg(i, STAGES[i].correct, SLOW[i], true)], { still: true, from: STAGES[(i + 2) % 3].correct });
       paintStages(i); flowPaused = true; syncFlowBtn();
     }
@@ -462,7 +478,7 @@
       paintValves();
       result.innerHTML = '<p class="h3__ask2">Stage ' + (i + 1) + ' of 3: <b>' + esc(STAGES[i].name.toLowerCase()) + '</b>. Set each valve open or closed, then press Run.</p>';
       var vs = settings[i]; shown = Object.assign({}, vs);
-      if (view && mode === 'valves') { view.stop(); view.reseed(); view.setValves(vs); valveWords(vs); view.labels(labelList()); }
+      if (view && mode === 'valves') { view.stop(); view.reseed(STAGES[i].key); view.setValves(vs); valveWords(vs); view.labels(labelList()); }
       if (flat) flat.valves(vs, STAGES[i]);
     }
     function setValve(v, open) {
@@ -483,7 +499,7 @@
       if (o.ok) solved[stageIdx] = true;
       paintValves();
       if (view) {
-        view.reseed();
+        view.reseed(STAGES[stageIdx].key);
         var from = stageIdx === 0 ? STAGES[2].correct : STAGES[stageIdx - 1].correct;
         view.play(stagePlan(stageIdx, vs), { from: from, still: still() });
         valveWords(vs); view.labels(labelList());
@@ -512,7 +528,7 @@
       var vs = STAGES[i].correct; shown = Object.assign({}, vs);
       valveWords(vs);
       if (view) {
-        if (i === 0) view.reseed();
+        if (i === 0) view.reseed('A');
         view.play(stagePlan(i, vs), { from: STAGES[(i + 2) % 3].correct, still: still(), onDone: function () {
           steps.playing = false;
           if (steps.all && steps.k < STAGES.length - 1) { goStep(steps.k + 1); return; }
@@ -579,10 +595,14 @@
     function teardown() {
       clearInterval(watch);
       if (io) io.disconnect();
+      if (stg) stg.detach();
       if (view) { view.dispose(); view = null; box.__view = null; }
     }
+    /* the stage in the plate's column, beside the controls, while you are level with them */
+    var stg = CL.stage ? CL.stage({ box: box, spec: spec, pack: stage, home: ctrl, before: function () { return pEx; }, watch: function () { return ctrl; },
+      onPlace: function (inColumn) { stage.classList.toggle('h3__stage--col', inColumn); if (view) view.resize(); } }) : null;
     box.__onReset = teardown;
-    box.__onMove = function () { if (view) view.resize(); };
+    box.__onMove = function () { if (stg) stg.mount(); if (view) view.resize(); };
     /* for the headless checks */
     box.__mode = setMode;
     box.__stage = function (i, vs) { chooseStage(i); if (vs) VK.forEach(function (v) { if (!!vs[v] !== !!settings[i][v]) setValve(v, !!vs[v]); }); };

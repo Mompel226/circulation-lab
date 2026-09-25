@@ -228,7 +228,7 @@
      other wrote. And paintPanel runs on the tab bar, on both glossary known-word toggles, on a
      sync and on Reset: rebuilding there would throw away a half-finished experiment because the
      student looked up a word. */
-  var SIM_NOT = { photo: 1, video: 1, watch: 1, finder: 1, table: 1, curio: 1, sound: 1, tasklist: 1, reportlinks: 1, labelphoto: 1 };   /* pictures, recordings, stories and lists are not simulations to try beside the questions */
+  var SIM_NOT = { photo: 1, figure: 1, video: 1, watch: 1, finder: 1, table: 1, curio: 1, sound: 1, tasklist: 1, reportlinks: 1, labelphoto: 1 };   /* pictures, recordings, stories and lists are not simulations to try beside the questions */
   var simView = null, simOpen = {}, simPick = {},
       simWide = window.matchMedia ? window.matchMedia('(min-width: 1001px)') : { matches: true, addEventListener: function () {} };
 

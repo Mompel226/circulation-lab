@@ -98,6 +98,16 @@
 .ci__bw{display:flex;align-items:center;gap:7px;font-size:14.5px;font-weight:700;color:var(--ink)}
 .ci__bw i{width:16px;height:16px;flex:none;border-radius:50%;border:1.5px solid rgba(0,0,0,.35)}
 .ci__fig{margin:0;position:relative}
+/* standing in the plate's column (CircLearn.stage): the read-outs, the drawing as large as the column
+   allows, and the words of the step under it; the buttons and the list of steps stay in the text */
+.ci__wrap.ci--staged{grid-template-columns:minmax(0,1fr)}
+.ci.is-staged .sp__p{display:none!important}
+.sim > .ci__pack{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px}
+.sim > .ci__pack .ci__read{margin:0}
+.sim > .ci__pack .ci__fig{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px}
+.sim > .ci__pack .ci__svg{flex:1 1 0;min-height:0;width:100%;height:100%}
+.sim > .ci__pack .sp__now{position:static;width:auto;height:auto;overflow:visible;clip:auto;white-space:normal;margin:0;padding:9px 12px;
+  background:#fff;border:1px solid var(--edge);border-left:4px solid var(--k-heart);border-radius:10px;font-size:14px;line-height:1.5;color:#2A2A2A}
 .ci__svg{width:100%;height:auto;display:block}
 .ci__bg{fill:#0D1A22}
 .ci__organ{stroke-width:1.6}

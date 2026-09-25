@@ -729,7 +729,12 @@
     var fig = h('figure', 'ci__fig');
     var svg = sv('svg', { viewBox: '0 0 ' + CI_W + ' ' + CI_H, 'class': 'ci__svg', role: 'img' });
     fig.appendChild(svg);
-    left.appendChild(read); left.appendChild(fig);
+    /* the pack: what you watch — the read-outs, the drawing and the words of the step. On a wide
+       screen it stands in the plate's column while you are level with the buttons (CircLearn.stage) */
+    var pack = h('div', 'ci__pack');
+    var packT = h('p', 'stg__title', esc(spec.title || 'Follow one red blood cell'));
+    pack.appendChild(packT); pack.appendChild(read); pack.appendChild(fig);
+    left.appendChild(pack);
     wrap.appendChild(left);
     box.appendChild(wrap);
     box.appendChild(h('p', 'widget__note',
@@ -809,7 +814,7 @@
       bw.querySelector('span').textContent = s.O > .5 ? 'oxygenated' : 'deoxygenated';
     }
     function fit() {
-      wrap.classList.toggle('ci--stack', wrap.getBoundingClientRect().width < 660);
+      wrap.classList.toggle('ci--stack', staged || wrap.getBoundingClientRect().width < 660);
       var f = fontFor(svg, CI_W, 16, 30);          /* measured after the layout has changed */
       if (f && f !== fontPx) { fontPx = f; if (sp) sp.paint(sp.time()); }
     }
@@ -818,7 +823,12 @@
     build();
     var ro = observe(wrap, fit);
     if (ro) ro.observe(svg);
-    box.__onReset = function () { if (sp) sp.stop(); if (ro) ro.disconnect(); };
+    var staged = false;
+    var st = L.stage ? L.stage({ box: box, spec: spec, pack: pack, home: left, watch: function () { return wrap; },
+      onPlace: function (inColumn) { staged = inColumn; wrap.classList.toggle('ci--staged', inColumn); packT.hidden = !inColumn; fit(); } }) : null;
+    packT.hidden = true;
+    box.__onMove = function () { if (st) st.mount(); };
+    box.__onReset = function () { if (sp) sp.stop(); if (ro) ro.disconnect(); if (st) st.detach(); };
     box.__seek = function (t) { return sp.seek(t); };
     return box;
   }

@@ -20,8 +20,11 @@
      - the valve cusps: drawn here, on the model's own valve rings, so they can open and close
        (3 tricuspid, 2 mitral, 3 + 3 semilunar), with chordae tendineae to the model's own
        papillary muscles;
-     - the blood: particles on paths traced through the model's own cavities and lumens
-       (least-cost paths through the free space, kept away from every wall — see CREDITS.md);
+     - the blood: particles moved by volume through five compartments a side (vein, atrium,
+       ventricle, the root of the artery, artery), on paths traced through the model's own cavities
+       and lumens (see CREDITS.md), spread through all the room each chamber leaves round its path;
+     - in the Blood flow and Valves tabs, the walls as glass: clear face on, bright edge on, the
+       right side outlined in blue and the left in red, the septum cream;
      - the beat: a smooth squeeze of each chamber towards its cavity centre.
 
    The biology it animates, with sources (checked 25 Sep 2026):
@@ -336,9 +339,25 @@ vec3 h3beat(vec3 p){ vec3 d = vec3(0.0); for (int i = 0; i < 4; i++) { vec3 q = 
   /* ---------------- the blood ----------------
      Paths (build step paths.py) run IN THE DIRECTION BLOOD FLOWS: in_* from a vein's cut end to the
      centre of its atrium; mid_* from the atrium through the atrioventricular valve, into the ventricle
-     and out through the semilunar valve; out_* from that valve along the artery. A particle rides one
-     inlet + the middle + one outlet. Its speed is the flow at that point divided by the local area
-     (continuity), so blood crowds in the wide chambers and hurries through the vessels. */
+     and out through the semilunar valve; out_* from that valve along the artery.
+
+     How the blood moves (rebuilt 25 Sep 2026, after Daniel: "it feels that sometimes some of the blood
+     is stagnated"). The first version moved every particle at a speed read off the flow at its point,
+     and stopped it at a shut valve, so the blood arriving in an atrium while its valve was shut piled
+     up in a knot against the valve, and more of it gathered wherever the flow was slow. Blood is not
+     like that: it cannot be squeezed, and a filling chamber fills everywhere at once.
+     So each side is five compartments in a row — vein, atrium, ventricle, the root of the artery,
+     artery — and each has a volume that changes as blood comes in and goes out. A particle's place is
+     the fraction of its compartment's blood that lies upstream of it, f from 0 at the inlet to 1 at
+     the outlet, and it moves by exactly the blood that flows past it:
+         df/dt = (Q_in (1 − f) + Q_out f) / V
+     (V the compartment's volume, Q_in and Q_out the flows at its ends). With the outlet shut, the
+     blood already there spreads out as the chamber fills, and new blood comes in behind it; nothing
+     crowds against the valve. Drawn, each fraction is placed by volume along the compartment's path,
+     so the blood is spread evenly through every chamber and vessel.
+     One beat moves one stroke volume through every valve, and the volumes the stages move (the widget's
+     rates: the atria give the last quarter of the filling, OpenStax 19.3) return every compartment to
+     where it began, so beat after beat nothing piles up anywhere. */
   function mkPath(key) {
     const src = X.paths[key]; const n = src.r.length;
     const P = [], S = [0], R = src.r.slice();
@@ -353,119 +372,284 @@ vec3 h3beat(vec3 p){ vec3 d = vec3(0.0); for (int i = 0; i < 4; i++) { vec3 q = 
       if (i) { nn.addScaledVector(T[i], -nn.dot(T[i])); if (nn.lengthSq() < 1e-8) nn.copy(N[i - 1]); nn.normalize(); }
       N.push(nn.clone()); B.push(new THREE.Vector3().crossVectors(T[i], nn));
     }
-    return { key, P, S, R, T, N, B, len: S[n - 1] };
+    /* the scan's path has no radius at a vessel's cut end; the blood keeps the width it has inside */
+    const med = R.slice().sort((a, b) => a - b)[n >> 1] || 0.05;
+    const RR = R.map((r) => Math.max(r, 0.6 * med));
+    const CV = [0];                                   /* the volume of lumen from the start, for placing by volume */
+    for (let i = 1; i < n; i++) { const rr = (RR[i] + RR[i - 1]) / 2; CV.push(CV[i - 1] + Math.PI * rr * rr * (S[i] - S[i - 1])); }
+    return { key, P, S, R: RR, T, N, B, CV, len: S[n - 1], vol: CV[n - 1] };
   }
   const PATH = {}; Object.keys(X.paths).forEach((k) => { PATH[k] = mkPath(k); });
+  function findIdx(arr, x) { let lo = 0, hi = arr.length - 1; while (hi - lo > 1) { const m = (lo + hi) >> 1; if (arr[m] <= x) lo = m; else hi = m; } return lo; }
+  function volAt(path, s) { s = clamp(s, 0, path.len); const i = findIdx(path.S, s), j = Math.min(i + 1, path.S.length - 1); const t = (s - path.S[i]) / Math.max(1e-9, path.S[j] - path.S[i]); return lerp(path.CV[i], path.CV[j], t); }
+  function sAtVol(path, v) { v = clamp(v, 0, path.vol); const i = findIdx(path.CV, v), j = Math.min(i + 1, path.CV.length - 1); const t = (v - path.CV[i]) / Math.max(1e-12, path.CV[j] - path.CV[i]); return lerp(path.S[i], path.S[j], t); }
   const SIDES = {
-    R: { mid: 'mid_r', ins: [['in_svc', 0.4], ['in_ivc', 0.6]], outs: [['out_pa_l', 0.47], ['out_pa_r', 0.53]], av: 'tri', sl: 'pul', color: BLOOD.deo, n: coarse ? 150 : 210 },
-    L: { mid: 'mid_l', ins: [['in_pv_rs', 0.25], ['in_pv_ri', 0.25], ['in_pv_ls', 0.25], ['in_pv_li', 0.25]],
-         outs: [['out_desc', 0.52], ['out_brachio', 0.2], ['out_lcc', 0.13], ['out_lsub', 0.15]], av: 'mit', sl: 'aor', color: BLOOD.oxy, n: coarse ? 170 : 250 }
+    R: { mid: 'mid_r', ins: [['in_svc', 0.4], ['in_ivc', 0.6]], outs: [['out_pa_l', 0.47], ['out_pa_r', 0.53]], av: 'tri', sl: 'pul', color: BLOOD.deo },
+    L: { mid: 'mid_l', ins: [['in_pv_rs', 0.28], ['in_pv_ri', 0.24], ['in_pv_ls', 0.24], ['in_pv_li', 0.24]],
+         outs: [['out_desc', 0.52], ['out_brachio', 0.2], ['out_lcc', 0.13], ['out_lsub', 0.15]], av: 'mit', sl: 'aor', color: BLOOD.oxy }
   };
   /* where along the middle path each valve blocks: the path point nearest the shut cusps */
   function nearestS(path, p) { let best = 0, bd = 1e9; path.P.forEach((q, i) => { const d = q.distanceToSquared(p); if (d < bd) { bd = d; best = i; } }); return path.S[best]; }
+  /* the compartments of each side, and the stroke volume: 55 % of the ventricle's own volume here */
+  const V_IN = 0, V_AT = 1, V_VE = 2, V_RO = 3, V_AR = 4;
   Object.keys(SIDES).forEach((k) => {
     const sd = SIDES[k], mid = PATH[sd.mid];
     const fa = VALVES[sd.av].f, fs = VALVES[sd.sl].f;
     sd.sAV = nearestS(mid, fa.c);
     sd.sSL = nearestS(mid, tmpA.copy(fs.c).addScaledVector(fs.n, fs.depth * 0.6));
     if (sd.sSL <= sd.sAV + 0.05) sd.sSL = mid.len - 0.01;
+    sd.vAV = volAt(mid, sd.sAV); sd.vSL = volAt(mid, sd.sSL);
+    sd.Gat = sd.vAV; sd.Gve = sd.vSL - sd.vAV; sd.Gro = mid.vol - sd.vSL;
+    sd.hasRoot = sd.Gro > 0.0004;
+    sd.SV = 0.55 * sd.Gve;
+    /* a vein or an artery is as long as the scan made it, so how long blood takes to cross one is not
+       its volume over its flow: each is given a crossing of one to three and a half beats, as in life
+       blood in the big vessels next to the heart is never more than a few beats from it */
+    sd.win = {}; sd.wout = {}; sd.Rin = {}; sd.Rout = {};
+    sd.ins.forEach(([p, w]) => { sd.win[p] = w; sd.Rin[p] = clamp(PATH[p].vol, w * sd.SV * 1.2, w * sd.SV * 3.5); });
+    sd.outs.forEach(([p, w]) => { sd.wout[p] = w; sd.Rout[p] = clamp(PATH[p].vol, w * sd.SV * 1.0, w * sd.SV * 2.5); });
+    sd.vol = { in: {}, out: {}, at: sd.Gat, ve: sd.Gve };
   });
+  /* the volumes at the start of each stage of the right beat, so a stage can begin as it would in a
+     heart that has been beating (the widget's rates: A 0 in / 0.25 through the AV valve; V 0.4 in / 1.0
+     out; D 0.6 in / 0.75 through; the arteries pass on 0.16, 0.5 and 0.34 of the stroke volume) */
+  const START = { A: { at: -0.15, ve: -0.25, vin: 0, vout: -0.34 }, V: { at: -0.4, ve: 0, vin: 0.2, vout: -0.5 }, D: { at: 0, ve: -1, vin: 0.17, vout: 0 } };
+  function setVolumes(key) {
+    const st = START[key] || START.A;
+    Object.keys(SIDES).forEach((k) => {
+      const sd = SIDES[k], V = sd.vol;
+      V.at = Math.max(0.25 * sd.Gat, sd.Gat + st.at * sd.SV);
+      V.ve = Math.max(0.3 * sd.Gve, sd.Gve + st.ve * sd.SV);
+      sd.ins.forEach(([p, w]) => { V.in[p] = sd.Rin[p] + st.vin * w * sd.SV; });
+      sd.outs.forEach(([p, w]) => { V.out[p] = sd.Rout[p] + (st.vout + 0.34) * w * sd.SV; });
+    });
+  }
+  /* The room round the blood. A path's radius is its distance to the NEAREST wall, so blood spread
+     within it fills only a thin tube down the middle of a chamber, and a ventricle looked empty. So for
+     every point of the two middle paths (the atria, the ventricles, the roots of the arteries), how far
+     you can go across the path in each of 16 directions before you meet heart tissue is measured once,
+     here, from the model's own vertices; the blood is spread through all of that. */
+  const NDIR = 16;
+  let roomMs = 0;
+  (function measureRoom() {
+    const t0 = performance.now();
+    const cell = 0.03, grid = new Map(), v = new THREE.Vector3();
+    const hk = (x, y, z) => ((x * 73856093) ^ (y * 19349663) ^ (z * 83492791));
+    Object.values(parts).forEach((pt) => {
+      /* the walls only: blood flows round the papillary muscles and through the valves, which move */
+      if (pt.id === 'coronary' || /^pap_/.test(pt.id) || MODEL_VALVE.test(pt.id)) return;
+      const pos = pt.mesh.geometry.attributes.position, mw = pt.mesh.matrixWorld;
+      for (let i = 0; i < pos.count; i++) {
+        v.fromBufferAttribute(pos, i).applyMatrix4(mw);
+        const k = hk(Math.floor(v.x / cell), Math.floor(v.y / cell), Math.floor(v.z / cell));
+        let a = grid.get(k); if (!a) grid.set(k, a = []); a.push(v.x, v.y, v.z);
+      }
+    });
+    const R2 = 0.02 * 0.02;
+    function tissue(x, y, z) {
+      const cx = Math.floor(x / cell), cy = Math.floor(y / cell), cz = Math.floor(z / cell);
+      for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) for (let dz = -1; dz <= 1; dz++) {
+        const a = grid.get(hk(cx + dx, cy + dy, cz + dz)); if (!a) continue;
+        for (let j = 0; j < a.length; j += 3) { const ex = a[j] - x, ey = a[j + 1] - y, ez = a[j + 2] - z; if (ex * ex + ey * ey + ez * ez < R2) return true; }
+      }
+      return false;
+    }
+    ['mid_r', 'mid_l'].forEach((key) => {
+      const path = PATH[key]; if (!path) return;
+      const CAP = 0.44;
+      path.E = path.P.map((p, i) => {
+        const raw = new Float32Array(NDIR), open = [];
+        for (let j = 0; j < NDIR; j++) {
+          const th = j / NDIR * Math.PI * 2, c = Math.cos(th), sn = Math.sin(th);
+          const dx = path.N[i].x * c + path.B[i].x * sn, dy = path.N[i].y * c + path.B[i].y * sn, dz = path.N[i].z * c + path.B[i].z * sn;
+          let d = Math.max(0.01, path.R[i] * 0.8);
+          while (d < CAP && !tissue(p.x + dx * d, p.y + dy * d, p.z + dz * d)) d += 0.01;
+          raw[j] = Math.max(path.R[i] * 0.8, d - 0.018);
+          open.push(d >= CAP);         /* no wall met: the way out along a vessel, not the chamber */
+        }
+        /* a direction that ran out along a vessel takes the room of the chamber round it */
+        const shut = [...raw].filter((x, j) => !open[j]).sort((x, y) => x - y);
+        const typical = shut.length ? shut[shut.length >> 1] : path.R[i];
+        const E = raw.map((x, j) => (open[j] ? typical : Math.min(x, 0.34)));
+        /* a little smoothing round the circle, so the blood's edge has no spikes */
+        return E.map((x, j) => 0.5 * x + 0.25 * (E[(j + NDIR - 1) % NDIR] + E[(j + 1) % NDIR]));
+      });
+    });
+    roomMs = Math.round(performance.now() - t0);
+  })();
   function sampleAt(path, s, out, frame) {
     const S = path.S; let lo = 0, hi = S.length - 1;
     s = clamp(s, 0, path.len);
     while (hi - lo > 1) { const m = (lo + hi) >> 1; if (S[m] <= s) lo = m; else hi = m; }
     const t = (s - S[lo]) / Math.max(1e-9, S[hi] - S[lo]);
     out.lerpVectors(path.P[lo], path.P[hi], t);
-    if (frame) { frame.r = lerp(path.R[lo], path.R[hi], t); frame.N = path.N[lo]; frame.B = path.B[lo]; }
+    if (frame) { frame.r = lerp(path.R[lo], path.R[hi], t); frame.N = path.N[lo]; frame.B = path.B[lo]; frame.T = path.T[lo]; frame.i = lo; frame.u = t; }
     return out;
   }
-  const pgeo = new THREE.SphereGeometry(coarse ? 0.019 : 0.016, 10, 8);
+  /* the room across the path in direction phi at this point: from the measured room where there is one */
+  function roomAt(path, fr, phi) {
+    if (!path.E) return fr.r;
+    const a = ((phi / (Math.PI * 2)) % 1 + 1) % 1 * NDIR, j0 = Math.floor(a) % NDIR, j1 = (j0 + 1) % NDIR, w = a - Math.floor(a);
+    const i1 = Math.min(fr.i + 1, path.E.length - 1), E0 = path.E[fr.i], E1 = path.E[i1];
+    return lerp(lerp(E0[j0], E0[j1], w), lerp(E1[j0], E1[j1], w), fr.u);
+  }
+  /* a particle is a small drop, drawn longer the faster it moves, so the flow shows its direction */
+  const PR = coarse ? 0.011 : 0.0095;
+  const pgeo = new THREE.SphereGeometry(1, 10, 7);
   const blood = {};
   const rand = rng(20260925);
   function pick(list) { let x = rand(), acc = 0; for (const [k, w] of list) { acc += w; if (x <= acc) return k; } return list[list.length - 1][0]; }
+  const NTOTAL = coarse ? 640 : 980;
   Object.keys(SIDES).forEach((k) => {
     const sd = SIDES[k];
-    const mat = new THREE.MeshStandardMaterial({ color: sd.color, roughness: 0.35, metalness: 0, emissive: sd.color, emissiveIntensity: 0.18, clippingPlanes: PLANES });
+    sd.n = Math.round(NTOTAL / 2);
+    const mat = new THREE.MeshStandardMaterial({ color: sd.color, roughness: 0.4, metalness: 0, emissive: sd.color, emissiveIntensity: 0.6, clippingPlanes: PLANES });
     const im = new THREE.InstancedMesh(pgeo, mat, sd.n); im.frustumCulled = false; im.visible = false;
     heart.add(im);
     blood[k] = { im, mat, parts: [] };
   });
-  function routeOf(sd, p) {
-    const pin = PATH[p.inK], pm = PATH[sd.mid], po = PATH[p.outK];
-    return { pin, pm, po, s1: pin.len, s2: pin.len + pm.len, end: pin.len + pm.len + po.len };
+  /* compartment c of side sd: its path, the volume of lumen before it on that path, its own volume
+     of lumen (for drawing), and the blood it holds now (for moving) */
+  function compOf(sd, p) {
+    if (p.c === V_IN) return [PATH[p.inK], 0, PATH[p.inK].vol, sd.vol.in[p.inK]];
+    if (p.c === V_AT) return [PATH[sd.mid], 0, sd.Gat, sd.vol.at];
+    if (p.c === V_VE) return [PATH[sd.mid], sd.vAV, sd.Gve, sd.vol.ve];
+    if (p.c === V_RO) return [PATH[sd.mid], sd.vSL, sd.Gro, sd.Gro];
+    return [PATH[p.outK], 0, PATH[p.outK].vol, sd.vol.out[p.outK]];
   }
-  function seedBlood() {
+  function seedBlood(key) {
+    setVolumes(key || 'A');
     Object.keys(SIDES).forEach((k) => {
-      const sd = SIDES[k], B = blood[k]; B.parts = [];
+      const sd = SIDES[k], B = blood[k], V = sd.vol; B.parts = [];
+      /* the blood each compartment holds decides how many particles start in it */
+      const bins = [];
+      sd.ins.forEach(([pk]) => bins.push([V_IN, pk, null, V.in[pk]]));
+      bins.push([V_AT, null, null, V.at]); bins.push([V_VE, null, null, V.ve]);
+      if (sd.hasRoot) bins.push([V_RO, null, null, sd.Gro]);
+      sd.outs.forEach(([pk]) => bins.push([V_AR, null, pk, V.out[pk]]));
+      const tot = bins.reduce((a, b) => a + b[3], 0);
       for (let i = 0; i < sd.n; i++) {
-        const p = { inK: pick(sd.ins), outK: pick(sd.outs), rho: Math.sqrt(rand()) * 0.62, phi: rand() * Math.PI * 2 };
-        const r = routeOf(sd, p);
-        /* start roughly where steady flow would put it: more particles where the space is wider */
-        let s = 0;
-        for (let tries = 0; tries < 12; tries++) {
-          s = rand() * r.end;
-          const fr = {}; locate(r, s, tmpA, fr);
-          if (rand() < clamp((fr.r / 0.12) * (fr.r / 0.12), 0.08, 1)) break;
-        }
-        p.s = s; B.parts.push(p);
+        let x = rand() * tot, b = bins[bins.length - 1];
+        for (const q of bins) { if (x <= q[3]) { b = q; break; } x -= q[3]; }
+        B.parts.push({ c: b[0], f: rand(), inK: b[1] || pick(sd.ins), outK: b[2] || pick(sd.outs),
+                       rho: Math.sqrt(rand()), phi: rand() * Math.PI * 2, sp: 0 });
       }
     });
   }
-  function locate(r, s, out, fr) {
-    if (s < r.s1) return sampleAt(r.pin, s, out, fr);
-    if (s < r.s2) return sampleAt(r.pm, s - r.s1, out, fr);
-    return sampleAt(r.po, s - r.s2, out, fr);
-  }
-  seedBlood();
+  seedBlood('A');
 
-  /* the flow now: per side, the rates at the inlet, the atrioventricular valve, the semilunar valve
-     and in the artery beyond it (units: path lengths a second, before the area correction) */
-  const FLOW = { R: { in: 0, av: 0, sl: 0, out: 0 }, L: { in: 0, av: 0, sl: 0, out: 0 } };
-  const SPEED = 0.42;
-  function velocity(sd, F, r, s) {
-    let q;
-    if (s < r.s1) q = F.in;
-    else if (s < r.s1 + sd.sAV) q = lerp(F.in, F.av, (s - r.s1) / Math.max(0.02, sd.sAV));
-    else if (s < r.s1 + sd.sSL) q = lerp(F.av, F.sl, (s - r.s1 - sd.sAV) / Math.max(0.02, sd.sSL - sd.sAV));
-    else q = lerp(F.sl, F.out, sstep(0, 0.12, s - r.s1 - sd.sSL));
-    return q;
+  /* the flow now, per side, in volume a second: from the body into the veins, from the veins into the
+     atrium, through the atrioventricular valve, through the semilunar valve, and on from the arteries */
+  const FLOW = { R: { body: 0, in: 0, av: 0, sl: 0, out: 0 }, L: { body: 0, in: 0, av: 0, sl: 0, out: 0 } };
+  function ends(sd, F, p) {                 /* [flow in at its inlet, flow out at its outlet] */
+    if (p.c === V_IN) { const w = sd.win[p.inK]; return [w * F.body, w * F.in]; }
+    if (p.c === V_AT) return [F.in, F.av];
+    if (p.c === V_VE) return [F.av, F.sl];
+    if (p.c === V_RO) return [F.sl, F.sl];
+    const w = sd.wout[p.outK]; return [w * F.sl, w * F.out];
   }
-  const fr0 = {};
+  function held(sd, p) { return p.c === V_IN ? sd.vol.in[p.inK] : p.c === V_AT ? sd.vol.at : p.c === V_VE ? sd.vol.ve : p.c === V_RO ? sd.Gro : sd.vol.out[p.outK]; }
+  function next(sd, p) {                    /* across an outlet */
+    if (p.c === V_IN) p.c = V_AT;
+    else if (p.c === V_AT) p.c = V_VE;
+    else if (p.c === V_VE) { p.c = sd.hasRoot ? V_RO : V_AR; if (p.c === V_AR) p.outK = pick(sd.outs); }
+    else if (p.c === V_RO) { p.c = V_AR; p.outK = pick(sd.outs); }
+    else { p.c = V_IN; p.inK = pick(sd.ins); }          /* on round the body, and back in by a vein */
+  }
+  function prev(sd, p) {                    /* back across an inlet: false where there is nowhere to go */
+    if (p.c === V_IN) return false;
+    if (p.c === V_AT) { p.c = V_IN; return true; }
+    if (p.c === V_VE) { p.c = V_AT; return true; }
+    if (p.c === V_RO) { p.c = V_VE; return true; }
+    p.c = sd.hasRoot ? V_RO : V_VE; return true;
+  }
   function stepBlood(dt) {
+    if (!(dt > 0)) return;
     Object.keys(SIDES).forEach((k) => {
-      const sd = SIDES[k], F = FLOW[k], B = blood[k];
-      const avShut = VALVES[sd.av].open < 0.35, slShut = VALVES[sd.sl].open < 0.35;
+      const sd = SIDES[k], F = FLOW[k], V = sd.vol, B = blood[k];
+      /* the compartments fill and empty */
+      sd.ins.forEach(([pk, w]) => { V.in[pk] = Math.max(0.3 * sd.Rin[pk], V.in[pk] + w * (F.body - F.in) * dt); });
+      V.at = Math.max(0.2 * sd.Gat, V.at + (F.in - F.av) * dt);
+      V.ve = Math.max(0.2 * sd.Gve, V.ve + (F.av - F.sl) * dt);
+      sd.outs.forEach(([pk, w]) => { V.out[pk] = Math.max(0.3 * sd.Rout[pk], V.out[pk] + w * (F.sl - F.out) * dt); });
       B.parts.forEach((p) => {
-        const r = routeOf(sd, p);
-        locate(r, p.s, tmpA, fr0);
-        const area = clamp((0.1 / Math.max(fr0.r, 0.03)) ** 2, 0.3, 2.4);
-        let ds = velocity(sd, F, r, p.s) * SPEED * area * dt;
-        let s2 = p.s + ds;
-        const a = r.s1 + sd.sAV, b = r.s1 + sd.sSL;
-        if (avShut) { if (p.s < a && s2 >= a) s2 = a - 0.004; else if (p.s > a && s2 <= a) s2 = a + 0.004; }
-        if (slShut) { if (p.s < b && s2 >= b) s2 = b - 0.004; else if (p.s > b && s2 <= b) s2 = b + 0.004; }
-        if (s2 >= r.end) { p.inK = pick(sd.ins); p.outK = pick(sd.outs); s2 = s2 - r.end; }
-        p.s = Math.max(0, s2);
+        const e = ends(sd, F, p), vol = held(sd, p);
+        let df = (e[0] * (1 - p.f) + e[1] * p.f) / vol * dt;
+        const g = compOf(sd, p);
+        p.sp = df * g[2] / dt;                  /* volume a second past it, for the length of its streak */
+        let f = p.f + df;
+        for (let guard = 0; guard < 4 && (f > 1 || f < 0); guard++) {
+          if (f > 1) { const carry = (f - 1) * held(sd, p); next(sd, p); f = carry / held(sd, p); }
+          else { const carry = -f * held(sd, p); if (!prev(sd, p)) { f = 0; break; } f = 1 - carry / held(sd, p); }
+        }
+        p.f = clamp(f, 0, 1);
       });
     });
   }
-  const M4 = new THREE.Matrix4(), POS = new THREE.Vector3(), DISP = new THREE.Vector3();
+  const M4 = new THREE.Matrix4(), POS = new THREE.Vector3(), DISP = new THREE.Vector3(), QN = new THREE.Quaternion(), SC = new THREE.Vector3(), UPY = new THREE.Vector3(0, 1, 0);
+  const fr0 = {};
   function drawBlood() {
     Object.keys(SIDES).forEach((k) => {
       const sd = SIDES[k], B = blood[k];
       B.parts.forEach((p, i) => {
-        const r = routeOf(sd, p);
-        locate(r, p.s, POS, fr0);
-        const rad = fr0.r * p.rho;
+        const g = compOf(sd, p), path = g[0];
+        const s = sAtVol(path, g[1] + p.f * g[2]);
+        sampleAt(path, s, POS, fr0);
+        /* in a chamber, across all the room it leaves; in a vessel, within most of its lumen */
+        const rad = path.E ? roomAt(path, fr0, p.phi) * p.rho * 0.92 : fr0.r * p.rho * 0.64;
         POS.addScaledVector(fr0.N, Math.cos(p.phi) * rad).addScaledVector(fr0.B, Math.sin(p.phi) * rad);
         POS.add(beatDisp(POS, DISP));
-        M4.makeTranslation(POS.x, POS.y, POS.z);
+        /* speed along the path: the volume passing, over the lumen's cross-section there */
+        const v = Math.abs(p.sp) / Math.max(1e-4, Math.PI * fr0.r * fr0.r);
+        const len = Math.min(0.045, v * 0.06);
+        QN.setFromUnitVectors(UPY, fr0.T);
+        SC.set(PR, PR + len / 2, PR);
+        M4.compose(POS, QN, SC);
         B.im.setMatrixAt(i, M4);
       });
       B.im.instanceMatrix.needsUpdate = true;
     });
   }
   drawBlood();
+
+  /* ---------------- the see-through heart ----------------
+     Daniel, 25 Sep 2026: with the walls evenly translucent "it's a bit tricky to see the chambers ...
+     clearly separate the chambers and outline the edges of the vessels". So the walls become glass
+     that is almost clear where you look straight through it and bright where you look along it, as a
+     real glass model is: each chamber and vessel shows as a clean outline with the blood inside it.
+     The right side of the heart and its vessels are outlined in blue and the left side in red, as the
+     lab's diagrams colour them; the septum between them is cream. Added light, not layered colour, so
+     no wall can hide another however they overlap. */
+  const XRAY_COL = { R: 0x9db9ff, L: 0xffa89a, S: 0xfff1dc };
+  const XRAY_SIDE = { ra: 'R', rv: 'R', vena_cava_sup: 'R', vena_cava_inf: 'R', pulmonary_artery: 'R', la: 'L', lv: 'L', pulmonary_veins: 'L', aorta: 'L', septum: 'S' };
+  function xrayMat(pt) {
+    if (pt.xmat) return pt.xmat;
+    const u = pt.mat.userData.u, side = XRAY_SIDE[pt.id], cor = pt.id === 'coronary', pap = /^pap_/.test(pt.id);
+    pt.xmat = new THREE.ShaderMaterial({
+      uniforms: { uBeatC: U_BEAT_C, uBeatK: U_BEAT_K, uL2H: u.uL2H, uH2L: u.uH2L,
+                  uCol: { value: new THREE.Color(side ? XRAY_COL[side] : cor ? 0xd9483e : 0xc98a80) },
+                  uA0: { value: cor ? 0.0 : pap ? 0.015 : 0.02 }, uA1: { value: cor ? 0.18 : pap ? 0.3 : side === 'S' ? 0.6 : 0.72 } },
+      vertexShader: BEAT_VS + `
+varying vec3 vN; varying vec3 vV;
+void main() {
+  vec3 hp = (uL2H * vec4(position, 1.0)).xyz; hp += h3beat(hp);
+  vec4 mv = modelViewMatrix * vec4((uH2L * vec4(hp, 1.0)).xyz, 1.0);
+  vN = normalize(normalMatrix * normal); vV = -mv.xyz;
+  gl_Position = projectionMatrix * mv;
+}`,
+      fragmentShader: `
+uniform vec3 uCol; uniform float uA0; uniform float uA1;
+varying vec3 vN; varying vec3 vV;
+void main() {
+  float ndv = abs(dot(normalize(vN), normalize(vV)));
+  float rim = pow(1.0 - ndv, 3.2);
+  gl_FragColor = vec4(uCol * (0.35 + 0.9 * rim), mix(uA0, uA1, rim));
+  #include <colorspace_fragment>
+}`,
+      transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending
+    });
+    return pt.xmat;
+  }
 
   /* ---------------- modes: what is shown ---------------- */
   let mode = 'explore', xray = false, cutK = 0, selected = null;
@@ -475,17 +659,17 @@ vec3 h3beat(vec3 p){ vec3 d = vec3(0.0); for (int i = 0; i < 4; i++) { vec3 q = 
     Object.values(parts).forEach((pt) => {
       const m = pt.mat, see = xray && !MODEL_VALVE.test(pt.id);
       pt.mesh.visible = !(live && MODEL_VALVE.test(pt.id)) && !(cutK >= (GONE_AT[pt.id] || 9));
-      m.transparent = see; m.opacity = see ? (pt.id === 'coronary' ? 0.55 : pt.solid ? 0.2 : 0.3) : 1;
-      m.depthWrite = !see;
-      m.side = see ? THREE.FrontSide : THREE.DoubleSide;
-      if (m.userData.u) m.userData.u.uCapOn.value = see ? 0 : 1;
+      pt.mesh.material = see ? xrayMat(pt) : m;
+      m.transparent = false; m.opacity = 1; m.depthWrite = true; m.side = THREE.DoubleSide;
+      if (m.userData.u) m.userData.u.uCapOn.value = 1;
       const on = lit(pt.id);
       m.emissive.setHex(on ? 0xffc36b : 0x000000); m.emissiveIntensity = on ? 0.42 : 0;
       m.needsUpdate = true;
     });
     vgroup.visible = live;
     Object.keys(VALVES).forEach((k) => {
-      const m = VALVES[k].mesh.material, on = lit('valve_' + k);
+      const m = VALVES[k].mesh.material, on = lit('valve_' + k), thin = mode === 'flow';
+      m.transparent = thin; m.opacity = thin ? 0.5 : 1; m.depthWrite = !thin; m.needsUpdate = true;
       m.emissive.setHex(on ? 0xffb04a : 0x000000); m.emissiveIntensity = on ? 0.5 : 0;
     });
     Object.values(blood).forEach((B) => { B.im.visible = live; });
@@ -593,8 +777,16 @@ vec3 h3beat(vec3 p){ vec3 d = vec3(0.0); for (int i = 0; i < 4; i++) { vec3 q = 
     });
     const ce = sstep(0, 0.7, u);
     setContraction(lerp(seg.atria[0], seg.atria[1], ce), lerp(seg.vent[0], seg.vent[1], ce));
-    const env = seg.hold ? sstep(0, 0.06, u) * (1 - sstep(0.62, 0.97, u)) : sstep(0, 0.1, u) * (1 - 0.55 * sstep(0.75, 1, u));
-    ['R', 'L'].forEach((s) => { const src = seg.rates[s]; FLOW[s].in = src.in * env; FLOW[s].av = src.av * env; FLOW[s].sl = src.sl * env; FLOW[s].out = src.out * env; });
+    /* the flows: each stage moves its volumes (the widget's rates, in stroke volumes) through the valves
+       in one smooth surge, while the veins fill and the arteries pass blood on steadily. A stage that
+       holds brings everything to rest before its end, so its last frame is still. */
+    const bump = (a, b) => (u <= a || u >= b ? 0 : Math.pow(Math.sin(Math.PI * (u - a) / (b - a)), 2) * 2 / (b - a));
+    const pulse = seg.hold ? bump(0.04, 0.86) : bump(0.06, 0.94);
+    const steady = seg.hold ? bump(0.02, 0.9) : 1;
+    ['R', 'L'].forEach((s) => {
+      const v = seg.rates[s], F = FLOW[s], q = SIDES[s].SV / seg.dur;
+      F.body = (v.body || 0) * steady * q; F.in = v.in * steady * q; F.av = v.av * pulse * q; F.sl = v.sl * pulse * q; F.out = v.out * steady * q;
+    });
     if (anim.segIndex !== k) { anim.segIndex = k; if (anim.onStep) anim.onStep(k, seg); }
   }
   function play(plan, o) {
@@ -628,7 +820,7 @@ vec3 h3beat(vec3 p){ vec3 d = vec3(0.0); for (int i = 0; i < 4; i++) { vec3 q = 
   }
   function stopAnim(resetValves) {
     anim = null;
-    ['R', 'L'].forEach((s) => { FLOW[s].in = FLOW[s].av = FLOW[s].sl = FLOW[s].out = 0; });
+    ['R', 'L'].forEach((s) => { FLOW[s].body = FLOW[s].in = FLOW[s].av = FLOW[s].sl = FLOW[s].out = 0; });
     setContraction(0, 0);
     if (resetValves) setValvesNow(resetValves);
     kick();
@@ -692,8 +884,8 @@ vec3 h3beat(vec3 p){ vec3 d = vec3(0.0); for (int i = 0; i < 4; i++) { vec3 q = 
   host.appendChild(over);
   let labelWant = [];      /* part ids to label, in priority order */
   let labelTimer = null, labelsShown = false;
-  function hideLabels() { over.classList.remove('is-on'); labelsShown = false; clearTimeout(labelTimer); }
-  function relabelSoon(ms) { clearTimeout(labelTimer); labelTimer = setTimeout(layoutLabels, ms == null ? 140 : ms); }
+  function hideLabels() { over.classList.remove('is-on'); labelsShown = false; clearTimeout(labelTimer); labelTimer = null; }
+  function relabelSoon(ms) { clearTimeout(labelTimer); labelTimer = setTimeout(() => { labelTimer = null; layoutLabels(); }, ms == null ? 140 : ms); }
   function labelText(id) {
     const nm = NAMES[id] || { name: id };
     return nm;
@@ -820,7 +1012,7 @@ vec3 h3beat(vec3 p){ vec3 d = vec3(0.0); for (int i = 0; i < 4; i++) { vec3 q = 
   controls.addEventListener('start', () => { moving = true; hideLabels(); if (opts.onInteract) opts.onInteract(); });
   /* any change of camera, however it came about, takes the labels down; they are laid out again once
      the view is still, so a leader is never drawn to where a part used to be */
-  controls.addEventListener('change', () => { idStale = true; if (labelsShown) hideLabels(); kick(); });
+  controls.addEventListener('change', () => { idStale = true; if (labelsShown || labelTimer) hideLabels(); kick(); });
   controls.addEventListener('end', () => { moving = false; });
 
   /* ---------------- the loop: only when something moves, only when you can see it ---------------- */
@@ -849,8 +1041,9 @@ vec3 h3beat(vec3 p){ vec3 d = vec3(0.0); for (int i = 0; i < 4; i++) { vec3 q = 
     renderer.render(scene, camera);
     why = (tween ? 'tween ' : '') + (anim && !anim.paused ? 'anim ' : '') + (moved ? 'controls ' : '') + (moving ? 'moving' : '');
     inFrame = false;
+    /* the names come back once the camera is still, even while the blood keeps flowing */
+    if (!labelsShown && labelWant.length && !tween && !moving && !labelTimer) relabelSoon(busy ? 240 : 120);
     if (busy || moving || pending) raf = requestAnimationFrame(frame);
-    else if (!labelsShown && labelWant.length && !tween) relabelSoon(120);
   }
   function renderNow() {
     Object.keys(VALVES).forEach((k) => { if (VALVES[k].dirty) buildValve(k); });
@@ -881,7 +1074,7 @@ vec3 h3beat(vec3 p){ vec3 d = vec3(0.0); for (int i = 0; i < 4; i++) { vec3 q = 
       mode = m; xray = m !== 'explore';
       if (m !== 'explore') { cutK = 0; updateClip(); }
       stopAnim(m === 'explore' ? null : REST);
-      if (m !== 'explore') { seedBlood(); drawBlood(); }
+      if (m !== 'explore') { seedBlood('A'); drawBlood(); }
       applyLook(); relabelSoon();
     },
     setCut(k) {
@@ -901,14 +1094,14 @@ vec3 h3beat(vec3 p){ vec3 d = vec3(0.0); for (int i = 0; i < 4; i++) { vec3 q = 
     resume() { if (anim) { anim.paused = false; kick(); } },
     playing() { return !!(anim && !anim.paused); },
     setSpeed(s) { if (anim) anim.speed = s; },
-    reseed() { seedBlood(); drawBlood(); kick(); },
+    reseed(key) { seedBlood(key); drawBlood(); kick(); },
     /* for the headless checks: jump to time t of a plan, deterministically */
     seek(plan, t, o) {
       o = o || {};
-      seedBlood(); anim = { plan, t: 0, total: plan.reduce((a, s) => a + s.dur, 0), loop: !!o.loop, speed: 1, segIndex: -1, from: o.from, paused: true };
-      const dt = 1 / 60;
-      for (let tt = 0; tt < t; tt += dt) { anim.t = tt; applyAt(Math.min(tt, anim.total - 1e-4)); stepBlood(dt); }
-      applyAt(Math.min(t, anim.total - 1e-4));
+      seedBlood(plan[0] && plan[0].stage); anim = { plan, t: 0, total: plan.reduce((a, s) => a + s.dur, 0), loop: !!o.loop, speed: 1, segIndex: -1, from: o.from, paused: true };
+      const dt = 1 / 60, at = (tt) => (anim.loop ? tt % anim.total : Math.min(tt, anim.total - 1e-4));
+      for (let tt = 0; tt < t; tt += dt) { anim.t = at(tt); if (anim.loop && tt % anim.total < dt) anim.segIndex = -1; applyAt(anim.t); stepBlood(dt); }
+      applyAt(at(t));
       renderNow(); idStale = true;
       return { t, stage: anim.segIndex };
     },
@@ -942,6 +1135,38 @@ vec3 h3beat(vec3 p){ vec3 d = vec3(0.0); for (int i = 0; i < 4; i++) { vec3 q = 
       const p = new THREE.Vector3(...pos).applyMatrix4(heart.matrixWorld), t = new THREE.Vector3(...target).applyMatrix4(heart.matrixWorld);
       tween = null; controls.enabled = true; controls.minDistance = 0.05; camera.position.copy(p); controls.target.copy(t); controls.update(); idStale = true; renderNow(); kick();
     },
+    /* checks only: the room measured round the middle paths — per point, the least and most across */
+    roomStats() {
+      const out = {};
+      ['mid_r', 'mid_l'].forEach((k) => { const P = PATH[k]; if (!P || !P.E) return; out[k] = P.E.map((e, i) => [+P.S[i].toFixed(2), +P.R[i].toFixed(3), +Math.min(...e).toFixed(3), +Math.max(...e).toFixed(3)]); });
+      out.sAV = { R: SIDES.R.sAV, L: SIDES.L.sAV }; out.sSL = { R: SIDES.R.sSL, L: SIDES.L.sSL }; out.ms = roomMs;
+      return out;
+    },
+    /* checks only: where each compartment's particles are on screen (css px in the stage) */
+    bloodScreen() {
+      const out = {}, v = new THREE.Vector3(), w = host.clientWidth, h = host.clientHeight;
+      Object.keys(SIDES).forEach((k) => {
+        const sd = SIDES[k], acc = {};
+        blood[k].parts.forEach((p, i) => {
+          const m = new THREE.Matrix4(); blood[k].im.getMatrixAt(i, m); v.setFromMatrixPosition(m).applyMatrix4(heart.matrixWorld).project(camera);
+          const x = (v.x + 1) / 2 * w, y = (1 - v.y) / 2 * h, a = acc[p.c] || (acc[p.c] = { n: 0, x0: 1e9, x1: -1e9, y0: 1e9, y1: -1e9 });
+          a.n++; a.x0 = Math.min(a.x0, x); a.x1 = Math.max(a.x1, x); a.y0 = Math.min(a.y0, y); a.y1 = Math.max(a.y1, y);
+        });
+        out[k] = Object.fromEntries(Object.entries(acc).map(([c, a]) => [['vein', 'atrium', 'ventricle', 'root', 'artery'][c], [a.n, Math.round(a.x0), Math.round(a.x1), Math.round(a.y0), Math.round(a.y1)]]));
+      });
+      return out;
+    },
+    /* checks only: how many particles each compartment holds, and the blood in it now */
+    bloodStats() {
+      const out = {};
+      Object.keys(SIDES).forEach((k) => {
+        const sd = SIDES[k], n = [0, 0, 0, 0, 0];
+        blood[k].parts.forEach((p) => { n[p.c]++; });
+        out[k] = { n, SV: +sd.SV.toFixed(5), at: +sd.vol.at.toFixed(5), ve: +sd.vol.ve.toFixed(5), Gat: +sd.Gat.toFixed(5), Gve: +sd.Gve.toFixed(5), Gro: +sd.Gro.toFixed(5), sAV: +sd.sAV.toFixed(3), sSL: +sd.sSL.toFixed(3), len: +PATH[sd.mid].len.toFixed(3),
+                   flow: Object.fromEntries(Object.entries(FLOW[k]).map(([q, v]) => [q, +v.toFixed(5)])) };
+      });
+      return out;
+    },
     idStats() { renderIds(); const c = {}; for (let i = 0; i < idBuf.length; i += 4) { const v = idBuf[i]; if (v) { const k = byIndex[v] + (idBuf[i + 1] > 127 ? '(back)' : ''); c[k] = (c[k] || 0) + 1; } } return c; },
     ring(k) { const f = VALVES[k].f; return { c: f.c.toArray(), n: f.n.toArray(), u: f.u.toArray(), r: f.r, depth: f.depth, open: VALVES[k].open }; },
     showOnly(re) { const rx = re ? new RegExp(re) : null; Object.values(parts).forEach((pt) => { pt.mesh.visible = !rx || rx.test(pt.id); }); Object.values(blood).forEach((B) => { B.im.visible = !rx; }); kick(); },
@@ -957,7 +1182,7 @@ vec3 h3beat(vec3 p){ vec3 d = vec3(0.0); for (int i = 0; i < 4; i++) { vec3 q = 
         if (o.geometry) o.geometry.dispose();
         if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => m.dispose());
       });
-      Object.values(parts).forEach((p) => p.idMat.dispose());
+      Object.values(parts).forEach((p) => { p.idMat.dispose(); p.mat.dispose(); if (p.xmat) p.xmat.dispose(); });
       Object.values(VALVES).forEach((v) => v.idMat.dispose());
       pgeo.dispose(); envTex.dispose(); if (idRT) idRT.dispose();
       renderer.dispose();
