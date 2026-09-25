@@ -55,9 +55,9 @@
   var WAVES = [
     { k: 'P', c: 46, s1: 20, s2: 20, a: 0.2, dir: 55 },
     { k: 'Q', c: 170, s1: 6, s2: 6, a: 0.18, dir: 160 },
-    { k: 'R', c: 198, s1: 10, s2: 10, a: 1.4, dir: 55 },
+    { k: 'R', c: 202, s1: 8, s2: 10, a: 1.4, dir: 55 },     /* rises as the lower walls are excited (180-204 ms), not before */
     { k: 'S', c: 226, s1: 7, s2: 7, a: 0.38, dir: -110 },
-    { k: 'T', c: 410, s1: 55, s2: 35, a: 0.38, dir: 45 }
+    { k: 'T', c: 410, s1: 34, s2: 30, a: 0.38, dir: 45 }      /* rises as the ventricles start to recover (330 ms), not before */
   ];
   var BEAT = 800;              /* ms: 75 beats a minute */
   function gauss(t, w) { var s = t < w.c ? w.s1 : w.s2, d = (t - w.c) / s; return Math.exp(-0.5 * d * d); }
@@ -114,15 +114,15 @@
   var STEPS = [
     { ms: [0, 100], wave: 'P', h: 'The SA node fires',
       p: 'The beat starts in the _sinoatrial node_ (SA node), the heart’s pacemaker, in the wall of the right atrium. A wave of electrical activity spreads from it across both atria, and they contract. It moves down and to the heart’s left side (on your right in the drawing), towards the ventricles. This wave draws the P wave.' },
-    { ms: [100, 160], wave: null, h: 'The AV node holds the signal',
+    { ms: [100, 150], wave: null, h: 'The AV node holds the signal',
       p: 'The signal reaches the _atrioventricular node_ (AV node), between the atria and the ventricles, and is held there for about 0.1 s, so the atria finish emptying before the ventricles contract. So little tissue is active that nothing is recorded: the line is flat. This is the PR segment. From the start of P to the start of the next wave is the PR interval, normally 0.12 to 0.20 s.' },
-    { ms: [160, 182], wave: 'Q', h: 'The septum goes first',
-      p: 'The signal passes along the _bundle of His_ into the septum. The septum is excited from its left side to its right, so this small first wave moves to the right. It moves almost at right angles to lead II, so in lead II the line hardly moves. In aVR, which looks from the right, it draws a small peak.' },
-    { ms: [182, 214], wave: 'R', h: 'Down to the apex and out through the walls',
-      p: 'The signal passes along the left and right _bundle branches_ to the apex, then through the ventricle walls in the _Purkinje fibres_, from the inside of each wall to the outside. The left ventricle has far more muscle than the right, so the biggest wave moves down and to the heart’s left side. In lead II this draws the R wave, the tallest peak. In aVR the same wave moves away from the + electrode and draws a deep trough.' },
-    { ms: [214, 240], wave: 'S', h: 'The top of the ventricles last',
+    { ms: [150, 180], wave: 'Q', h: 'The septum goes first',
+      p: 'The signal passes along the _bundle of His_ and down the septum in the two _bundle branches_. The septum is excited from its left side to its right, so this small first wave moves to the right. It moves almost at right angles to lead II, so in lead II the line hardly moves. In aVR, which looks from the right, it draws a small peak.' },
+    { ms: [180, 212], wave: 'R', h: 'Down to the apex and out through the walls',
+      p: 'At the apex the _Purkinje fibres_ spread the signal over the inside of both ventricles in a moment, and it moves through each wall from the inside to the outside. The left ventricle has far more muscle than the right, so the biggest wave moves down and to the heart’s left side. In lead II this draws the R wave, the tallest peak. In aVR the same wave moves away from the + electrode and draws a deep trough.' },
+    { ms: [212, 244], wave: 'S', h: 'The top of the ventricles last',
       p: 'The last muscle to be excited is at the top of the ventricles, near the valves, so the wave now moves up. In lead II this draws the S wave, a small trough. Q, R and S together are the QRS complex, less than 0.12 s long. It is much bigger than the P wave because the ventricles have much more muscle than the atria.' },
-    { ms: [240, 330], wave: null, h: 'All the ventricle muscle is excited',
+    { ms: [244, 330], wave: null, h: 'All the ventricle muscle is excited',
       p: 'Every ventricle cell is excited, and the ventricles are contracting. No wave is moving, so the line is flat again: the ST segment. The atria have recovered by now: the small wave of their recovery was hidden inside the QRS complex.' },
     { ms: [330, 500], wave: 'T', h: 'The ventricles recover',
       p: 'The ventricle cells recover, ready for the next beat. Recovery starts at the outside of each wall and moves inwards, the opposite way to the first wave. A recovery wave moving away from the + electrode draws the same shape as a signal moving towards it, so the T wave usually points the same way as the biggest wave of the QRS complex.' },
@@ -173,23 +173,23 @@
     { d: 'M110 164 C130 196 160 232 186 262', t: [0, 42] },                                 /* SA to AV node, across the right atrium */
     { d: 'M110 164 C100 200 110 236 150 256 C164 260 176 262 186 262', t: [0, 46] },
     { d: 'M110 164 C170 156 240 158 290 172', t: [0, 50] },                                 /* to the left atrium */
-    { d: 'M186 262 C192 268 198 276 200 290', t: [150, 166] },                              /* the bundle of His */
-    { d: 'M200 290 C198 330 200 370 208 404', t: [158, 182] },                              /* the right bundle branch */
-    { d: 'M200 290 C208 322 214 352 222 384 C226 396 230 404 236 410', t: [158, 184] },     /* the left bundle branch */
-    { d: 'M208 404 C184 416 152 408 118 384 C92 364 74 332 66 298', t: [176, 214] },        /* Purkinje fibres */
-    { d: 'M208 404 C196 430 170 432 150 424', t: [176, 196] },
-    { d: 'M236 410 C262 432 300 426 324 404 C344 378 352 340 352 300', t: [180, 222] },
-    { d: 'M236 410 C252 442 280 440 300 430', t: [180, 200] },
-    { d: 'M118 384 C110 360 104 336 100 310', t: [192, 212] },
-    { d: 'M324 404 C330 378 334 350 334 322', t: [198, 222] }
+    { d: 'M186 262 C192 268 198 276 200 290', t: [150, 164] },                              /* the bundle of His */
+    { d: 'M200 290 C198 330 200 370 208 404', t: [158, 176] },                              /* the right bundle branch, down the septum */
+    { d: 'M200 290 C208 322 214 352 222 384 C226 396 230 404 236 410', t: [158, 176] },     /* the left bundle branch */
+    { d: 'M208 404 C184 416 152 408 118 384 C92 364 74 332 66 298', t: [180, 196] },        /* Purkinje fibres: fast, over the */
+    { d: 'M208 404 C196 430 170 432 150 424', t: [180, 190] },                              /* inside of the lower walls */
+    { d: 'M236 410 C262 432 300 426 324 404 C344 378 352 340 352 300', t: [180, 198] },
+    { d: 'M236 410 C252 442 280 440 300 430', t: [180, 190] },
+    { d: 'M118 384 C110 360 104 336 100 310', t: [186, 200] },
+    { d: 'M324 404 C330 378 334 350 334 322', t: [188, 202] }
   ];
   /* the numbered markers on the conduction system, and the key under the heart */
   var PINS = [
     { n: 1, at: COND.sa, p: [80, 142], name: 'SA node', on: [0, 30] },
-    { n: 2, at: COND.av, p: [150, 262], name: 'AV node', on: [40, 162] },
-    { n: 3, at: [200, 282], p: [236, 270], name: 'bundle of His', on: [150, 172] },
-    { n: 4, at: [222, 384], p: [258, 372], name: 'bundle branches', on: [158, 190] },
-    { n: 5, at: [100, 316], p: [64, 326], name: 'Purkinje fibres', on: [170, 225] }
+    { n: 2, at: COND.av, p: [150, 262], name: 'AV node', on: [40, 152] },
+    { n: 3, at: [200, 282], p: [236, 270], name: 'bundle of His', on: [150, 166] },
+    { n: 4, at: [222, 384], p: [258, 372], name: 'bundle branches', on: [158, 180] },
+    { n: 5, at: [100, 316], p: [64, 326], name: 'Purkinje fibres', on: [180.01, 204] }
   ];
   function sv(name, attrs) { var e = document.createElementNS(NS, name); for (var k in attrs) e.setAttribute(k, attrs[k]); return e; }
   function n1(v) { return Math.round(v * 10) / 10; }
@@ -422,8 +422,8 @@
         if (live) w.pulse.setAttribute('stroke-dashoffset', n1(26 - Math.min(1.15, p) * (w.len + 26)));
       });
       g.sa.classList.toggle('is-on', ms >= 0 && ms < 30);
-      g.av.classList.toggle('is-on', ms >= 40 && ms < 162);
-      g.av.style.opacity = ms >= 40 && ms < 162 ? n1(0.65 + 0.35 * Math.sin((ms - 40) / 9)) : '';
+      g.av.classList.toggle('is-on', ms >= 40 && ms < 152);
+      g.av.style.opacity = ms >= 40 && ms < 152 ? n1(0.65 + 0.35 * Math.sin((ms - 40) / 9)) : '';
       pins.forEach(function (p) { var on = ms >= p.on[0] && ms < p.on[1]; p.el.classList.toggle('is-on', on); if (p.key) p.key.classList.toggle('is-on', on); if (p.hkey) p.hkey.classList.toggle('is-on', on); });
       /* the heart contracting behind it all */
       if (art && hn.outer) {
