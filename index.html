@@ -18,13 +18,13 @@
 <link rel="stylesheet" media="print" onload="this.media='all'"
       href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500&display=swap">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500&display=swap"></noscript>
-<link rel="stylesheet" href="css/app.css?v=1790310888">
-  <link rel="stylesheet" href="css/w-journey.css?v=1790310888">
-  <link rel="stylesheet" href="css/w-monitor.css?v=1790310888">
-  <link rel="stylesheet" href="css/w-chd.css?v=1790310888">
-  <link rel="stylesheet" href="css/w-defence.css?v=1790310888">
-  <link rel="stylesheet" href="css/w-bodyflow.css?v=1790310888">
-  <link rel="stylesheet" href="css/w-heart3d.css?v=1790310888">
+<link rel="stylesheet" href="css/app.css?v=1790314646">
+  <link rel="stylesheet" href="css/w-journey.css?v=1790314646">
+  <link rel="stylesheet" href="css/w-monitor.css?v=1790314646">
+  <link rel="stylesheet" href="css/w-chd.css?v=1790314646">
+  <link rel="stylesheet" href="css/w-defence.css?v=1790314646">
+  <link rel="stylesheet" href="css/w-bodyflow.css?v=1790314646">
+  <link rel="stylesheet" href="css/w-heart3d.css?v=1790314646">
 </head>
 <body>
 <div class="app">
@@ -61,13 +61,19 @@
   <main class="stage">
     <section class="platecol" aria-label="The body and its circulation">
       <div class="platecol__tools">
-        <button class="tool tool--whole" id="tWhole" hidden title="Pull back to the whole body">⤢ Whole body</button>
+        <button class="tool tool--whole" id="tWhole" type="button">⤢ Whole body</button>
+        <span class="tool-zoom" role="group" aria-label="Zoom">
+          <button class="tool tool--z" id="tZoomOut" type="button" aria-label="Zoom out">−</button>
+          <button class="tool tool--z" id="tZoomIn" type="button" aria-label="Zoom in">+</button>
+        </span>
+        <button class="tool tool--t" id="tLabels" type="button" aria-pressed="true">Labels</button>
+        <button class="tool tool--t" id="tBeyond" type="button" aria-pressed="false">Beyond syllabus</button>
         <button class="tool tool--sim" id="simBtn" type="button" hidden></button>
-        <span class="platecol__hint" id="plateHint">Click any part of the body to open its station</span>
+        <span class="platecol__hint" id="plateHint">Click a part to open its station · scroll or pinch to zoom</span>
         <button class="tool fold" id="plateFold" type="button" aria-expanded="true" data-what="the body" title="Fold the body away to read the notes on their own">▲ Hide the body</button>
       </div>
       <div class="platewrap" id="map">
-        <svg id="body" preserveAspectRatio="xMidYMid meet" role="group" aria-label="A human body with its circulation drawn inside it: the heart, the lungs, the liver, the kidneys and the gut, and the arteries, veins and capillaries between them. Red is oxygenated blood, blue is deoxygenated blood. Click a part to open the station that teaches it.">
+        <svg id="body" preserveAspectRatio="xMidYMid meet" role="group" aria-label="An anatomical drawing of the human circulatory system from the front: the heart, the lungs, the liver and the kidneys, and the arteries (red) and veins (blue) of the whole body, with blood flowing in them. Click a part to open the station that teaches it; scroll or pinch to zoom.">
           <defs></defs>
         </svg>
         <div class="tag" id="tag" aria-hidden="true"><span class="tag__pill"></span></div>
@@ -127,7 +133,7 @@
 
     <h3>In one minute</h3>
     <ul>
-      <li><b>Click any part of the body</b>, or any step on the bar along the bottom. The body on the left lights the part each station is about, and the blood in it keeps flowing.</li>
+      <li><b>Click any part of the body</b>, or any step on the bar along the bottom. The body on the left lights the part each station is about, and the blood in it keeps flowing. <b>Zoom</b> with the − and + buttons, the mouse wheel or two fingers, drag to move around, and press <b>Whole body</b> to see all of it again. <b>Labels</b> names the parts; <b>Beyond syllabus</b> adds vessels 0610 does not ask you to name.</li>
       <li>Each station has two tabs: <b>Learn</b> — what you must know, with something to press, drag or watch in every section — and <b>Practise</b>, the questions.</li>
       <li><b>Check as often as you like.</b> You are told which parts are wrong, <b>never the answer</b> — you have to work it out. Keep going until it is all right.</li>
       <li>An underlined word can be clicked: <b>🔍</b> opens a picture there and then, <b>↗</b> jumps to the station that explains it and brings you back, and a faint dotted line opens the definition.</li>
@@ -147,11 +153,10 @@
     <details class="helpmore">
       <summary>What is simplified here</summary>
       <ul>
-        <li>The heart is drawn as every exam diagram draws it: cut from the front, so its right side is on <b>your</b> left. The aorta and the pulmonary artery leave the top side by side; in the body the pulmonary artery twists round the front of the aorta.</li>
-        <li>Each atrioventricular valve is drawn as two flaps. The one on the right side of the heart really has three.</li>
-        <li>The body shows one capillary bed for each part of the body. A real organ has millions of capillaries.</li>
-        <li>The veins from the right lung pass <b>behind</b> the heart to the left atrium, so on the body they fade where they go behind it.</li>
-        <li>The large vessels of the head, the arms and the legs are drawn so the blood has somewhere to go. 0610 does not ask you to name them; point at one and it says so.</li>
+        <li>The body is a real anatomical drawing, so every vessel and organ is where it is in the body. It is still a simplified drawing: only the larger vessels are shown, and the capillaries that join them in every organ are too small to draw.</li>
+        <li>The small intestine is drawn faintly, under the vessels. Seen from the front, a real one would hide the aorta and the vena cava behind it.</li>
+        <li>The moving dots show the direction the blood flows, away from the heart in the arteries and towards it in the veins. Real blood cells are far too small to see at this scale, and far more numerous.</li>
+        <li>The magnified heart is drawn as every exam diagram draws it: cut from the front, so its right side is on <b>your</b> left. The aorta and the pulmonary artery leave the top side by side; in the body the pulmonary artery twists round the front of the aorta. Each atrioventricular valve is drawn as two flaps; the one on the right side of the heart really has three.</li>
         <li>In the animations, cells and molecules are drawn much larger and far fewer than in real life, and every process is slowed down so each step can be read.</li>
         <li>The fish and mammal circuits are circuit diagrams, not drawings of real hearts: there the aorta leaves the side of the left ventricle, and one vena cava is drawn.</li>
         <li>In the coronary artery, the blood flow falls as the fatty deposit grows. At rest a real artery keeps its flow until it is badly narrowed; the shortage shows first during exercise.</li>
@@ -163,7 +168,7 @@
       <ul>
         <li>The definitions are the 2026–28 syllabus wording. Where the slides use an older wording it is given in brackets.</li>
         <li>The stations follow Dr&nbsp;Mompel's own Year 10 lessons on Topic 9, and most of the pictures are the ones shown in those lessons.</li>
-        <li>The body outline is Mikael Häggström's <i>Human body diagrams</i> (Wikimedia Commons, CC0) — the same body as the Human Body Hub. The heart, the vessels and the blood flowing in them are drawn for this lab.</li>
+        <li>The body on the left is Mariana Ruiz Villarreal's <i>Circulatory System</i> (LadyofHats, Wikimedia Commons, public domain), drawn from Gray's Anatomy and the Sobotta atlas — the same artist as the Digestion Lab's body. Its small intestine is hers too, from her <i>Digestive system</i> (with Jmarchn, public domain). The flowing blood follows the centre line of every vessel she drew; the magnified heart is drawn for this lab.</li>
         <li>The 3D heart is a real human heart: the HuBMAP Human Reference Atlas (Browne and Schlehlein 2024), made from the Visible Human Male of the US National Library of Medicine, CC BY 4.0. Its moving valve cusps, tendons and blood paths are added for this lab.</li>
         <li>Every other picture is credited under it and listed in full below and in <code>assets/photos/CREDITS.md</code>.</li>
       </ul>
@@ -178,36 +183,39 @@
 </div>
 
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-<script src="js/config.js?v=1790310888" defer></script>
-<script src="js/data/glossary.js?v=1790310888" defer></script>
-<script src="js/data/syllabus.js?v=1790310888" defer></script>
-<script src="js/data/stations.js?v=1790310888" defer></script>
-<script src="js/data/photos.js?v=1790310888" defer></script>
-<script src="js/body-art.js?v=1790310888" defer></script>
-<script src="js/heart-art.js?v=1790310888" defer></script>
-<script src="js/circ-draw.js?v=1790310888" defer></script>
-<script src="js/terms.js?v=1790310888" defer></script>
-<script src="js/marking.js?v=1790310888" defer></script>
-<script src="js/sync.js?v=1790310888" defer></script>
-<script src="js/signin.js?v=1790310888" defer></script>
-<script src="js/engine.js?v=1790310888" defer></script>
-<script src="js/syllabus.js?v=1790310888" defer></script>
-<script src="js/widgets.js?v=1790310888" defer></script>
-<script src="js/learn.js?v=1790310888" defer></script>
-<script src="js/w-common.js?v=1790310888" defer></script>
-<script src="js/w-heart.js?v=1790310888" defer></script>
-  <script src="js/w-task.js?v=1790310888" defer></script>
-  <script src="js/w-route.js?v=1790310888" defer></script>
-  <script src="js/w-exercise.js?v=1790310888" defer></script>
-  <script src="js/w-journey.js?v=1790310888" defer></script>
-  <script src="js/w-monitor.js?v=1790310888" defer></script>
-  <script src="js/w-chd.js?v=1790310888" defer></script>
-  <script src="js/w-defence.js?v=1790310888" defer></script>
-  <script src="js/w-bodyflow.js?v=1790310888" defer></script>
-  <script src="js/w-heart3d.js?v=1790310888" defer></script>
-<script src="js/engine-ext.js?v=1790310888" defer></script>
-<script src="js/plate.js?v=1790310888" defer></script>
-<script src="js/app.js?v=1790310888" defer></script>
+<script src="js/config.js?v=1790314646" defer></script>
+<script src="js/data/glossary.js?v=1790314646" defer></script>
+<script src="js/data/syllabus.js?v=1790314646" defer></script>
+<script src="js/data/stations.js?v=1790314646" defer></script>
+<script src="js/data/photos.js?v=1790314646" defer></script>
+<script src="js/body-art.js?v=1790314646" defer></script>
+<script src="js/heart-art.js?v=1790314646" defer></script>
+<script src="js/circ-art.js?v=1790314646" defer></script>
+<script src="js/circ-flow.js?v=1790314646" defer></script>
+<script src="js/circ-gut.js?v=1790314646" defer></script>
+<script src="js/circ-draw.js?v=1790314646" defer></script>
+<script src="js/terms.js?v=1790314646" defer></script>
+<script src="js/marking.js?v=1790314646" defer></script>
+<script src="js/sync.js?v=1790314646" defer></script>
+<script src="js/signin.js?v=1790314646" defer></script>
+<script src="js/engine.js?v=1790314646" defer></script>
+<script src="js/syllabus.js?v=1790314646" defer></script>
+<script src="js/widgets.js?v=1790314646" defer></script>
+<script src="js/learn.js?v=1790314646" defer></script>
+<script src="js/w-common.js?v=1790314646" defer></script>
+<script src="js/w-heart.js?v=1790314646" defer></script>
+  <script src="js/w-task.js?v=1790314646" defer></script>
+  <script src="js/w-route.js?v=1790314646" defer></script>
+  <script src="js/w-exercise.js?v=1790314646" defer></script>
+  <script src="js/w-journey.js?v=1790314646" defer></script>
+  <script src="js/w-monitor.js?v=1790314646" defer></script>
+  <script src="js/w-chd.js?v=1790314646" defer></script>
+  <script src="js/w-defence.js?v=1790314646" defer></script>
+  <script src="js/w-bodyflow.js?v=1790314646" defer></script>
+  <script src="js/w-heart3d.js?v=1790314646" defer></script>
+<script src="js/engine-ext.js?v=1790314646" defer></script>
+<script src="js/plate.js?v=1790314646" defer></script>
+<script src="js/app.js?v=1790314646" defer></script>
 <!-- The lab offline. The worker lives at this lab's root, so on Pages its scope is exactly
      /<lab>/. It fetches the HTML network-first, so a deploy always reaches an online student
      and the cache is only the fall-back for when the wifi is not there. -->

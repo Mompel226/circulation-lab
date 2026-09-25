@@ -1,9 +1,10 @@
 /* ============================================================
    plate.js — the body and its circulation, as this lab's plate.
-   The drawing is js/circ-draw.js; this file decides what the lab does with it: a station
-   lights the parts it is about and flies the camera to them, shows the heart cut open or from
-   the outside, and sets the heart rate; a part clicked on the body opens the station that
-   teaches it. A station may also stand a bench in place of the body (none does yet).
+   The drawing is js/circ-draw.js (a public-domain anatomical plate); this file decides what the
+   lab does with it: a station lights the parts it is about and flies the camera to them, opens
+   the magnified heart for the heart stations, and sets the heart rate; a part clicked on the body
+   opens the station that teaches it. The tools above the plate zoom, pull back to the whole
+   body, and show the names. A station may also stand a bench in place of the body (none does).
    ============================================================ */
 (function (global) {
   'use strict';
@@ -32,8 +33,35 @@
       onLeave: function () { if (tag) tag.classList.remove('on'); },
       onClick: function (id) { onPick(id); }
     });
-    if (whole) whole.addEventListener('click', flyHome);
+    if (whole) { whole.hidden = false; whole.addEventListener('click', flyHome); }
+    var zin = document.getElementById('tZoomIn'), zout = document.getElementById('tZoomOut');
+    if (zin) zin.addEventListener('click', function () { draw.zoomBy(.66); });
+    if (zout) zout.addEventListener('click', function () { draw.zoomBy(1.5); });
+    var tl = document.getElementById('tLabels'), tb = document.getElementById('tBeyond');
+    function paintToggles() {
+      if (tl) tl.setAttribute('aria-pressed', labels.on ? 'true' : 'false');
+      if (tb) { tb.setAttribute('aria-pressed', labels.beyond ? 'true' : 'false'); tb.disabled = !labels.on; }
+      draw.labels(labels.on, labels.beyond);
+    }
+    if (tl) tl.addEventListener('click', function () { labels.on = !labels.on; remember(); paintToggles(); });
+    if (tb) tb.addEventListener('click', function () { labels.beyond = !labels.beyond; remember(); paintToggles(); });
+    paintToggles();
     window.addEventListener('resize', function () { if (tag) tag.classList.remove('on'); });
+  }
+  /* the name toggles are remembered in this browser, like the Digestion Lab's */
+  var labels = { on: true, beyond: false };
+  try { var LS = JSON.parse(localStorage.getItem('circulation-lab.plate') || 'null'); if (LS) { labels.on = LS.on !== false; labels.beyond = !!LS.beyond; } } catch (e) {}
+  function remember() { try { localStorage.setItem('circulation-lab.plate', JSON.stringify(labels)); } catch (e) {} }
+  /* the heart, magnified beside the body: for a station about the chambers, the valves or the
+     coronary arteries, or one that says so */
+  var CHAMBER = { ra: 1, la: 1, rv: 1, lv: 1, septum: 1, 'av-valves': 1, 'sl-valves': 1 };
+  function wantsLens(s) {
+    if (s.lens === false) return null;
+    var kind = s.heart === 'exterior' ? 'exterior' : 'section';
+    if (s.lens) return kind;
+    if ((s.light || []).some(function (id) { return CHAMBER[id]; })) return kind;
+    if (['heart', 'heartClose', 'valves', 'coronary'].indexOf(s.fly) >= 0) return kind;
+    return null;
   }
 
   function spec(st) { return (st && st.plate) || {}; }
@@ -50,16 +78,15 @@
     if (onBench) { draw.stop(); draw.clear(); if (tag) tag.classList.remove('on'); return; }
     draw.start();
     draw.heartMode(s.heart === 'exterior' ? 'exterior' : 'section');
+    draw.lens(wantsLens(s));
     draw.setRate(s.rate || 72);
-    if (hint) hint.textContent = 'Click any part of the body to open its station';
+    if (hint) hint.textContent = 'Click a part to open its station · scroll or pinch to zoom';
     var r = draw.light(ids);
     var names = ids.map(function (id) { return draw.G[id] ? draw.G[id].label.toLowerCase() : id; });
     /* a station that lights many parts says what they are in a few words (plate.say) instead of listing them */
     say(st.name, s.say || (names.length ? names.join(' · ') : 'the whole circulation'), r.colour);
-    var box = s.fly ? draw.boxOf(s.fly, 36) : draw.FULL;
-    draw.flyTo(box, function () { if (whole) whole.hidden = !draw.isZoomed(); });
-    if (whole) whole.hidden = false;
-    setTimeout(function () { if (whole) whole.hidden = !draw.isZoomed(); }, still ? 0 : 800);
+    var box = s.fly && s.fly !== 'whole' ? draw.boxOf(s.fly, 36) : draw.FULL;
+    draw.flyTo(box);
   }
 
   /* one part, named and framed: the student clicked it on the body or in the text */
@@ -68,15 +95,14 @@
     var g = draw.G[id];
     var r = draw.light([id]);
     say(g.label, g.note || '', r.colour);
-    draw.flyTo(draw.boxOf(id, 40), function () { var e = draw.elFor(id); if (e) draw.pin(e, g.label, r.colour); if (whole) whole.hidden = !draw.isZoomed(); });
-    if (whole) whole.hidden = false;
+    if (CHAMBER[id] || id === 'heart') draw.lens('section');
+    draw.flyTo(draw.boxOf(id, 40), function () { var e = draw.elFor(id); if (e) draw.pin(e, g.label, r.colour); });
   }
 
   function flyHome() {
     if (!draw) return;
     if (tag) tag.classList.remove('on');
-    draw.flyTo(draw.FULL, function () { if (whole) whole.hidden = !draw.isZoomed(); });
-    if (whole) whole.hidden = true;
+    draw.flyTo(draw.FULL);
     if (current) {
       var ids = spec(current).light || [];
       say(current.name, ids.length ? 'the whole body · ' + ids.length + (ids.length === 1 ? ' part lit' : ' parts lit') : 'the whole circulation', null);

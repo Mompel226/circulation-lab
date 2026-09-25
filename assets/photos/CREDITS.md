@@ -11,9 +11,11 @@ the … lesson slides" or "… lesson materials".
 **Openly licensed figures.** The 3D heart is a real human heart from the HuBMAP Human Reference Atlas (CC BY 4.0), and the vessel journey uses three micrographs from Wikimedia Commons (below). Two lesson pictures turned out to be OpenStax figures (CC BY 4.0). They are
 credited to OpenStax on the page, with a link, as the licence asks.
 
-**Drawn for the lab.** The body on the left, the heart, the vessels and every animation are drawn by the
-page itself (see the header of each file in `js/`). The body outline is Mikael Häggström's "Man shadow"
-(CC0), the same outline the Human Body Hub uses.
+**The body on the left** is a real anatomical drawing: Mariana Ruiz Villarreal's public-domain
+*Circulatory System*, the same artist as the Digestion Lab's body. The blood flowing in it follows the
+centre line of every vessel she drew, traced from the drawing itself
+(`circulation-lab-source/plate-build/`). The magnified heart and every animation are drawn by the
+page itself (see the header of each file in `js/`).
 
 Every base name below stands for two files, `-900.jpg` and `-900.webp`.
 
@@ -25,7 +27,9 @@ Every base name below stands for two files, `-900.jpg` and `-900.webp`.
 | `heart-valves-above-*` | the four valves seen from above, the atria removed | [OpenStax, *Anatomy and Physiology 2e*, section 19.1](https://openstax.org/books/anatomy-and-physiology-2e/pages/19-1-heart-anatomy) — also on the 9.2 slides (The Heart, slide 8) | CC BY 4.0 |
 | `assets/3d/heart.glb` | the real heart in "Explore a real heart" | HuBMAP Human Reference Atlas: Browne and Schlehlein (2024), [3D Reference Organ for Heart, Male v1.3](https://doi.org/10.48539/HBM564.WKNG.249) and [Blood Vasculature, Male v1.3](https://doi.org/10.48539/HBM473.XTPP.725), from the Visible Human Male (US National Library of Medicine). Every change is listed in `assets/3d/CREDITS.md` | CC BY 4.0 |
 | `js/vendor/three/` | the 3D engine | three.js r185.1 | MIT |
-| body outline (`js/body-art.js`) | the man's silhouette the circulation is drawn in | Mikael Häggström, "Man shadow", from his [Human body diagrams](https://commons.wikimedia.org/wiki/Human_body_diagrams), Wikimedia Commons | CC0 |
+| the body on the plate (`js/circ-art.js`) | the whole circulatory system from the front: arteries, veins, heart, lungs, liver, kidneys | Mariana Ruiz Villarreal (LadyofHats), [Circulatory System no tags.svg](https://commons.wikimedia.org/wiki/File:Circulatory_System_no_tags.svg), Wikimedia Commons, drawn from Gray's Anatomy (36th ed.) and the Sobotta atlas. Unchanged except the white veil over the left arm is removed; the arrow tips of her labelled version ([Circulatory System en.svg](https://commons.wikimedia.org/wiki/File:Circulatory_System_en.svg)) name the vessels | public domain |
+| the small intestine on the plate (`js/circ-gut.js`) | borrowed so the hepatic portal vein has something to come from | Mariana Ruiz (LadyofHats) and Jmarchn, [Digestive system without labels.svg](https://commons.wikimedia.org/wiki/File:Digestive_system_without_labels.svg) (the Digestion Lab's plate), placed by matching the two drawings' livers | public domain |
+| body outline (`js/body-art.js`) | the silhouette in the "After a meal" animation | Mikael Häggström, "Man shadow", from his [Human body diagrams](https://commons.wikimedia.org/wiki/Human_body_diagrams), Wikimedia Commons | CC0 |
 
 ## From the lesson slides and handouts
 
