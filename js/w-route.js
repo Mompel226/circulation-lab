@@ -62,6 +62,12 @@
     'kidneys|renal-vein': 'The blood passes through the kidney, in its capillaries, before it leaves in the renal vein.',
     'lungs|pulmonary-vein': 'The blood passes through the lungs, in their capillaries, before it leaves in the pulmonary vein.'
   };
+  /* vessels the blood passes through on the way that 0610 does not name: clicking one is not
+     wrong, it is lit and the reader is asked for the named vessel it leads to */
+  var PASS = {
+    'hepatic-portal-vein': { 'mesenteric-vein': 'Yes, the blood leaves the small intestine in the mesenteric vein (0610 does not ask you to name it). Follow it: which vessel does it join, to enter the liver?' },
+    'hepatic-artery': { 'coeliac-artery': 'Yes, the blood passes through the coeliac artery, a short branch of the aorta (0610 does not ask you to name it). Which of its branches goes to the liver?' }
+  };
   var NOT_A_ROUTE = {
     heart: 'That is the muscular wall of the heart. Click one of the four chambers.',
     septum: 'That is the septum, the wall between the two sides of the heart. Blood never passes through it.',
@@ -110,7 +116,7 @@
     box.appendChild(wrap);
     box.appendChild(h('p', 'widget__note', 'Red is oxygenated blood and blue is deoxygenated blood, as on every diagram; real blood is never blue. The heart is shown cut open in the magnified view beside the body, seen from the front, so its right side is on your left. Scroll or pinch to zoom.'));
 
-    var solved = {}, cur = 0, got = [], wrong = 0, names = true, draw = null;
+    var solved = {}, cur = 0, got = [], via = [], wrong = 0, names = true, draw = null;
     PUZZLES.forEach(function (p, i) {
       var b = h('button', 'rt__pb', String(i + 1) + (p.sup ? ' <small>S</small>' : '')); b.type = 'button';
       b.setAttribute('aria-label', 'Puzzle ' + (i + 1) + ': ' + p.title + (p.sup ? ' (Supplement)' : ''));
@@ -120,7 +126,7 @@
 
     function lightRoute() {
       if (!draw) return;
-      var on = [PUZZLES[cur].start].concat(got);
+      var on = [PUZZLES[cur].start].concat(via, got);
       draw.light(on);
     }
     function paint() {
@@ -137,7 +143,7 @@
       lightRoute();
     }
     function start(i) {
-      cur = i; got = []; wrong = 0;
+      cur = i; got = []; via = []; wrong = 0;
       say.className = 'rt__say'; say.textContent = '';
       paint();
     }
@@ -155,6 +161,13 @@
           say.className = 'rt__say is-right';
           say.textContent = 'Yes: from the ' + NAME[last] + ' to the ' + NAME[id] + '.';
         }
+        paint();
+        return;
+      }
+      if (PASS[want] && PASS[want][id]) {
+        if (via.indexOf(id) < 0) via.push(id);
+        say.className = 'rt__say is-right';
+        say.textContent = PASS[want][id];
         paint();
         return;
       }

@@ -6,20 +6,28 @@
    artist as the Digestion Lab's plate. Nothing on it is positioned by hand: every vessel is where
    the artist drew it, both arms included.
 
-   On top of it this file adds four things, all made FROM the drawing:
+   On top of it this file adds, all made FROM the drawing:
      the blood flowing   dots move along the centre line of every drawn vessel (js/circ-flow.js,
                          traced from the drawing's own medial axis), away from the heart in the
                          arteries and towards it in the veins, surging with each beat
-     lighting            a station lights its vessels and organs: the body is veiled in its own
-                         skin colour (the artist's own way of fading an arm) and the lit parts are
-                         redrawn above the veil at full colour, cut out along their centre lines
+     lighting            a station lights its vessels and organs. The body is veiled in its own skin
+                         colour, and each lit vessel is drawn again above the veil ALONG ITS OWN
+                         CENTRE LINE, at its own width, in the drawing's colours — so a lit vessel
+                         can never bring its neighbours with it (Daniel, 25 Sep: "make sure that
+                         you highlight the right veins and arteries depending on what is selected")
+     organs              clicking an organ lights it with the vessels that bring blood to it and take
+                         it away: the liver with the hepatic artery, the hepatic portal vein and the
+                         hepatic vein
      the heart, cut open a magnified view beside the heart, beating, with the chambers and valves
                          the heart stations light (js/heart-art.js — the cardiac-cycle widget's heart)
      a camera            fly to a part, zoom and pan with the wheel, a drag or a pinch, "Whole body"
-   and names ruled out to the sides of the plate, like a labelled figure.
+     names               ruled out to columns at the sides, each leader level with its own part; the
+                         syllabus names at every zoom, the vessels of an organ from closer, and with
+                         "Beyond syllabus" every name the artist gave, each at the tip of her own arrow
 
    CircDraw(svg, opts) → the object js/plate.js (and the route puzzle) drive:
      light(ids) / clear()      light some parts, veil the rest; returns { colour }
+     organVessels(id)          an organ with its vessels, for lighting it on its own
      lens(mode)                'section' | 'exterior' | null — the magnified heart
      heartMode(m)              which drawing the lens shows
      flyTo(box, done), jump(box), boxOf(id, pad), FULL, BOX, isZoomed(), zoomBy(k), home()
@@ -38,6 +46,7 @@
   var SKIN = '#f2f2f2';
 
   /* ---------- every part: what the tag and the line under the plate say ---------- */
+  var NOT = ' (not named in 0610)';
   var G = {
     heart:   { label: 'Heart', note: 'a muscular pump: two sides, four chambers', colour: '#FF8A7E' },
     ra:      { label: 'Right atrium', note: 'receives deoxygenated blood from the body', colour: '#8FB2FF' },
@@ -48,42 +57,62 @@
     'av-valves': { label: 'Atrioventricular valves', note: 'between each atrium and its ventricle', colour: '#F4E6D0' },
     'sl-valves': { label: 'Semilunar valves', note: 'where the blood leaves the ventricles', colour: '#F4E6D0' },
     coronary: { label: 'Coronary arteries', note: 'the heart muscle’s own blood supply', colour: '#FF8A7E' },
+    'cardiac-vein': { label: 'Cardiac veins', note: 'they take blood from the heart muscle back to the right atrium' + NOT, colour: '#8FB2FF' },
     lungs:   { label: 'Lungs', note: 'the blood is oxygenated here', colour: '#F2B8C2' },
     liver:   { label: 'Liver', note: 'two vessels bring blood in, one takes it out', colour: '#E0A08E' },
     kidneys: { label: 'Kidneys', note: 'a renal artery in, a renal vein out', colour: '#E0A08E' },
-    spleen:  { label: 'Spleen', note: 'not in 0610', colour: '#C9A5C0' },
-    gut:     { label: 'Small intestine', note: 'digested food is absorbed into its capillaries', colour: '#E6C1A4' },
+    spleen:  { label: 'Spleen', note: 'its blood leaves in the splenic vein, to the hepatic portal vein' + NOT, colour: '#C9A5C0' },
+    gut:     { label: 'Small intestine', note: 'digested food is absorbed into the blood in its capillaries', colour: '#E6C1A4' },
+    head:    { label: 'Head', note: 'the brain’s blood supply', colour: '#C9D8E6' },
     aorta:   { label: 'Aorta', note: 'the artery that carries oxygenated blood from the left ventricle to the body', colour: '#FF8A7E' },
     'vena-cava': { label: 'Vena cava', note: 'brings deoxygenated blood from the body to the right atrium', colour: '#8FB2FF' },
     'pulmonary-artery': { label: 'Pulmonary artery', note: 'carries deoxygenated blood from the right ventricle to the lungs', colour: '#8FB2FF' },
     'pulmonary-vein': { label: 'Pulmonary vein', note: 'carries oxygenated blood from the lungs to the left atrium', colour: '#FF8A7E' },
-    'hepatic-artery': { label: 'Hepatic artery', note: 'oxygenated blood from the aorta to the liver', colour: '#FF8A7E' },
-    'hepatic-vein': { label: 'Hepatic vein', note: 'blood from the liver to the vena cava', colour: '#8FB2FF' },
-    'hepatic-portal-vein': { label: 'Hepatic portal vein', note: 'from the gut to the liver, carrying absorbed nutrients', colour: '#7FE3DA' },
-    'gut-vein': { label: 'Veins from the gut and spleen', note: 'they join to form the hepatic portal vein (names not in 0610)', colour: '#7FE3DA' },
-    'renal-artery': { label: 'Renal artery', note: 'blood from the aorta to the kidney', colour: '#FF8A7E' },
-    'renal-vein': { label: 'Renal vein', note: 'blood from the kidney to the vena cava', colour: '#8FB2FF' },
-    'gut-artery': { label: 'Arteries to the gut and spleen', note: 'branches of the aorta (names not in 0610)', colour: '#FF8A7E' },
-    carotid: { label: 'Arteries of the head and neck', note: 'the carotid arteries and their branches: the pulse in the neck (names not in 0610)', colour: '#FF8A7E' },
-    jugular: { label: 'Veins of the head and neck', note: 'the jugular veins and their branches (names not in 0610)', colour: '#8FB2FF' },
-    'arm-artery': { label: 'Arteries of the arm', note: 'the radial artery at the wrist carries the pulse you feel (names not in 0610)', colour: '#FF8A7E' },
-    'arm-vein': { label: 'Veins of the arm', note: 'they carry blood back towards the heart (names not in 0610)', colour: '#8FB2FF' },
-    'head-arm-vein': { label: 'Brachiocephalic veins', note: 'the veins from the head and arms join to form the vena cava (not in 0610)', colour: '#8FB2FF' },
-    'leg-artery': { label: 'Arteries of the leg', note: 'branches of the aorta, below where it divides (names not in 0610)', colour: '#FF8A7E' },
-    'leg-vein': { label: 'Veins of the leg', note: 'valves keep the blood flowing up, towards the heart (names not in 0610)', colour: '#8FB2FF' },
-    artery:  { label: 'Artery', note: 'carries blood away from the heart', colour: '#FF8A7E' },
-    vein:    { label: 'Vein', note: 'carries blood towards the heart', colour: '#8FB2FF' },
-    head:    { label: 'Head', note: 'the brain’s blood supply', colour: '#C9D8E6' },
+    'hepatic-artery': { label: 'Hepatic artery', note: 'brings oxygenated blood from the aorta into the liver', colour: '#FF8A7E' },
+    'hepatic-portal-vein': { label: 'Hepatic portal vein', note: 'brings blood from the gut into the liver, rich in absorbed nutrients after a meal', colour: '#7FE3DA' },
+    'hepatic-vein': { label: 'Hepatic vein', note: 'takes blood out of the liver, to the vena cava', colour: '#8FB2FF' },
+    'mesenteric-vein': { label: 'Mesenteric vein', note: 'carries blood from the intestines, with the nutrients absorbed in the small intestine, to the hepatic portal vein' + NOT, colour: '#7FE3DA' },
+    'splenic-vein': { label: 'Splenic vein', note: 'carries blood from the spleen; it joins the mesenteric vein to form the hepatic portal vein' + NOT, colour: '#7FE3DA' },
+    'renal-artery': { label: 'Renal artery', note: 'brings blood from the aorta to the kidney', colour: '#FF8A7E' },
+    'renal-vein': { label: 'Renal vein', note: 'takes blood from the kidney to the vena cava', colour: '#8FB2FF' },
+    'coeliac-artery': { label: 'Coeliac artery', note: 'a short branch of the aorta; it divides into the hepatic, splenic and gastric arteries' + NOT, colour: '#FF8A7E' },
+    'gastric-artery': { label: 'Gastric arteries', note: 'oxygenated blood to the stomach' + NOT, colour: '#FF8A7E' },
+    'splenic-artery': { label: 'Splenic artery', note: 'oxygenated blood to the spleen' + NOT, colour: '#FF8A7E' },
+    'mesenteric-artery': { label: 'Mesenteric arteries', note: 'branches of the aorta that carry oxygenated blood to the intestines' + NOT, colour: '#FF8A7E' },
+    carotid: { label: 'Carotid artery', note: 'carries blood from the aorta to the head; you can feel its pulse at the side of the neck', colour: '#FF8A7E' },
+    'head-artery': { label: 'Arteries of the head', note: 'the brain’s and the face’s supply' + NOT, colour: '#FF8A7E' },
+    jugular: { label: 'Jugular vein', note: 'brings blood back from the head' + NOT, colour: '#8FB2FF' },
+    'head-vein': { label: 'Veins of the head', note: 'they drain the brain and the face into the jugular veins' + NOT, colour: '#8FB2FF' },
+    'radial-artery': { label: 'Radial artery', note: 'the artery at the wrist, on the thumb side, where you feel the pulse', colour: '#FF8A7E' },
+    'arm-artery': { label: 'Arteries of the arm', note: 'they carry oxygenated blood to the arm and hand' + NOT, colour: '#FF8A7E' },
+    'arm-vein': { label: 'Veins of the arm', note: 'they carry blood back towards the heart' + NOT, colour: '#8FB2FF' },
+    'head-arm-vein': { label: 'Brachiocephalic veins', note: 'the veins from the head and arms join to form the vena cava' + NOT, colour: '#8FB2FF' },
+    'leg-artery': { label: 'Arteries of the leg', note: 'branches of the aorta, below where it divides' + NOT, colour: '#FF8A7E' },
+    'leg-vein': { label: 'Veins of the leg', note: 'valves keep the blood flowing up, towards the heart' + NOT, colour: '#8FB2FF' },
+    artery:  { label: 'Gonadal artery', note: 'to the testis or the ovary' + NOT, colour: '#FF8A7E' },
+    vein:    { label: 'Gonadal vein', note: 'from the testis or the ovary' + NOT, colour: '#8FB2FF' },
     arms:    { label: 'Arms', note: 'arteries and veins of the arm', colour: '#C9D8E6' },
     legs:    { label: 'Legs', note: 'arteries and veins of the leg', colour: '#C9D8E6' },
     body:    { label: 'The body', note: 'every organ, in parallel', colour: '#C9D8E6' }
   };
   /* what a station's broad names light */
+  var SYSTEMIC = ['aorta', 'vena-cava', 'carotid', 'head-artery', 'jugular', 'head-vein', 'arm-artery', 'radial-artery', 'arm-vein', 'head-arm-vein',
+                  'leg-artery', 'leg-vein', 'renal-artery', 'renal-vein', 'hepatic-artery', 'hepatic-vein', 'hepatic-portal-vein', 'coeliac-artery',
+                  'gastric-artery', 'splenic-artery', 'mesenteric-artery', 'splenic-vein', 'mesenteric-vein', 'artery', 'vein'];
   var ALIAS = {
-    arms: ['arm-artery', 'arm-vein'], legs: ['leg-artery', 'leg-vein'], head: ['carotid', 'jugular', 'head'],
-    gut: ['gut', 'gut-artery', 'gut-vein'], 'aorta-branch': [],
-    body: ['aorta', 'vena-cava', 'carotid', 'jugular', 'arm-artery', 'arm-vein', 'leg-artery', 'leg-vein', 'renal-artery', 'renal-vein',
-           'hepatic-artery', 'hepatic-vein', 'hepatic-portal-vein', 'gut-artery', 'gut-vein', 'head-arm-vein', 'artery', 'vein']
+    arms: ['arm-artery', 'radial-artery', 'arm-vein'], legs: ['leg-artery', 'leg-vein'],
+    head: ['head', 'carotid', 'head-artery', 'jugular', 'head-vein'],
+    'gut-artery': ['coeliac-artery', 'gastric-artery', 'splenic-artery', 'mesenteric-artery'], 'gut-vein': ['splenic-vein', 'mesenteric-vein'],
+    'aorta-branch': [], body: SYSTEMIC
+  };
+  /* an organ, lit on its own, brings the vessels that serve it */
+  var ORGAN_VESSELS = {
+    liver: ['liver', 'hepatic-artery', 'hepatic-portal-vein', 'hepatic-vein'],
+    kidneys: ['kidneys', 'renal-artery', 'renal-vein'],
+    lungs: ['lungs', 'pulmonary-artery', 'pulmonary-vein'],
+    gut: ['gut', 'mesenteric-artery', 'mesenteric-vein'],
+    spleen: ['spleen', 'splenic-artery', 'splenic-vein'],
+    head: ['head', 'carotid', 'head-artery', 'jugular', 'head-vein']
   };
   var CHAMBERS = { ra: 1, la: 1, rv: 1, lv: 1, septum: 1, 'av-valves': 1, 'sl-valves': 1 };
   var ORGANS = { lungs: 1, liver: 1, kidneys: 1, spleen: 1, head: 1, gut: 1 };
@@ -95,12 +124,13 @@
     heartClose: { x: 180, y: 172, w: 188, h: 122 },
     valves:     { x: 180, y: 172, w: 188, h: 122 },
     coronary:   { x: 180, y: 172, w: 188, h: 122 },
+    'cardiac-vein': { x: 180, y: 172, w: 188, h: 122 },
     lungs:      { x: 128, y: 160, w: 166, h: 136 },
     chest:      { x: 118, y: 140, w: 184, h: 190 },
-    liver:      { x: 136, y: 248, w: 150, h: 104 },
+    liver:      { x: 118, y: 244, w: 180, h: 104 },
     abdomen:    { x: 128, y: 246, w: 170, h: 160 },
-    kidneys:    { x: 146, y: 286, w: 136, h: 86 },
-    gut:        { x: 140, y: 270, w: 150, h: 150 },
+    kidneys:    { x: 128, y: 282, w: 176, h: 94 },
+    gut:        { x: 150, y: 266, w: 130, h: 150 },
     head:       { x: 150, y: 6, w: 124, h: 196 },
     legs:       { x: 96, y: 366, w: 232, h: 446 },
     arms:       { x: -2, y: 150, w: 375, h: 380 },
@@ -109,33 +139,102 @@
     trunk:      { x: 104, y: 140, w: 216, h: 310 }
   };
 
-  /* the names at the sides: the point each one's leader touches, on its own vessel or organ.
-     The vessel points are the arrow tips of the artist's labelled version, moved into this frame. */
+  /* ---------- the names at the sides ----------
+     lv  A  0610 names, and the two pulses of the practical: at every zoom
+         B  the vessels of an organ, and the gut's veins that feed the hepatic portal vein: from closer
+         G  "artery / vein in the arm" and so on, where nothing else is named: from closer, and not
+            with Beyond syllabus on (then the real names replace them)
+         X  beyond the syllabus: every name the artist gave, at the tip of her own arrow
+     at  a point on the part; it is moved onto the nearest centre line of that part when the plate is
+         built, so a leader always touches its own vessel. An organ's point is a spot in it far from
+         every vessel, so "liver" never seems to name a vessel inside the liver, and away from the
+         height where its own vessels enter, so its leader does not run along theirs.
+     alt other points on the same part, tried in turn when the first would put its leader on the
+         same line as a more needed name. z: the zoom (screen px per unit) it needs. */
   var LABELS = [
-    { id: 'heart', text: 'heart', at: [240.2, 238] },
-    { id: 'aorta', text: 'aorta', at: [220.8, 193.5] },
-    { id: 'vena-cava', text: 'vena cava', at: [201.1, 257.2] },
-    { id: 'lungs', text: 'lung', at: [158, 250] },
-    { id: 'liver', text: 'liver', at: [166, 296] },
-    { id: 'kidneys', text: 'kidney', at: [251, 322] },
-    { id: 'gut', text: 'small intestine', at: [214, 372], needs: 'gut' },
-    /* the vessels of the heart, the lungs, the liver and the kidneys: from about twice the whole-body scale */
-    { id: 'vena-cava', text: 'vena cava', at: [201.6, 211.4], near: 1.25 },
-    { id: 'pulmonary-artery', text: 'pulmonary artery', at: [184, 206], near: 1.25 },
-    { id: 'pulmonary-vein', text: 'pulmonary vein', at: [258, 216], near: 1.25 },
-    { id: 'hepatic-vein', text: 'hepatic vein', at: [202.3, 268.6], near: 1.25 },
-    { id: 'hepatic-artery', text: 'hepatic artery', at: [196, 289], near: 1.25 },
-    { id: 'hepatic-portal-vein', text: 'hepatic portal vein', at: [205.6, 305.2], near: 1.25 },
-    { id: 'renal-artery', text: 'renal artery', at: [233.9, 327.6], near: 1.25 },
-    { id: 'renal-vein', text: 'renal vein', at: [198.8, 329.5], near: 1.25 },
-    { id: 'coronary', text: 'coronary arteries', at: [233, 246.4], beyond: true, near: 1.6 },
-    { id: 'carotid', text: 'carotid artery', at: [224.5, 160.5], beyond: true },
-    { id: 'jugular', text: 'jugular vein', at: [229.5, 135.4], beyond: true },
-    { id: 'arm-artery', text: 'subclavian artery', at: [162.2, 175.5], beyond: true },
-    { id: 'arm-artery', text: 'radial artery', at: [65.1, 389.5], beyond: true },
-    { id: 'leg-artery', text: 'femoral artery', at: [243.9, 499.7], beyond: true },
-    { id: 'leg-vein', text: 'great saphenous vein', at: [219.7, 621.2], beyond: true }
+    { id: 'heart', text: 'heart', at: [238.7, 247.7], alt: [[235.2, 240.2], [233.2, 253.7]], lv: 'A' },
+    { id: 'aorta', text: 'aorta', at: [220.8, 193.5], alt: [[225.9, 198.4], [226.9, 210.1]], lv: 'A' },
+    { id: 'vena-cava', text: 'vena cava', at: [201.1, 257.2], lv: 'A' },
+    { id: 'lungs', text: 'lung', at: [154.8, 243.3], alt: [[157.3, 223.8], [151.8, 262.8], [242.8, 185.6]], lv: 'A' },
+    { id: 'liver', text: 'liver', at: [157.7, 310.4], alt: [[153.7, 288.4], [161.2, 298.9], [188.2, 284.4], [242.7, 274.9]], lv: 'A' },
+    { id: 'kidneys', text: 'kidney', at: [260.4, 338.4], alt: [[259.9, 323.9], [171.5, 346.2]], lv: 'A' },
+    { id: 'gut', text: 'small intestine', at: [214, 372], alt: [[228, 390], [212, 395]], lv: 'A', needs: 'gut' },
+    { id: 'carotid', text: 'carotid artery', at: [224.9, 134.2], alt: [[224.9, 147.8], [225.9, 116.8]], lv: 'A' },
+    { id: 'radial-artery', text: 'radial artery', at: [65.9, 396.8], alt: [[64.1, 403.2], [71.4, 372.9]], lv: 'A' },
+
+    { id: 'vena-cava', text: 'vena cava', at: [201.6, 211.4], alt: [[202.6, 192.2]], lv: 'B' },
+    { id: 'pulmonary-artery', text: 'pulmonary artery', at: [184, 206], alt: [[187.1, 200.2], [189.8, 225.6]], lv: 'B' },
+    { id: 'pulmonary-vein', text: 'pulmonary vein', at: [258, 216], alt: [[253.1, 205.4], [257.4, 232.8]], lv: 'B' },
+    { id: 'hepatic-vein', text: 'hepatic vein', at: [195, 266], alt: [[187.2, 271.2]], lv: 'B' },
+    { id: 'hepatic-artery', text: 'hepatic artery', at: [196, 290.5], alt: [[188.1, 295.6]], lv: 'B' },
+    { id: 'hepatic-portal-vein', text: 'hepatic portal vein', at: [197, 300.5], alt: [[163.2, 313.2], [209.6, 305.9]], lv: 'B' },
+    { id: 'mesenteric-vein', text: 'mesenteric vein', at: [215.9, 321.1], alt: [[217.3, 328.5], [212.6, 311.8]], lv: 'B' },
+    { id: 'splenic-vein', text: 'splenic vein', at: [236.9, 300.2], alt: [[262.4, 295.2], [215.8, 305.4]], lv: 'B' },
+    { id: 'spleen', text: 'spleen', at: [272.3, 301.2], alt: [[268.8, 288.7], [270.3, 314.7]], lv: 'B' },
+    { id: 'renal-artery', text: 'renal artery', at: [233.9, 327.6], alt: [[243.8, 312.4], [247.9, 335.6]], lv: 'B' },
+    { id: 'renal-vein', text: 'renal vein', at: [198.8, 331.5], alt: [[185.6, 337.8], [183.2, 319.1]], lv: 'B' },
+    { id: 'coronary', text: 'coronary arteries', at: [230.7, 235.9], alt: [[227.1, 230.4], [207.3, 224.5]], lv: 'B', z: 1.6 },
+    { id: 'cardiac-vein', text: 'cardiac vein', at: [200.9, 239.1], alt: [[231.7, 246.7]], lv: 'B', z: 1.6 },
+    { id: 'head', text: 'head', at: [199.7, 51.4], alt: [[220.1, 53.7], [188, 78]], lv: 'B' },
+    { id: 'carotid', text: 'carotid artery', at: [197.9, 139.8], alt: [[198.6, 150], [199.5, 128]], lv: 'B' },
+    { id: 'radial-artery', text: 'radial artery', at: [320.4, 387.8], alt: [[322.5, 395], [318.5, 378]], lv: 'B' },
+
+    { id: 'arm-artery', text: 'artery in the arm', at: [113.6, 287.4], lv: 'G' },
+    { id: 'arm-vein', text: 'vein in the arm', at: [120.9, 255.9], lv: 'G' },
+    { id: 'arm-artery', text: 'artery in the arm', at: [305.1, 269.4], lv: 'G' },
+    { id: 'arm-vein', text: 'vein in the arm', at: [303.2, 256.9], lv: 'G' },
+    { id: 'leg-artery', text: 'artery in the leg', at: [244.9, 507.1], lv: 'G' },
+    { id: 'leg-vein', text: 'vein in the leg', at: [240.6, 529.1], lv: 'G' },
+    { id: 'leg-artery', text: 'artery in the leg', at: [181.6, 474.1], lv: 'G' },
+    { id: 'leg-vein', text: 'vein in the leg', at: [181.8, 484.8], lv: 'G' },
+    { id: 'head-artery', text: 'artery in the head', at: [236.8, 90.4], lv: 'G', z: 1.5 },
+    { id: 'head-vein', text: 'vein in the head', at: [246.2, 61.8], lv: 'G', z: 1.5 },
+
+    { id: 'arm-artery', text: 'subclavian artery', at: [162.2, 175.5], lv: 'X' },
+    { id: 'arm-vein', text: 'subclavian vein', at: [162.2, 177.5], lv: 'X' },
+    { id: 'arm-artery', text: 'axillary artery', at: [139.7, 196.2], lv: 'X' },
+    { id: 'arm-vein', text: 'axillary vein', at: [139.7, 198.2], lv: 'X' },
+    { id: 'arm-vein', text: 'cephalic vein', at: [122.9, 215.1], lv: 'X' },
+    { id: 'arm-artery', text: 'brachial artery', at: [112.8, 286.4], lv: 'X' },
+    { id: 'arm-vein', text: 'basilic vein', at: [118.9, 294.5], lv: 'X' },
+    { id: 'arm-vein', text: 'median cubital vein', at: [94.6, 324.7], lv: 'X' },
+    { id: 'arm-artery', text: 'ulnar artery', at: [90.2, 387.1], lv: 'X' },
+    { id: 'arm-artery', text: 'digital artery', at: [37.5, 462.8], lv: 'X', z: 2 },
+    { id: 'arm-vein', text: 'digital vein', at: [53.8, 466.7], lv: 'X', z: 2 },
+    { id: 'head-arm-vein', text: 'brachiocephalic vein', at: [200.6, 186.8], lv: 'X' },
+    { id: 'jugular', text: 'internal jugular vein', at: [229.5, 135.4], lv: 'X' },
+    { id: 'jugular', text: 'external jugular vein', at: [232.9, 120.1], lv: 'X' },
+    { id: 'head-artery', text: 'vertebral artery', at: [218.4, 143.4], lv: 'X' },
+    { id: 'head-artery', text: 'internal carotid artery', at: [224.3, 88.5], lv: 'X', z: 1.6 },
+    { id: 'head-artery', text: 'external carotid artery', at: [233.5, 99.3], lv: 'X', z: 1.6 },
+    { id: 'head-artery', text: 'basilar artery', at: [212.5, 72.3], lv: 'X', z: 1.8 },
+    { id: 'head-vein', text: 'venous sinus', at: [239.5, 64.4], lv: 'X', z: 1.6 },
+    { id: 'coeliac-artery', text: 'coeliac artery', at: [222.1, 281.4], lv: 'X', z: 1.6 },
+    { id: 'gastric-artery', text: 'gastric artery', at: [225.2, 275.4], lv: 'X', z: 1.8 },
+    { id: 'splenic-artery', text: 'splenic artery', at: [240.4, 293.3], lv: 'X', z: 1.6 },
+    { id: 'mesenteric-artery', text: 'mesenteric artery', at: [221.1, 326.2], lv: 'X', z: 1.6 },
+    { id: 'artery', text: 'gonadal artery', at: [234, 372.5], lv: 'X' },
+    { id: 'vein', text: 'gonadal vein', at: [236, 372.5], lv: 'X' },
+    { id: 'leg-artery', text: 'common iliac artery', at: [226.8, 386.2], lv: 'X' },
+    { id: 'leg-vein', text: 'common iliac vein', at: [204.6, 381.5], lv: 'X' },
+    { id: 'leg-artery', text: 'internal iliac artery', at: [208.6, 399.8], lv: 'X', z: 1.6 },
+    { id: 'leg-artery', text: 'external iliac artery', at: [234.3, 407.5], lv: 'X', z: 1.6 },
+    { id: 'leg-vein', text: 'external iliac vein', at: [232.3, 409.5], lv: 'X', z: 1.6 },
+    { id: 'leg-artery', text: 'femoral artery', at: [243.9, 499.7], lv: 'X' },
+    { id: 'leg-vein', text: 'femoral vein', at: [240.6, 505], lv: 'X' },
+    { id: 'leg-artery', text: 'deep femoral artery', at: [249.7, 482.8], lv: 'X', z: 1.6 },
+    { id: 'leg-vein', text: 'great saphenous vein', at: [219.7, 621.2], lv: 'X' },
+    { id: 'leg-artery', text: 'popliteal artery', at: [240, 578.3], lv: 'X' },
+    { id: 'leg-vein', text: 'popliteal vein', at: [238, 581], lv: 'X' },
+    { id: 'leg-vein', text: 'small saphenous vein', at: [236.1, 642.5], lv: 'X' },
+    { id: 'leg-artery', text: 'anterior tibial artery', at: [239.6, 662.9], lv: 'X' },
+    { id: 'leg-artery', text: 'posterior tibial artery', at: [228.6, 677.8], lv: 'X' },
+    { id: 'leg-artery', text: 'peroneal artery', at: [240.5, 696.5], lv: 'X', z: 1.6 },
+    { id: 'leg-vein', text: 'dorsal venous arch', at: [264.4, 769.1], lv: 'X', z: 1.6 },
+    { id: 'leg-artery', text: 'arcuate artery', at: [169.3, 777.4], lv: 'X', z: 1.8 }
   ];
+  var LV_RANK = { A: 0, B: 1, G: 2, X: 3 };
+  var LV_ZOOM = { A: 0, B: 1.15, G: 1.2, X: 1.3 };
 
   /* every vessel's name touches its OWN vessel: the point is moved onto the nearest centre line of
      that part (an artery and its vein often run side by side) */
@@ -144,17 +243,20 @@
     if (snapped) return; snapped = true;
     LABELS.forEach(function (L) {
       var P = FLOW[L.id]; if (!P) return;
-      var best = null;
-      P.e.forEach(function (e) {
-        for (var i = 1; i + 3 < e.length + 1 && i + 2 < e.length; i += 2) {
-          var ax = e[i], ay = e[i + 1], bx = e[i + 2], by = e[i + 3];
-          if (bx == null) break;
-          var dx = bx - ax, dy = by - ay, L2 = dx * dx + dy * dy, t = L2 ? Math.max(0, Math.min(1, ((L.at[0] - ax) * dx + (L.at[1] - ay) * dy) / L2)) : 0;
-          var qx = ax + t * dx, qy = ay + t * dy, d = (qx - L.at[0]) * (qx - L.at[0]) + (qy - L.at[1]) * (qy - L.at[1]);
-          if (!best || d < best[0]) best = [d, qx, qy];
-        }
-      });
-      if (best && best[0] < 14 * 14) L.at = [Math.round(best[1] * 10) / 10, Math.round(best[2] * 10) / 10];
+      function snap(at) {
+        var best = null;
+        P.e.forEach(function (e) {
+          for (var i = 0; i + 5 < e.length; i += 3) {
+            var ax = e[i], ay = e[i + 1], bx = e[i + 3], by = e[i + 4];
+            var dx = bx - ax, dy = by - ay, L2 = dx * dx + dy * dy, t = L2 ? Math.max(0, Math.min(1, ((at[0] - ax) * dx + (at[1] - ay) * dy) / L2)) : 0;
+            var qx = ax + t * dx, qy = ay + t * dy, d = (qx - at[0]) * (qx - at[0]) + (qy - at[1]) * (qy - at[1]);
+            if (!best || d < best[0]) best = [d, qx, qy];
+          }
+        });
+        return best && best[0] < 14 * 14 ? [Math.round(best[1] * 10) / 10, Math.round(best[2] * 10) / 10] : at;
+      }
+      L.at = snap(L.at);
+      if (L.alt) L.alt = L.alt.map(snap);
     });
   }
 
@@ -178,6 +280,8 @@
     return e;
   }
   function f2(v) { return Math.round(v * 100) / 100; }
+  function medianR(e) { var rs = []; for (var i = 2; i < e.length; i += 3) rs.push(e[i]); rs.sort(function (a, b) { return a - b; }); return rs[rs.length >> 1] || 1; }
+  function dAlong(e) { var d = 'M' + e[0] + ' ' + e[1]; for (var i = 3; i + 1 < e.length; i += 3) d += 'L' + e[i] + ' ' + e[i + 1]; return d; }
   var UID = 0;
 
   function CircDraw(svg, opts) {
@@ -190,12 +294,8 @@
     var defs = el('defs', {}, svg);
     defs.innerHTML =
       '<radialGradient id="' + U + 'slab" cx=".5" cy=".42" r=".78"><stop offset="0" stop-color="#16303D"/><stop offset=".62" stop-color="#0D1C25"/><stop offset="1" stop-color="#081218"/></radialGradient>' +
-      '<filter id="' + U + 'glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.1" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>' +
       '<filter id="' + U + 'soft" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="3"/></filter>' +
-      '<mask id="' + U + 'mA" maskUnits="userSpaceOnUse" x="-60" y="-60" width="500" height="960"><rect x="-60" y="-60" width="500" height="960" fill="#000"/><g class="cp__mk" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round"></g></mask>' +
-      '<mask id="' + U + 'mV" maskUnits="userSpaceOnUse" x="-60" y="-60" width="500" height="960"><rect x="-60" y="-60" width="500" height="960" fill="#000"/><g class="cp__mk" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round"></g></mask>' +
       '<clipPath id="' + U + 'lensclip"><rect x="0" y="0" width="1" height="1" rx="6"/></clipPath>';
-    var mkA = defs.querySelector('#' + U + 'mA .cp__mk'), mkV = defs.querySelector('#' + U + 'mV .cp__mk');
 
     var root = el('g', { 'class': 'cp' }, svg);
     el('rect', { x: -600, y: -600, width: AW + 1200, height: AH + 1200, fill: 'url(#' + U + 'slab)', 'class': 'cp__bg' }, root);
@@ -232,11 +332,9 @@
     var firstLayer = skin; while (firstLayer && firstLayer.parentNode !== artG) firstLayer = firstLayer.parentNode;
     var organFill = el('g', { 'class': 'cp__ofill' });
     if (firstLayer && firstLayer.nextSibling) artG.insertBefore(organFill, firstLayer.nextSibling); else artG.appendChild(organFill);
-    var fillOf = {};
     Object.keys(ORGAN_FILL).forEach(function (p) {
       (organs[p] || []).forEach(function (n) {
-        var c = copyOf(n, { fill: ORGAN_FILL[p][0], 'fill-opacity': ORGAN_FILL[p][1], stroke: 'none', 'data-part': p }, organFill);
-        (fillOf[p] = fillOf[p] || []).push(c);
+        copyOf(n, { fill: ORGAN_FILL[p][0], 'fill-opacity': ORGAN_FILL[p][1], stroke: 'none', 'data-part': p }, organFill);
       });
     });
 
@@ -244,6 +342,7 @@
     if (global.CIRC_GUT) {
       var gut = el('g', { 'class': 'cp__gut', 'data-part': 'gut', transform: global.CIRC_GUT.transform }, organFill);
       gut.innerHTML = global.CIRC_GUT.svg;
+      Array.prototype.forEach.call(gut.querySelectorAll('[fill-opacity]'), function (c) { c.setAttribute('fill-opacity', .75); });   /* under the vessels, so it can be this solid */
       organs.gut = [gut];
     }
     Array.prototype.forEach.call(artG.querySelectorAll('[id]'), function (n) { n.removeAttribute('id'); });
@@ -251,36 +350,25 @@
     /* ----- the veil, and the lit parts above it ----- */
     var veil = el('g', { 'class': 'cp__veil' }, root);
     if (skin) copyOf(skin, { fill: SKIN, 'fill-opacity': .8, stroke: 'none' }, veil);
-    function overlay(kind, maskId) {
-      var g = el('g', { 'class': 'cp__lit cp__lit--' + kind, mask: 'url(#' + maskId + ')' }, root);
-      var c = artG.cloneNode(true);
-      c.removeAttribute('class');
-      Array.prototype.forEach.call(c.querySelectorAll('path,rect,ellipse,circle,polygon,polyline,line'), function (n) {
-        if (!n.classList || !n.classList.contains(kind === 'a' ? 'cp-a' : 'cp-v')) n.style.display = 'none';
-      });
-      var of = c.querySelector('.cp__ofill'); if (of) of.parentNode.removeChild(of);
-      g.appendChild(c);
-      return g;
-    }
     var litO = el('g', { 'class': 'cp__lito' }, root);          /* lit organs, under their vessels */
-    var litA = overlay('a', U + 'mA'), litV = overlay('v', U + 'mV');
+    var tubesBack = el('g', { 'class': 'cp__tubes' }, root);    /* lit vessels behind the heart */
     var litH = el('g', { 'class': 'cp__lito cp__lith' }, root); /* the lit heart and its coronary vessels */
+    var tubesFront = el('g', { 'class': 'cp__tubes' }, root);   /* lit vessels in front of it */
 
     /* ----- the blood ----- */
     var flowG = el('g', { 'class': 'cp__flow' }, root);
-    var DOT = { a: '#FFE2DC', pv: '#FFE2DC', v: '#DCEAFF', pa: '#DCEAFF', po: '#D8FBF6' };
-    var SPEED = { a: 34, pv: 22, v: 17, pa: 26, po: 15 };
+    var DOT = { a: '#FFE2DC', ag: '#FFE2DC', pv: '#FFE2DC', v: '#DCEAFF', pa: '#DCEAFF', po: '#D8FBF6' };
+    var SPEED = { a: 34, ag: 30, pv: 22, v: 17, pa: 26, po: 15 };
     var BUCKETS = [0, .8, 1.8, 3.4, 1e9];
     var flows = [];
-    function dAlong(e) { var d = 'M' + e[1] + ' ' + e[2]; for (var i = 3; i < e.length; i += 2) d += 'L' + e[i] + ' ' + e[i + 1]; return d; }
     Object.keys(FLOW).forEach(function (part) {
       var P = FLOW[part], byB = {};
       P.e.forEach(function (e) {
-        var r = e[0], b = 0; while (r >= BUCKETS[b + 1]) b++;
+        var r = medianR(e), b = 0; while (r >= BUCKETS[b + 1]) b++;
         (byB[b] = byB[b] || []).push(e);
       });
       Object.keys(byB).forEach(function (b) {
-        var list = byB[b], rs = list.map(function (e) { return e[0]; }).sort(function (x, y) { return x - y; }), r = rs[rs.length >> 1];
+        var list = byB[b], rs = list.map(medianR).sort(function (x, y) { return x - y; }), r = rs[rs.length >> 1];
         var dot = Math.max(.36, Math.min(1.7, r * .5)), dash = dot * 1.5, gap = Math.max(3, dot * 4.6);
         var p = el('path', { d: list.map(dAlong).join(''), fill: 'none', stroke: DOT[P.c], 'stroke-width': f2(dot), 'stroke-linecap': 'round',
           'stroke-dasharray': f2(dash) + ' ' + f2(gap), 'class': 'cp__f', 'data-part': part, opacity: .82 }, flowG);
@@ -315,19 +403,24 @@
     /* ----- what the pointer can press ----- */
     var hitG = el('g', { 'class': 'cp__hits' }, root);
     Object.keys(organs).forEach(function (p) {
-      if (p === 'heart' || p === 'head') return;
+      if (p === 'heart') return;
       organs[p].forEach(function (n) {
-        if (p === 'gut') { var gc = n.cloneNode(true); gc.setAttribute('class', 'cp__hit cp__hit--o'); gc.setAttribute('data-part', 'gut'); hitG.appendChild(gc); return; }
+        if (p === 'gut') {                     /* its copy for the pointer must not paint: it lies above the vessels */
+          var gc = n.cloneNode(true); gc.setAttribute('class', 'cp__hit cp__hit--o'); gc.setAttribute('data-part', 'gut');
+          Array.prototype.forEach.call(gc.querySelectorAll('*'), function (c) { c.removeAttribute('style'); c.setAttribute('fill', 'transparent'); c.setAttribute('stroke', 'none'); c.removeAttribute('fill-opacity'); });
+          hitG.appendChild(gc); return;
+        }
         copyOf(n, { fill: 'transparent', stroke: 'none', 'data-part': p, 'class': 'cp__hit cp__hit--o' }, hitG);
       });
     });
     if (heartShape) copyOf(heartShape, { fill: 'transparent', stroke: 'none', 'data-part': 'heart', 'class': 'cp__hit cp__hit--o' }, hitG);
-    Array.prototype.forEach.call(corShapes, function (n) {      /* the coronary vessels on the heart win over the heart itself */
-      copyOf(n, { fill: 'none', stroke: 'transparent', 'stroke-width': 8, 'vector-effect': 'non-scaling-stroke', 'data-part': 'coronary', 'class': 'cp__hit' }, hitG);
+    Array.prototype.forEach.call(corShapes, function (n) {      /* the vessels on the heart win over the heart itself: red, its arteries; blue, its veins */
+      copyOf(n, { fill: 'none', stroke: 'transparent', 'stroke-width': 8, 'vector-effect': 'non-scaling-stroke', 'data-part': n.classList.contains('cp-v') ? 'cardiac-vein' : 'coronary', 'class': 'cp__hit' }, hitG);
     });
+    /* the vessels: the gut's small ones last, so they win where they cross the aorta */
     var hitOf = {};
-    Object.keys(FLOW).forEach(function (part) {
-      hitOf[part] = el('path', { d: FLOW[part].e.map(dAlong).join(''), fill: 'none', stroke: 'transparent', 'stroke-width': 13, 'vector-effect': 'non-scaling-stroke',
+    Object.keys(FLOW).sort(function (a, b) { return (FLOW[a].c === 'ag' || FLOW[a].c === 'po') - (FLOW[b].c === 'ag' || FLOW[b].c === 'po'); }).forEach(function (part) {
+      hitOf[part] = el('path', { d: FLOW[part].e.map(dAlong).join(''), fill: 'none', stroke: 'transparent', 'stroke-width': 11, 'vector-effect': 'non-scaling-stroke',
         'stroke-linecap': 'round', 'data-part': part, 'class': 'cp__hit' }, hitG);
     });
     root.appendChild(lensG);                                       /* the lens takes its own clicks: the chambers */
@@ -339,34 +432,55 @@
       (ids || []).forEach(function (id) { (ALIAS[id] || [id]).forEach(function (k) { out[k] = 1; }); if (ALIAS[id] && G[id]) out[id] = 1; });
       return out;
     }
-    function maskFor(host, cls) {
+    /* a lit vessel, drawn again as a tube along its centre line: the drawing's own rim colour, then its
+       own fill, at the width the drawing gives it at every point */
+    var TUBE = { a: ['#b62717', '#ffbf00'], ag: ['#b62717', '#ffbf00'], pv: ['#b62717', '#ffbf00'], v: ['#0060b6', '#00a0c6'], pa: ['#0060b6', '#00a0c6'], po: ['#0060b6', '#00d8c6'] };
+    var BACK = ['a', 'pv', 'v'], FRONT = ['pa', 'po', 'ag'];
+    function tubes(host, layers, heartLitNow) {
       host.innerHTML = '';
       if (!lit) return;
-      var byW = {};
-      Object.keys(lit).forEach(function (part) {
-        var P = FLOW[part]; if (!P || cls.indexOf(P.c) < 0) return;
-        P.e.forEach(function (e) { var w = Math.round((e[0] * 2 + 2.6) * 2) / 2; (byW[w] = byW[w] || []).push(dAlong(e)); });
-      });
-      Object.keys(byW).forEach(function (w) { el('path', { d: byW[w].join(''), 'stroke-width': w }, host); });
+      var byLayer = {};
+      Object.keys(lit).forEach(function (part) { var P = FLOW[part]; if (P) (byLayer[P.c] = byLayer[P.c] || []).push(P); });
+      function draw(c, keep) {
+        var list = byLayer[c]; if (!list) return;
+        var rim = {}, core = {};
+        list.forEach(function (P) {
+          P.e.forEach(function (e) {
+            for (var i = 0; i + 5 < e.length; i += 3) {
+              if (keep && !keep(e[i], e[i + 1], e[i + 3], e[i + 4])) continue;
+              var r = (e[i + 2] + e[i + 5]) / 2, seg = 'M' + e[i] + ' ' + e[i + 1] + 'L' + e[i + 3] + ' ' + e[i + 4];
+              var wr = Math.round((2 * r + .15) * 5) / 5, wc = Math.max(.3, Math.round((2 * r - .6) * 5) / 5);
+              rim[wr] = (rim[wr] || '') + seg; core[wc] = (core[wc] || '') + seg;
+            }
+          });
+        });
+        var g = el('g', { 'class': 'cp__tube cp__tube--' + c, fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, host);
+        Object.keys(rim).forEach(function (w) { el('path', { d: rim[w], stroke: TUBE[c][1], 'stroke-width': w }, g); });
+        Object.keys(core).forEach(function (w) { el('path', { d: core[w], stroke: TUBE[c][0], 'stroke-width': w }, g); });
+      }
+      layers.forEach(function (c) { draw(c); });
+      /* in the drawing the arch of the aorta lies over the heart, and the descending aorta behind it */
+      if (host === tubesFront && heartLitNow) draw('a', function (x0, y0, x1, y1) { return y0 < 213 && y1 < 213 && x0 > 196 && x0 < 236; });
     }
     function applyLight() {
       root.classList.toggle('is-lighting', !!lit);
-      maskFor(mkA, ['a', 'pv']); maskFor(mkV, ['v', 'pa', 'po']);
-      litO.innerHTML = ''; litH.innerHTML = '';
+      litO.innerHTML = ''; litH.innerHTML = ''; heartLit = null;
+      var heartOn = !!(lit && (lit.heart || lit.coronary || lit['cardiac-vein'] || anyChamber()));
       if (lit) {
         Object.keys(lit).forEach(function (p) {
           if (!ORGANS[p] || !organs[p]) return;
           if (p === 'gut') { var g2 = organs.gut[0].cloneNode(true); g2.setAttribute('class', 'cp__gut is-lit'); litO.appendChild(g2); return; }
           organs[p].forEach(function (n) {
             if (ORGAN_FILL[p]) copyOf(n, { fill: ORGAN_FILL[p][0], 'fill-opacity': Math.min(.85, ORGAN_FILL[p][1] + .3), stroke: 'none' }, litO);
-            copyOf(n, { fill: 'none', stroke: '#6E7F8C', 'stroke-width': 1.6 }, litO);
+            copyOf(n, { fill: 'none', stroke: '#6E7F8C', 'stroke-width': 2, 'vector-effect': 'non-scaling-stroke' }, litO);
           });
         });
-        if ((lit.heart || lit.coronary || anyChamber()) && heartShape) {
+        if (heartOn && heartShape) {
           heartLit = copyOf(heartShape, {}, litH);
-          if (lit.coronary || lit.heart) Array.prototype.forEach.call(corShapes, function (n) { copyOf(n, {}, litH); });
-        } else heartLit = null;
-      } else heartLit = null;
+          if (lit.coronary || lit['cardiac-vein'] || lit.heart) Array.prototype.forEach.call(corShapes, function (n) { copyOf(n, {}, litH); });
+        }
+      }
+      tubes(tubesBack, BACK, heartOn); tubes(tubesFront, FRONT, heartOn);
       flows.forEach(function (f) { f.el.classList.toggle('is-dim', !!lit && !lit[f.part]); });
       /* the lens: its chambers and valves, lit or dimmed */
       Array.prototype.forEach.call(lensG.querySelectorAll('[data-part]'), function (n) {
@@ -375,6 +489,7 @@
         n.classList.toggle('is-dim', !on);
         n.classList.toggle('is-lit', !!(lit && lit[p]));
       });
+      layoutLabels();
     }
     var heartLit = null;
     function anyChamber() { if (!lit) return false; for (var k in CHAMBERS) if (lit[k]) return true; return false; }
@@ -394,6 +509,7 @@
       lensMode = want;
       lensG.setAttribute('opacity', want ? 1 : 0);
       lensG.style.pointerEvents = want ? '' : 'none';
+      layoutLabels();
     }
 
     /* ----- the heartbeat, and the blood moving with it ----- */
@@ -424,7 +540,7 @@
     function moveFlow(dt) {
       var s = surge(phase), rateK = .55 + .45 * bpm / 72;
       flows.forEach(function (f) {
-        var v = f.speed * rateK * (f.c === 'a' || f.c === 'pa' ? s : 1);
+        var v = f.speed * rateK * (f.c === 'a' || f.c === 'ag' || f.c === 'pa' ? s : 1);
         f.off = (f.off - v * dt) % (f.gap * 1000);
         f.el.setAttribute('stroke-dashoffset', f2(f.off));
       });
@@ -448,9 +564,16 @@
     /* ----- the camera ----- */
     var cam = { x: FULL.x, y: FULL.y, w: FULL.w, h: FULL.h }, flying = null;
     function aspect() { var r = svg.getBoundingClientRect(); return r.width > 0 && r.height > 0 ? r.width / r.height : FULL.w / FULL.h; }
-    function fit(b) {
-      var a = aspect(), w = b.w, h = b.h;
+    function fit(b, asIs) {
+      var a = aspect(), w = b.w, h = b.h, r = svg.getBoundingClientRect();
       if (w / h > a) h = w / a; else w = h * a;
+      /* a part flown to is kept out from under the two columns of names at the sides, zooming out
+         by at most a third to do it */
+      if (!asIs && b !== FULL && labOn && labSvg && r.width > 0) {
+        var c = Math.min(r.width * .26, 150), inner = Math.max(20, b.w - 2 * Math.min(36, b.w * .15));
+        var s0 = r.width / w, s = Math.max(.7 * s0, Math.min(s0, (r.width - 2 * c) / inner));
+        w = r.width / s; h = w / a;
+      }
       return { x: b.x + b.w / 2 - w / 2, y: b.y + b.h / 2 - h / 2, w: w, h: h };
     }
     function clampView(v) {
@@ -482,7 +605,7 @@
         if (k < 1) flying = requestAnimationFrame(step); else { flying = null; if (done) done(); }
       })(performance.now());
     }
-    function jump(box) { if (flying) cancelAnimationFrame(flying); flying = null; setView(clampView(fit(box || FULL))); }
+    function jump(box, asIs) { if (flying) cancelAnimationFrame(flying); flying = null; setView(clampView(fit(box || FULL, asIs))); }
     function isZoomed() { return cam.w < Math.max(FULL.w, FULL.h * aspect()) * .86; }
     function zoomAt(k, px, py) {            /* k < 1 zooms in; px, py a point in the drawing that stays put */
       var v = clampView({ x: px - (px - cam.x) * k, y: py - (py - cam.y) * k, w: cam.w * k, h: cam.h * k });
@@ -582,20 +705,23 @@
       pad = pad == null ? 24 : pad;
       var b = null;
       function add(x0, y0, x1, y1) { if (!b) b = [x0, y0, x1, y1]; else { b[0] = Math.min(b[0], x0); b[1] = Math.min(b[1], y0); b[2] = Math.max(b[2], x1); b[3] = Math.max(b[3], y1); } }
-      (ALIAS[id] || [id]).forEach(function (k) {
+      (ALIAS[id] || ORGAN_VESSELS[id] || [id]).forEach(function (k) {
         if (FLOW[k]) { var q = FLOW[k].box; add(q[0], q[1], q[0] + q[2], q[1] + q[3]); }
         if (CHAMBERS[k] || k === 'heart') add(BOX.heart.x + pad, BOX.heart.y + pad, BOX.heart.x + BOX.heart.w - pad, BOX.heart.y + BOX.heart.h - pad);
         if (organs[k] && k !== 'heart') organs[k].forEach(function (n) {
-          var r = n.getBoundingClientRect(), a1 = toArtFromClient(r.left, r.top), a2 = toArtFromClient(r.right, r.bottom);
+          var r = n.getBoundingClientRect(), a1 = toArt(r.left, r.top), a2 = toArt(r.right, r.bottom);
           add(a1.x, a1.y, a2.x, a2.y);
         });
       });
       if (!b) return FULL;
       return { x: b[0] - pad, y: b[1] - pad, w: b[2] - b[0] + pad * 2, h: b[3] - b[1] + pad * 2 };
     }
-    function toArtFromClient(x, y) { return toArt(x, y); }
 
-    /* ----- the names at the sides ----- */
+    /* ----- the names at the sides -----
+       Each side is a column of names, set level with their parts; where two would touch they are
+       spread apart evenly, centred on their parts, never re-ordered — so the leaders cannot cross.
+       Lit parts are named first; parts outside a station's light keep their names, dimmed, while
+       there is room; a column that is full drops the least needed. */
     var labOn = true, labBeyond = false, labSvg = null;
     if (opts.map && opts.labels !== false) {
       labSvg = document.createElementNS(NS, 'svg');
@@ -603,60 +729,153 @@
       opts.map.appendChild(labSvg);
     }
     var labRaf = null;
-    function layoutLabels() {
-      if (!labSvg || labRaf) return;
+    function layoutLabels() {                 /* at most once a frame; a newer request replaces an older one */
+      if (!labSvg) return;
+      if (labRaf) cancelAnimationFrame(labRaf);
       labRaf = requestAnimationFrame(function () { labRaf = null; drawLabels(); });
+    }
+    function spread(ys, pitch, lo, hi) {
+      /* ys ascending; returns rows at least `pitch` apart, each cluster centred on its own parts */
+      var cl = ys.map(function (y) { return { n: 1, sum: y, top: 0 }; });
+      function fix(c) {
+        c.top = c.sum / c.n - c.n * pitch / 2;
+        if (c.top + c.n * pitch > hi) c.top = hi - c.n * pitch;
+        if (c.top < lo) c.top = lo;
+      }
+      cl.forEach(fix);
+      for (var guard = 0; guard < 400; guard++) {
+        var merged = false;
+        for (var k = 0; k + 1 < cl.length; k++) {
+          var a = cl[k], b = cl[k + 1];
+          if (a.top + a.n * pitch > b.top + .01) { a.n += b.n; a.sum += b.sum; cl.splice(k + 1, 1); fix(a); merged = true; break; }
+        }
+        if (!merged) break;
+      }
+      var out = [];
+      cl.forEach(function (c) { for (var j = 0; j < c.n; j++) out.push(c.top + pitch * (j + .5)); });
+      return out;
+    }
+    function autoAt(part) {                   /* a lit part with no name of its own in view: name its longest vessel */
+      var P = FLOW[part]; if (!P) return null;
+      var best = null;
+      P.e.forEach(function (e) {
+        var L = 0; for (var i = 0; i + 4 < e.length; i += 3) L += Math.hypot(e[i + 3] - e[i], e[i + 4] - e[i + 1]);
+        var n = e.length / 3, i1 = 3 * Math.floor(n / 2), i2 = 3 * Math.floor(n / 4);
+        if (!best || L > best[0]) best = [L, e[i1], e[i1 + 1], e[i2], e[i2 + 1]];
+      });
+      return best ? [[best[1], best[2]], [best[3], best[4]]] : null;
     }
     function drawLabels() {
       if (!labSvg) return;
       var m = opts.map.getBoundingClientRect(), W = m.width, H = m.height;
       labSvg.setAttribute('width', W); labSvg.setAttribute('height', H); labSvg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
       if (!labOn || W < 10) { labSvg.innerHTML = ''; return; }
-      var fs = W < 460 ? 11 : 12.5, lh = fs + 9, pad = 10, scale = toArt(0, 0).s;
-      var items = [], seen = {};
-      LABELS.forEach(function (L) {
-        if (L.beyond && !labBeyond) return;
-        if (L.needs && !organs[L.needs]) return;
-        if (L.near && scale < L.near) return;
-        if (lit && !lit[L.id] && !(L.id === 'heart' && (lit.heart || anyChamber()))) return;
-        var key = L.id + '|' + L.text; if (seen[key] && !L.near) return;
-        var p = toScreen(L.at[0], L.at[1]);
-        if (p.x < 24 || p.x > W - 24 || p.y < 24 || p.y > H - 20) return;
-        seen[key] = 1;
-        items.push({ L: L, x: p.x, y: p.y, w: L.text.length * fs * .56 + 14 });
-      });
-      /* one name per part and text: a zoomed-in view shows the nearer of two */
+      var small = W < 460, fs = small ? 11 : 12.5, pill = fs + 8, pad = 10, scale = toArt(0, 0).s;
+      var minPitch = pill + (small ? 7 : 11), maxPitch = pill + (small ? 12 : 17), gap = small ? 5 : 6.5;
+      var lensBox = null;
+      if (lensMode) { var l0 = toScreen(LENS.x, LENS.y), l1 = toScreen(LENS.x + LENS.w, LENS.y + LENS.h); lensBox = [l0.x - 6, l0.y - 6, l1.x + 6, l1.y + 6]; }
+      function inView(p) {
+        if (p.x < 18 || p.x > W - 18 || p.y < 16 || p.y > H - 14) return false;
+        return !(lensBox && p.x > lensBox[0] && p.x < lensBox[2] && p.y > lensBox[1] && p.y < lensBox[3]);
+      }
+      function isOn(id) { return !lit || !!lit[id] || (id === 'heart' && (lit.heart || anyChamber())); }
+      /* the body's midline decides the side while it is in view; the middle of the picture when it is
+         not; with the heart magnified on the right, every name goes to the left */
+      var midX = toScreen(211.4, 0).x;
+      var mid = lensMode ? W + 1 : (midX > W * .22 && midX < W * .78 ? midX : W / 2);
+      /* the most needed names choose first. Each takes the first of its points (on its own part) that is
+         in view and not on the same line as a name already on that side: two leaders a few pixels apart
+         cannot be told apart */
+      var kept = [], named = {};
+      function take(o) {
+        for (var k = 0; k < o.pts.length; k++) {
+          var p = toScreen(o.pts[k][0], o.pts[k][1]);
+          if (!inView(p)) continue;
+          var side = p.x < mid ? 'L' : 'R', w = o.L.text.length * fs * .56 + 16;
+          if (kept.some(function (q) { return q.side === side && Math.abs(q.y - p.y) < gap; })) continue;
+          o.x = p.x; o.y = p.y; o.side = side; o.w = w;
+          kept.push(o); if (o.on) named[o.L.id] = 1;
+          return;
+        }
+      }
+      function gather(all) {
+        var cand = [];
+        LABELS.forEach(function (L, idx) {
+          if (L.lv === 'X' && !labBeyond) return;
+          if (L.lv === 'G' && labBeyond) return;
+          if (L.needs && !organs[L.needs]) return;
+          var on = isOn(L.id);
+          if (lit && !on && L.lv !== 'A' && !all) return;               /* while a station lights its parts, only the syllabus names stay, dimmed, for finding your way */
+          var zmin = L.z != null ? L.z : LV_ZOOM[L.lv];
+          if (scale < zmin && !(lit && on && L.lv !== 'X')) return;     /* a lit part is named at any zoom */
+          cand.push({ L: L, on: on, dim: !!lit && !on, rank: (on ? 0 : 10) + LV_RANK[L.lv], i: idx, pts: [L.at].concat(L.alt || []) });
+        });
+        cand.sort(function (a, b) { return a.rank - b.rank || a.i - b.i; });
+        cand.forEach(take);
+        /* a lit part that no name reaches, in view: name it at its longest vessel */
+        if (lit) Object.keys(lit).forEach(function (part) {
+          if (named[part] || !G[part] || ALIAS[part] || CHAMBERS[part] || ORGANS[part] || part === 'heart') return;
+          var at = autoAt(part); if (!at) return;
+          var own = LABELS.filter(function (L) { return L.id === part && L.lv !== 'X'; })[0];     /* the same words as its own name elsewhere */
+          take({ L: { id: part, text: own ? own.text : G[part].label.toLowerCase(), lv: 'B' }, on: true, dim: false, rank: 1, i: 999, pts: at });
+        });
+      }
+      gather(false);
+      /* zoomed in where nothing lit is in view: the names of what is there, dimmed, rather than none */
+      if (lit && !kept.some(function (q) { return q.on; })) { kept = []; named = {}; gather(true); }
+      /* a column is as wide as its longest name. A name whose point ends up under it tries its other
+         points, then the column on the other side, where its leader is longer but still level */
+      function colW(side) { return Math.max.apply(null, kept.filter(function (q) { return q.side === side; }).map(function (q) { return q.w; }).concat([0])); }
+      function under(side, x, o) { var c = Math.max(colW(side), o.w); return side === 'L' ? x < pad + c + 16 : x > W - pad - c - 16; }
+      function free(side, y, o) { return !kept.some(function (q) { return q !== o && q.side === side && Math.abs(q.y - y) < gap; }); }
+      for (var pass = 0; pass < 2; pass++) {
+        kept.slice().sort(function (a, b) { return a.rank - b.rank || a.i - b.i; }).forEach(function (o) {
+          if (!under(o.side, o.x, o)) return;
+          kept.splice(kept.indexOf(o), 1);
+          var first = null;
+          for (var k = 0; k < o.pts.length; k++) {
+            var p = toScreen(o.pts[k][0], o.pts[k][1]);
+            if (!inView(p)) continue;
+            if (!first) first = p;
+            var side = p.x < mid ? 'L' : 'R';
+            if (!under(side, p.x, o) && free(side, p.y, o)) { o.x = p.x; o.y = p.y; o.side = side; kept.push(o); return; }
+          }
+          /* only a lit part with no other name in view is worth a leader across the body */
+          if (!first || !(lit && o.on) || kept.some(function (q) { return q.L.id === o.L.id; })) return;
+          var other = (first.x < mid ? 'L' : 'R') === 'L' ? 'R' : 'L';
+          if (!under(other, first.x, o) && free(other, first.y, o)) { o.x = first.x; o.y = first.y; o.side = other; kept.push(o); }
+        });
+      }
       var out = '';
-      /* the body's midline (x 211 in the drawing), not the middle of the picture, decides the side;
-         with the heart magnified on the right, every name goes to the left */
-      var mid = lensMode ? W : Math.max(W * .3, Math.min(W * .7, toScreen(211, 0).x));
       ['L', 'R'].forEach(function (side) {
-        var it = items.filter(function (i) { return side === 'L' ? i.x < mid : i.x >= mid; }).sort(function (a, b) { return a.y - b.y; });
-        if (!it.length) return;
-        var colW = Math.max.apply(null, it.map(function (o) { return o.w; }));
+        var it = kept.filter(function (o) { return o.side === side; });
+        it.sort(function (a, b) { return a.rank - b.rank || a.i - b.i; });
+        it = it.slice(0, Math.max(1, Math.floor((H - 24) / minPitch)));
+        var colW = Math.max.apply(null, it.map(function (o) { return o.w; }).concat([0]));
         var edge = side === 'L' ? pad + colW : W - pad - colW, dir = side === 'L' ? -1 : 1;
-        var i;
-        for (i = 0; i < it.length; i++) it[i].ly = it[i].y;
-        for (i = 1; i < it.length; i++) if (it[i].ly < it[i - 1].ly + lh) it[i].ly = it[i - 1].ly + lh;
-        var over = it[it.length - 1].ly - (H - 16);
-        if (over > 0) { for (i = 0; i < it.length; i++) it[i].ly -= over; for (i = it.length - 2; i >= 0; i--) if (it[i].ly > it[i + 1].ly - lh) it[i].ly = it[i + 1].ly - lh; }
-        it.forEach(function (o) {
+        it = it.filter(function (o) { return side === 'L' ? o.x > edge + 16 : o.x < edge - 16; });   /* a part under its own column is not named */
+        if (!it.length) return;
+        it.sort(function (a, b) { return a.y - b.y; });
+        /* as much room between the names as the column allows, up to a comfortable gap */
+        var pitch = Math.max(minPitch, Math.min(maxPitch, (H - 24) / it.length));
+        var rows = spread(it.map(function (o) { return o.y; }), pitch, 14, H - 10);
+        it.forEach(function (o, k) {
+          var ly = rows[k];
           /* level from the part to just outside the column, a short step to its own row, level in */
-          var x1 = edge - dir * 12, x2 = edge - dir * 4;
-          if ((side === 'L' && o.x < x1 + 2) || (side === 'R' && o.x > x1 - 2)) x1 = o.x;
-          var d = 'M' + f2(o.x) + ' ' + f2(o.y) + 'L' + f2(x1) + ' ' + f2(o.y) + 'L' + f2(x2) + ' ' + f2(o.ly) + 'L' + f2(edge) + ' ' + f2(o.ly);
+          var x1 = edge - dir * 16, x2 = edge - dir * 5;
+          var d = 'M' + f2(o.x) + ' ' + f2(o.y) + 'L' + f2(x1) + ' ' + f2(o.y) + 'L' + f2(x2) + ' ' + f2(ly) + 'L' + f2(edge) + ' ' + f2(ly);
           var tx = side === 'L' ? edge - o.w : edge;
-          var cls = 'cp-lab' + (o.L.beyond ? ' is-beyond' : '');
-          out += '<g class="' + cls + '"><path class="cp-lab__halo" d="' + d + '"/><path class="cp-lab__lead" d="' + d + '"/><circle class="cp-lab__dot" cx="' + f2(o.x) + '" cy="' + f2(o.y) + '" r="2.2"/>' +
-            '<rect class="cp-lab__pill" x="' + f2(tx) + '" y="' + f2(o.ly - lh / 2 + 2) + '" width="' + f2(o.w) + '" height="' + f2(lh - 4) + '" rx="' + f2((lh - 4) / 2) + '"/>' +
-            '<text class="cp-lab__txt" x="' + f2(tx + o.w / 2) + '" y="' + f2(o.ly + fs * .36) + '" text-anchor="middle" style="font-size:' + fs + 'px">' + o.L.text + '</text></g>';
+          var cls = 'cp-lab' + (o.L.lv === 'X' ? ' is-beyond' : '') + (o.dim ? ' is-dim' : '');
+          out += '<g class="' + cls + '" data-part="' + o.L.id + '"><path class="cp-lab__halo" d="' + d + '"/><path class="cp-lab__lead" d="' + d + '"/><circle class="cp-lab__dot" cx="' + f2(o.x) + '" cy="' + f2(o.y) + '" r="2.2"/>' +
+            '<rect class="cp-lab__pill" x="' + f2(tx) + '" y="' + f2(ly - pill / 2) + '" width="' + f2(o.w) + '" height="' + f2(pill) + '" rx="' + f2(pill / 2) + '"/>' +
+            '<text class="cp-lab__txt" x="' + f2(tx + o.w / 2) + '" y="' + f2(ly + fs * .36) + '" text-anchor="middle" style="font-size:' + fs + 'px">' + o.L.text + '</text></g>';
         });
       });
       labSvg.innerHTML = out;
     }
     function labels(on, beyond) { if (on != null) labOn = !!on; if (beyond != null) labBeyond = !!beyond; layoutLabels(); }
     if (global.ResizeObserver && opts.map) {
-      var ro = new ResizeObserver(function () { if (!svg.isConnected) { ro.disconnect(); return; } jump(cam && isZoomed() ? cam : FULL); });
+      var ro = new ResizeObserver(function () { if (!svg.isConnected) { ro.disconnect(); return; } jump(cam && isZoomed() ? cam : FULL, true); });
       ro.observe(opts.map);
     }
 
@@ -667,16 +886,18 @@
 
     return {
       G: G, FULL: FULL, BOX: BOX, light: light, clear: function () { return light(null); }, lens: lens,
+      organVessels: function (id) { return ORGAN_VESSELS[id] || null; },
       flyTo: flyTo, jump: jump, boxOf: boxOf, isZoomed: isZoomed, zoomBy: zoomBy, home: function (done) { flyTo(FULL, done); },
       labels: labels, pin: pin, elFor: elFor,
       setRate: setRate, rate: function () { return bpm; },
       heartMode: function (m) { var k = m === 'exterior' ? 'exterior' : 'section'; if (k !== heartKind) { heartKind = k; buildLens(); lens(lensMode ? k : null); } },
       flow: function (on) { flowOn = on !== false; },
       start: start, stop: stop,
-      /* for the headless checks: one moment of the beat, and the blood t seconds on */
+      /* for the headless checks: one moment of the beat, the blood t seconds on, and the names now */
       __seek: function (ph, t) {
         stop(); phase = ph || 0; beat = beatState(phase, bpm); paintBeat();
         flows.forEach(function (f) { f.off = 0; }); moveFlow(t || 0);
+        drawLabels();
       }
     };
   }
