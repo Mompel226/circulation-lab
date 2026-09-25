@@ -201,8 +201,19 @@
     stage.appendChild(vbar);
     var hint = h('p', 'h3__hint', coarse() ? 'Drag to turn · pinch to zoom · tap a part' : 'Drag to turn · scroll to zoom · press a part to name it');
     stage.appendChild(hint);
-    var legend = h('p', 'h3__legend', '<span class="h3__sw h3__sw--deo"></span>deoxygenated <span class="h3__sw h3__sw--oxy"></span>oxygenated');
+    /* the colour key (Daniel, 25 Sep: "you should add a legend ... I see blue and I see red"): the blood
+       and the outline of the side of the heart that carries it share a colour */
+    var legend = h('p', 'h3__legend', '<span class="h3__key"><span class="h3__sw h3__sw--deo"></span>deoxygenated blood · right side</span>' +
+      '<span class="h3__key"><span class="h3__sw h3__sw--oxy"></span>oxygenated blood · left side</span>');
     legend.hidden = true; stage.appendChild(legend);
+    /* what the beat is doing now, on the heart itself */
+    var stageCap = h('p', 'h3__stagecap'); stageCap.setAttribute('aria-hidden', 'true'); stageCap.hidden = true; stage.appendChild(stageCap);
+    function capStage(k) {
+      if (k == null || k < 0 || mode === 'explore') { stageCap.hidden = true; return; }
+      var st = STAGES[k];
+      stageCap.innerHTML = '<b>' + (k + 1) + ' of 3</b> ' + esc(st.name) + (st.sound ? ' <i>' + st.sound + '</i>' : '');
+      stageCap.hidden = false;
+    }
     ctrl.appendChild(stage);
 
     /* ---------- Explore panel ---------- */
@@ -241,6 +252,26 @@
     [spSlow, spReal].forEach(function (b, i) { b.type = 'button'; b.setAttribute('aria-pressed', i ? 'false' : 'true'); spd.appendChild(b); });
     flRow.appendChild(spd);
     pFl.appendChild(flRow);
+    /* one side at a time (Daniel: "be able to remove maybe the left side and the right side of the heart"):
+       the other side fades to a trace and its blood is hidden */
+    var sideRow = h('div', 'h3__row h3__row--side');
+    sideRow.appendChild(h('span', 'h3__lead', 'Show'));
+    var sideSeg = h('div', 'h3__seg'); sideSeg.setAttribute('role', 'group'); sideSeg.setAttribute('aria-label', 'Which side of the heart to show');
+    var sideNow = null, sideBtns = {};
+    [[null, 'Both sides'], ['R', 'Right side'], ['L', 'Left side']].forEach(function (o) {
+      var b = h('button', 'h3__segb' + (o[0] === null ? ' is-on' : ''), esc(o[1])); b.type = 'button';
+      b.setAttribute('aria-pressed', o[0] === null ? 'true' : 'false');
+      b.addEventListener('click', function () { setSide(o[0]); });
+      sideSeg.appendChild(b); sideBtns[String(o[0])] = b;
+    });
+    sideRow.appendChild(sideSeg);
+    pFl.appendChild(sideRow);
+    pFl.appendChild(h('p', 'h3__note h3__note--tip', 'Follow one side at a time. The right side takes deoxygenated blood from the body to the lungs; the left side takes oxygenated blood from the lungs to the body. Both sides beat together.'));
+    function setSide(sd) {
+      sideNow = sd;
+      Object.keys(sideBtns).forEach(function (k) { var on = k === String(sd); sideBtns[k].classList.toggle('is-on', on); sideBtns[k].setAttribute('aria-pressed', on ? 'true' : 'false'); });
+      if (view) { view.showSide(sd); view.labels(labelList()); }
+    }
     var flStages = h('ol', 'h3__stages');
     STAGES.forEach(function (st, i) {
       var li = h('li', 'h3__stg'); var b = h('button', 'h3__stgb', '<span class="h3__num">' + (i + 1) + '</span>' + esc(st.name) + (st.sound ? ' <span class="h3__snd">' + st.sound + '</span>' : ''));
@@ -349,7 +380,8 @@
     function labelList() {
       if (mode === 'valves') return ['valve_tri', 'valve_mit', 'valve_pul', 'valve_aor'];
       /* while the blood flows, the chambers and the vessels are named, so you can say where it is */
-      if (mode === 'flow') return ['ra', 'la', 'rv', 'lv', 'vena_cava', 'pulmonary_artery', 'pulmonary_veins', 'aorta'];
+      if (mode === 'flow') return sideNow === 'R' ? ['ra', 'rv', 'vena_cava', 'pulmonary_artery'] : sideNow === 'L' ? ['la', 'lv', 'pulmonary_veins', 'aorta']
+        : ['ra', 'la', 'rv', 'lv', 'vena_cava', 'pulmonary_artery', 'pulmonary_veins', 'aorta'];
       /* the valves are inside: from outside a whole heart only the wall of the aorta round them shows */
       var l = allNames ? NAME_ALL.filter(function (x) { return +cut.value > 0 || !/^valve_/.test(x); }) : [];
       if (selected) { var s = partKey(selected) === 'papillary' ? 'papillary' : selected; l = l.filter(function (x) { return x !== s && !(s.indexOf('vena_cava') === 0 && x === 'vena_cava'); }); l.unshift(selWall ? s + '#wall' : s); }
@@ -397,6 +429,8 @@
       Object.keys(tabBtn).forEach(function (k) { var on = k === m; tabBtn[k].classList.toggle('is-on', on); tabBtn[k].setAttribute('aria-selected', on ? 'true' : 'false'); });
       [pEx, pFl, pVa].forEach(function (p) { p.hidden = p.getAttribute('data-for') !== m; });
       legend.hidden = m === 'explore';
+      if (m !== 'flow' && sideNow) setSide(null);
+      capStage(-1);
       box.classList.toggle('h3--live', m !== 'explore');
       if (m !== 'explore') { cut.value = '0'; cutVal.textContent = cutText(0); selected = null; selWall = false; showInfo(null); sel.value = ''; if (view) view.select(null); }
       /* the blood is easiest to follow with all four chambers facing you: the heart turned to the plane
@@ -418,6 +452,7 @@
 
     /* ---------- Blood flow ---------- */
     function paintStages(k) {
+      capStage(k);
       Array.prototype.forEach.call(flStages.children, function (li, i) { li.classList.toggle('is-on', i === k); });
       flCap.textContent = k >= 0 ? STAGES[k].step : '';
     }
@@ -475,7 +510,7 @@
     }
     function chooseStage(i) {
       stopSteps(); stageIdx = i; result.innerHTML = ''; result.className = 'h3__result';
-      paintValves();
+      paintValves(); capStage(i);
       result.innerHTML = '<p class="h3__ask2">Stage ' + (i + 1) + ' of 3: <b>' + esc(STAGES[i].name.toLowerCase()) + '</b>. Set each valve open or closed, then press Run.</p>';
       var vs = settings[i]; shown = Object.assign({}, vs);
       if (view && mode === 'valves') { view.stop(); view.reseed(STAGES[i].key); view.setValves(vs); valveWords(vs); view.labels(labelList()); }
@@ -525,6 +560,7 @@
       if (!view && !flat) return;
       steps.started = true; steps.k = i; steps.playing = !still();
       bNow.textContent = 'Step ' + (i + 1) + ': ' + STAGES[i].step;
+      capStage(i);
       var vs = STAGES[i].correct; shown = Object.assign({}, vs);
       valveWords(vs);
       if (view) {

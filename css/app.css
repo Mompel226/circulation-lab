@@ -1031,7 +1031,7 @@ picture{display:block;line-height:0}
   .fold{display:inline-flex}
   .platecol.is-folded{height:auto;min-height:0}
   .platecol.is-folded .platewrap{position:absolute;left:0;right:0;top:46px;height:320px;visibility:hidden}   /* kept at a real size: the drawing's geometry must stay sane while it is out of sight */
-  .platecol.is-folded .said,.platecol.is-folded .platecol__hint{display:none}
+  .platecol.is-folded .said,.platecol.is-folded .platecol__hint,.platecol.is-folded .plate-key{display:none}
 }
 @media (max-width:1000px) and (max-height:560px){ .platecol{position:static} }
 
@@ -1216,6 +1216,17 @@ picture{display:block;line-height:0}
   background:linear-gradient(180deg,rgba(6,13,18,0),rgba(6,13,18,.86))}
 .said__name{display:block;font-family:var(--sans);font-size:15px;font-weight:500;color:var(--c,#FFE7E2)}
 .said__note{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#9CB4C0;margin-top:3px}
+/* the colour key under the body (Daniel, 25 Sep: "if you're going to color code veins and arteries, you
+   should add a legend"): the colours are the blood's, so the pulmonary artery is blue and the pulmonary
+   veins red; the hepatic portal system is outlined in turquoise */
+.plate-key{position:relative;z-index:4;display:flex;justify-content:center;flex-wrap:wrap;gap:4px 14px;margin:0;padding:0 12px 10px;
+  font-family:var(--sans);font-size:11.5px;color:#C9D8E0;background:rgba(6,13,18,.86)}
+.plate-key__i{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.plate-key i{display:inline-block;width:18px;height:6px;border-radius:3px}
+.plate-key__o{background:#C4302B;box-shadow:0 0 0 1.5px #FFBF00 inset}
+.plate-key__d{background:#0060B6;box-shadow:0 0 0 1.5px #00A0C6 inset}
+.plate-key__p{background:#0060B6;box-shadow:0 0 0 1.5px #00D8C6 inset}
+.platecol.is-sim .plate-key,.platecol.is-bench .plate-key{display:none}
 /* a station that stands something else on the bench takes the whole column */
 .platecol.is-bench,.platecol.is-sim{background:#F3EFE4;background-image:none;color:var(--ink)}
 .platecol.is-bench .platewrap,.platecol.is-bench .platecol__tools,.platecol.is-bench .said{display:none}
