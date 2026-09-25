@@ -99,6 +99,17 @@
     { id: 'aVF', name: 'aVF', ang: 90, plus: 'LL', minus: 'C', say: '+ on the left leg; − is the two arms together' }
   ];
 
+  /* the leads offered: two, not six (Daniel, 25 Sep: "adding all of these different ways of measuring
+     the ECG is a bit confusing ... include clearly lead two because it's the main one used, and maybe
+     add a different one"). Lead II is what a heart monitor shows; aVR looks from the opposite side, so
+     the same beat draws upside down: the clearest way to see that where the + electrode is decides
+     whether the line rises or falls. The other four stay in the model and in the checks. */
+  var OFFER = [
+    { id: 'II', tag: 'the main lead', say: 'what a heart monitor shows: − on the right arm, + on the left leg' },
+    { id: 'aVR', tag: 'the opposite side', say: 'looks from the right shoulder: + on the right arm' }
+  ];
+  function leadOf(id) { for (var i = 0; i < LEADS.length; i++) if (LEADS[i].id === id) return LEADS[i]; return null; }
+
   /* ---------- the steps: ms of the beat each one covers, and its words ---------- */
   var STEPS = [
     { ms: [0, 100], wave: 'P', h: 'The SA node fires',
@@ -106,9 +117,9 @@
     { ms: [100, 160], wave: null, h: 'The AV node holds the signal',
       p: 'The signal reaches the _atrioventricular node_ (AV node), between the atria and the ventricles, and is held there for about 0.1 s, so the atria finish emptying before the ventricles contract. So little tissue is active that nothing is recorded: the line is flat. This is the PR segment. From the start of P to the start of the next wave is the PR interval, normally 0.12 to 0.20 s.' },
     { ms: [160, 182], wave: 'Q', h: 'The septum goes first',
-      p: 'The signal passes along the _bundle of His_ into the septum. The septum is excited from its left side to its right, so this small wave moves to the right. Seen from the left (lead I or aVL), it draws a small trough: the Q wave.' },
+      p: 'The signal passes along the _bundle of His_ into the septum. The septum is excited from its left side to its right, so this small first wave moves to the right. It moves almost at right angles to lead II, so in lead II the line hardly moves. In aVR, which looks from the right, it draws a small peak.' },
     { ms: [182, 214], wave: 'R', h: 'Down to the apex and out through the walls',
-      p: 'The signal passes along the left and right _bundle branches_ to the apex, then through the ventricle walls in the _Purkinje fibres_, from the inside of each wall to the outside. The left ventricle has far more muscle than the right, so the biggest wave moves down and to the heart’s left side. In lead II this draws the R wave, the tallest peak.' },
+      p: 'The signal passes along the left and right _bundle branches_ to the apex, then through the ventricle walls in the _Purkinje fibres_, from the inside of each wall to the outside. The left ventricle has far more muscle than the right, so the biggest wave moves down and to the heart’s left side. In lead II this draws the R wave, the tallest peak. In aVR the same wave moves away from the + electrode and draws a deep trough.' },
     { ms: [214, 240], wave: 'S', h: 'The top of the ventricles last',
       p: 'The last muscle to be excited is at the top of the ventricles, near the valves, so the wave now moves up. In lead II this draws the S wave, a small trough. Q, R and S together are the QRS complex, less than 0.12 s long. It is much bigger than the P wave because the ventricles have much more muscle than the atria.' },
     { ms: [240, 330], wave: null, h: 'All the ventricle muscle is excited',
@@ -213,8 +224,9 @@
     /* where the + electrode is */
     var pick = h('div', 'es__leads'); pick.setAttribute('role', 'group'); pick.setAttribute('aria-label', 'Choose the lead');
     var leadBtns = {};
-    LEADS.concat([{ id: 'free', name: 'Move it yourself', say: 'drag the + electrode round the heart' }]).forEach(function (ld) {
-      var b = h('button', 'es__lead', '<b>' + esc(ld.name) + '</b><small>' + esc(ld.say) + '</small>'); b.type = 'button';
+    OFFER.map(function (o) { return { id: o.id, name: leadOf(o.id).name, tag: o.tag, say: o.say }; })
+      .concat([{ id: 'free', name: 'Move it yourself', say: 'drag the + electrode round the heart' }]).forEach(function (ld) {
+      var b = h('button', 'es__lead', '<b>' + esc(ld.name) + (ld.tag ? ' <span class="es__tag">' + esc(ld.tag) + '</span>' : '') + '</b><small>' + esc(ld.say) + '</small>'); b.type = 'button';
       b.addEventListener('click', function () { setLead(ld.id); });
       pick.appendChild(b); leadBtns[ld.id] = b;
     });
@@ -233,20 +245,20 @@
     var listSlot = h('div', 'es__listslot'); box.appendChild(listSlot);
     /* the whole beat in every lead, side by side: the same beat, six different lines */
     var minis = h('div', 'es__minis');
-    minis.appendChild(h('p', 'es__minih', 'The same beat, seen by each lead'));
+    minis.appendChild(h('p', 'es__minih', 'The same beat, from two places'));
     var miniGrid = h('div', 'es__minig'); minis.appendChild(miniGrid);
-    LEADS.forEach(function (ld) {
+    OFFER.map(function (o) { return leadOf(o.id); }).forEach(function (ld) {
       var b = h('button', 'es__mini'); b.type = 'button'; b.setAttribute('aria-label', ld.name + ': show this lead');
       var s = sv('svg', { viewBox: '0 0 160 70', 'aria-hidden': 'true' });
       var d = '';
       for (var t = 0; t <= BEAT; t += 6) d += (t ? 'L' : 'M') + n1(8 + t / BEAT * 144) + ' ' + n1(38 - volt(t, ld.ang) * 20);
       s.innerHTML = '<line x1="8" y1="38" x2="152" y2="38" class="es__minibase"/><path d="' + d + '" class="es__minitrace"/>';
-      b.appendChild(s); b.appendChild(h('span', 'es__mininame', esc(ld.name)));
+      b.appendChild(s); b.appendChild(h('span', 'es__mininame', esc(ld.name) + (ld.id === 'II' ? ': P, R and T point up' : ': the same waves point down')));
       b.addEventListener('click', function () { setLead(ld.id); });
       miniGrid.appendChild(b); ld.mini = b;
     });
     box.appendChild(minis);
-    box.appendChild(h('p', 'widget__note', 'A simplified heart. The six limb leads see the signal move up, down, left and right, as drawn here. A real ECG also has six chest leads, which see it move towards the front or the back of the chest. Seen from a lead that points the same way as the heart’s main electrical direction (lead II), the P, R and T waves all point up. Seen from the other side (aVR), they all point down. It is the same beat. A small wave is named with a small letter (q, r, s). On the ECG paper one small square is 0.04 s wide, as on a real ECG; the heights are not to scale. The limb electrodes can go anywhere on the limb: a limb carries the signal like a wire. Source: the conduction system and the waves, OpenStax Anatomy and Physiology 2e, section 19.2; the leads and deflections, Ninja Nerd, “ECG Basics”; the body, LadyofHats (public domain).'));
+    box.appendChild(h('p', 'widget__note', 'A simplified heart. A real ECG records the same beat from twelve places: six from the limbs, as here, and six across the chest. Lead II, the one a heart monitor shows, looks along the heart’s main electrical direction, so the P, R and T waves all point up. aVR looks from the opposite side, so they all point down. It is the same beat. A small wave is named with a small letter (q, r, s). On the ECG paper one small square is 0.04 s wide, as on a real ECG; the heights are not to scale. The limb electrodes can go anywhere on the limb: a limb carries the signal like a wire. Source: the conduction system and the waves, OpenStax Anatomy and Physiology 2e, section 19.2; the leads and deflections, Ninja Nerd, “ECG Basics”; the body, LadyofHats (public domain).'));
 
     /* ---------- the pack: the drawing, and what it is doing now ---------- */
     var pack = h('div', 'es__pack');
@@ -310,7 +322,7 @@
               '<text x="' + p.p[0] + '" y="' + p.p[1] + '">' + p.n + '</text></g>';
           }).join('') + '</g>' +
         '</g>' +
-        '<g class="es__lead"></g><g class="es__vec"></g>' +
+        '<g class="es__leadg"></g><g class="es__vec"></g>' +
       '</g>' +
       '<rect x="' + LENS.x + '" y="' + LENS.y + '" width="' + LENS.w + '" height="' + LENS.h + '" rx="12" class="es__lensrim"/>' +
       '<text x="' + (LENS.x + 12) + '" y="' + (LENS.y + 20) + '" class="es__cap">The heart, magnified</text>' +
@@ -327,7 +339,7 @@
       '<g class="es__marks"></g><path class="es__trace" d=""/><circle class="es__pen" r="5" cx="' + STRIP.x + '" cy="' + STRIP.base + '"/>' +
       '<text x="' + (STRIP.x + STRIP.w - 8) + '" y="' + (STRIP.y + 18) + '" class="es__stripname" text-anchor="end"></text>';
     var g = {
-      cells: svg.querySelector('.es__cells'), lead: svg.querySelector('.es__lead'), vec: svg.querySelector('.es__vec'), blead: svg.querySelector('.es__blead'), elecs: svg.querySelector('.es__elecs'),
+      cells: svg.querySelector('.es__cells'), lead: svg.querySelector('.es__leadg'), vec: svg.querySelector('.es__vec'), blead: svg.querySelector('.es__blead'), elecs: svg.querySelector('.es__elecs'),
       trace: svg.querySelector('.es__trace'), pen: svg.querySelector('.es__pen'), marks: svg.querySelector('.es__marks'), sname: svg.querySelector('.es__stripname'),
       sa: svg.querySelector('.es__node--sa'), av: svg.querySelector('.es__node--av')
     };
@@ -387,7 +399,7 @@
       s += '<g class="es__el is-on is-plus' + (ld ? '' : ' es__free') + '"><circle cx="' + n1(pp[0]) + '" cy="' + n1(pp[1]) + '" r="' + (ld ? 12 : 15) + '"/><text x="' + n1(pp[0]) + '" y="' + n1(pp[1] + 5.5) + '" class="es__elsign">+</text></g>';
       g.lead.innerHTML = s;
       var deg = Math.round(((ang % 360) + 540) % 360 - 180), near = null;
-      LEADS.forEach(function (x) { var d = Math.abs(((deg - x.ang) % 360 + 540) % 360 - 180); if (d <= 12 && (!near || d < near.d)) near = { d: d, name: x.name }; });
+      OFFER.forEach(function (o) { var x = leadOf(o.id), d = Math.abs(((deg - x.ang) % 360 + 540) % 360 - 180); if (d <= 12 && (!near || d < near.d)) near = { d: d, name: x.name }; });
       g.sname.innerHTML = ld ? '<tspan>' + esc(ld.name) + '</tspan><tspan class="es__stripsay"> · ' + esc(ld.say) + '</tspan>'
         : '<tspan>Your lead: + at ' + deg + '°</tspan><tspan class="es__stripsay">' + (near ? ' (close to ' + esc(near.name) + ')' : '') + '</tspan>';
       var fr = g.lead.querySelector('.es__free circle');
@@ -460,7 +472,7 @@
       now.innerHTML = line;
       /* which lead is chosen, on the buttons and the small traces */
       Object.keys(leadBtns).forEach(function (k) { var on = k === leadId; leadBtns[k].classList.toggle('is-on', on); leadBtns[k].setAttribute('aria-pressed', on ? 'true' : 'false'); });
-      LEADS.forEach(function (x) { x.mini.classList.toggle('is-on', x.id === leadId); });
+      LEADS.forEach(function (x) { if (x.mini) x.mini.classList.toggle('is-on', x.id === leadId); });
     }
     function setLead(id) { leadId = id; drawLead(); paint(); }
 
