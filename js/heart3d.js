@@ -790,6 +790,43 @@ void main() {
     return true;
   }
 
+  /* ---------------- turning by buttons ----------------
+     Daniel, 25 Sep: "if I just want to turn it I click those arrows and it turns more easily, and then if
+     I just want to flip it then I can use the mouse". turn(): one smooth step round the heart, the same
+     way a drag would turn it (left: the heart's front goes left; up: its front tips up). spin(): keeps
+     turning, in degrees a second, while a button is held; spin(0, 0) stops. Never past the poles, the
+     same 20 degrees from them as the mouse. */
+  const SPH = new THREE.Spherical(), OFF = new THREE.Vector3();
+  function orbitBy(az, pol) {
+    OFF.copy(camera.position).sub(controls.target);
+    SPH.setFromVector3(OFF);
+    SPH.theta += az; SPH.phi = clamp(SPH.phi + pol, controls.minPolarAngle, controls.maxPolarAngle); SPH.makeSafe();
+    OFF.setFromSpherical(SPH);
+    return controls.target.clone().add(OFF);
+  }
+  function turn(azDeg, polDeg) {
+    if (tween) stepTween(tween.dur);                      /* a view still arriving: land it first */
+    spinning = null;
+    const p1 = orbitBy(THREE.MathUtils.degToRad(azDeg), THREE.MathUtils.degToRad(polDeg));
+    if (reduced || opts.test) { camera.position.copy(p1); controls.update(); idStale = true; hideLabels(); relabelSoon(); kick(); return; }
+    controls.enabled = false;
+    tween = { t: 0, dur: 0.42, q0: heart.quaternion.clone(), q1: heart.quaternion.clone(), p0: camera.position.clone(), p1, c0: controls.target.clone(), c1: controls.target.clone() };
+    hideLabels(); kick();
+  }
+  let spinning = null;
+  function spin(azRate, polRate) {
+    if (!azRate && !polRate) { if (spinning) { spinning = null; idStale = true; relabelSoon(); } return; }
+    if (tween) stepTween(tween.dur);
+    spinning = { az: THREE.MathUtils.degToRad(azRate), pol: THREE.MathUtils.degToRad(polRate) };
+    hideLabels(); kick();
+  }
+  function stepSpin(dt) {
+    if (!spinning) return false;
+    camera.position.copy(orbitBy(spinning.az * dt, spinning.pol * dt));
+    idStale = true;
+    return true;
+  }
+
   /* ---------------- a beat, or one stage of it ----------------
      plan: [{ stage, dur, valves: {tri, mit, pul, aor}, rates: {R, L}, atria: [from, to], vent: [from, to], hold }]
      Valves swing in the first quarter-second of a stage; chambers contract or relax over the stage;
@@ -1068,6 +1105,7 @@ void main() {
     const dt = last < 0 ? 0 : clamp((now - last) / 1000, 0, 0.05); last = now;
     let busy = false;
     if (stepTween(dt)) busy = true;
+    if (stepSpin(dt)) busy = true;
     if (stepAnim(dt)) busy = true;
     const moved = controls.update();
     if (moved) busy = true;
@@ -1122,6 +1160,8 @@ void main() {
     cutAt4ch: 0.5,
     setXray(on) { xray = !!on; applyLook(); },
     view(name) { setView(name); },
+    turn(az, pol) { turn(az, pol); },
+    spin(az, pol) { spin(az, pol); },
     select(id) { selected = id; applyLook(); relabelSoon(60); },
     /* 'R' or 'L' shows that side of the heart only; null shows both */
     showSide(side) { sideOnly = side === 'R' || side === 'L' ? side : null; applyLook(); relabelSoon(60); },
