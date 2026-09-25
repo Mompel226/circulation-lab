@@ -475,7 +475,9 @@
         /* A tall, narrow diagram set under the sentence leaves a column of empty paper beside it.
            Put it FIRST instead and let the sentence close round it — css floats it into the
            margin. Everything else still sits under the sentence it belongs to. */
-        if (el && el.classList && el.classList.contains('photo--portrait')) li.insertBefore(el, li.firstChild);
+        /* a tall picture, or a small one, stands beside its sentence (the CSS floats it), so the words wrap
+           round it instead of leaving white paper beside it (Daniel, 25 Sep) */
+        if (el && el.classList && (el.classList.contains('photo--portrait') || el.classList.contains('photo--small'))) li.insertBefore(el, li.firstChild);
         else li.appendChild(el);
       });
     });

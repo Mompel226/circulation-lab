@@ -85,7 +85,9 @@
     /* ~like this~ is italic. The lab's own _like this_ means "underline this exam word", which is
        not what a scientific name or a journal title wants, and Terms.mark would escape a raw tag. */
     function ital(html) { return html.replace(/~([^~]+)~/g, '<i>$1</i>'); }
-    var box = h('section', 'curio' + (spec.shape === 'tall' ? ' curio--tall' : ''));
+    /* a card with no picture is one column: its words used to sit in the picture's 300 px column with the
+       rest of the card empty (Daniel, 25 Sep: "all of the text on the left and not expanding the whole space") */
+    var box = h('section', 'curio' + (spec.shape === 'tall' ? ' curio--tall' : '') + (spec.img ? '' : ' curio--text'));
     box.appendChild(h('div', 'curio__head',
       '<span class="curio__pill">Did you know?</span>' +
       '<span class="curio__fence">Not in 0610 or the IB guide. Nothing here is examined.</span>'));
