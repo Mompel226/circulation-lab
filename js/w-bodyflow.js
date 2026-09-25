@@ -1414,8 +1414,8 @@
     var wrapEl = h('div', 'bf__wrap');
     var left = h('div', 'bf__left'), fig = h('figure', 'bf__fig');
     fig.appendChild(svg); fig.appendChild(sp.now);
-    /* on a wide screen the drawing and its readings stand in the plate's column, beside the steps (Daniel,
-       26 Sep: "the after a meal ... also move it to the left") */
+    /* on a wide screen the drawing stands in the plate's column, beside the steps (Daniel, 26 Sep: "the
+       after a meal ... also move it to the left"); its readings stay with the steps (placeRead, below) */
     var pack = h('div', 'bf__pack');
     var packT = h('p', 'stg__title', esc(spec.title || 'After a meal')); packT.hidden = true;
     pack.appendChild(packT); pack.appendChild(fig); pack.appendChild(cap); pack.appendChild(read);
@@ -1437,7 +1437,8 @@
       var rb = svg.getBoundingClientRect ? svg.getBoundingClientRect() : { width: 0, height: 0 };
       var wpx = rb.height && rb.height < rb.width ? rb.height * G.W / G.H : rb.width;
       var ww = wrapEl.getBoundingClientRect ? wrapEl.getBoundingClientRect().width : 0;
-      if (ww) wrapEl.classList.toggle('bf--stack', ww < 640);
+      /* standing in the column, the steps keep their words: the copy under the drawing is for a phone */
+      if (ww) wrapEl.classList.toggle('bf--stack', ww < 640 && !box.classList.contains('is-staged'));
       if (!wpx) return;
       var kk = wpx / G.W, font = Math.round(Math.max(14, Math.min(22, (kk < .7 ? 11.5 : 12.5) / kk)));
       if (font !== G.font) { G.font = font; layout(); applyLayout(); sp.paint(sp.time()); }
@@ -1451,8 +1452,15 @@
     watchSize();
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { widths = {}; if (box.isConnected) sp.paint(sp.time()); });
 
+    /* In the column the drawing is the main thing (Daniel, 26 Sep: "the image should be the priority and
+       be big enough ... the text below makes it so that the image is very small"): the readings and their
+       switch stay with the steps, above the key, and the drawing has the column to itself. */
+    function placeRead(inColumn) {
+      if (inColumn) { if (read.parentNode !== left) left.insertBefore(read, key); }
+      else if (read.parentNode !== pack) pack.appendChild(read);
+    }
     var stg = L.stage ? L.stage({ box: box, spec: spec, pack: pack, home: left, before: function () { return key; }, watch: function () { return box; },
-      onPlace: function (inColumn) { packT.hidden = !inColumn; box.classList.toggle('bf--staged', inColumn); requestAnimationFrame(fit); } }) : null;
+      onPlace: function (inColumn) { packT.hidden = !inColumn; box.classList.toggle('bf--staged', inColumn); placeRead(inColumn); requestAnimationFrame(fit); } }) : null;
     box.__onMove = function () { if (stg) stg.mount(); };
     box.__onReset = function () { sp.stop(); if (ro) { ro.disconnect(); ro = null; } if (stg) stg.detach(); };
     /* for the headless checks: draw any moment, after a meal or hours later */

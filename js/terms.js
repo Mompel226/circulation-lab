@@ -17,6 +17,17 @@
      an arrow             you are taken to another station
    The arrow is only for a journey with something at the other end; one arrow per
    destination per station; never a word inside a negative.
+
+   Audited 26 Sep 2026, as a student in doubt (Daniel: "when the student clicks that word, where is
+   it taking the student? Is the student going to learn more about that? ... if you make too many
+   things take you somewhere, it's going to be a bit overwhelming"):
+     · an arrow only in the sentences of "What you need to know" (Terms.teach), never in an
+       animation's steps, a caption, a Did-you-know card or the Going further list, where a jump
+       would pull the student out of what they are doing: there the word opens its definition;
+     · an arrow only for a word with something at the other end (GOES_THERE), at most one in a sentence;
+     · one mark per idea per station: "clot", "clots" and "blood clot" open the same definition,
+       so only the first of them is marked;
+     · "heart" is never dotted: no student in this topic is in doubt about it.
    ============================================================ */
 (function (global) {
   'use strict';
@@ -148,7 +159,8 @@
    'red blood cells', 'white blood cells', 'platelets', 'plasma', 'lymphocyte', 'lymphocytes', 'phagocyte', 'phagocytes', 'phagocytosis',
    'clotting', 'fibrinogen', 'fibrin'].forEach(function (w) { GOES_THERE[w] = true; });
 
-  var here = null, seen = null, quiet = false, wentTo = null;
+  var here = null, seen = null, quiet = false, wentTo = null, teaching = false, arrowed = false;
+  var NEVER_DOTTED = { heart: 1, hearts: 1 };
   /* The pictures this station is about to put on the page. A magnifier that opens one of
      them shows the reader what is already in front of them — worst where the caption of a
      picture uses the very word, so the word beside the dark dust opens the dark dust. Where
@@ -158,8 +170,12 @@
   function setShown(m) { SHOWN = m || {}; }
   function setStation(id) { here = id; seen = Object.create(null); quiet = false; wentTo = Object.create(null); }
   /* a widget built afresh (its reset) marks its words as it did the first time: forget what it introduced */
-  function unsee(words, jumps) { if (seen) (words || []).forEach(function (w) { delete seen[String(w).toLowerCase()]; }); if (wentTo) (jumps || []).forEach(function (j) { delete wentTo[j]; }); }
+  function unsee(words, jumps) {
+    if (seen) (words || []).forEach(function (w) { var low = String(w).toLowerCase(), d = defined(low); delete seen[low]; if (d) delete seen[d.toLowerCase()]; });
+    if (wentTo) (jumps || []).forEach(function (j) { delete wentTo[j]; });
+  }
   function setQuiet(v) { quiet = !!v; }
+  function teach(v) { teaching = !!v; }
 
   var U0 = '', U1 = '';
   function underlineMarks(escaped) { return escaped.replace(/_([^_\n]{1,240})_/g, U0 + '$1' + U1); }
@@ -183,7 +199,7 @@
     'control':  [{ after: /^\s+(the|it|them|this|these|for|every|all|each|how)\b/i }],
     'mean':     [{ before: /\b(this|that|which|it|they|does|do|will|would|can|could|may|might|not)\s+$/i }, { after: /^\s+(that|the|a|an|you|it|to)\b/i }],
     'range':    [{ after: /^\s+of\s+(activities|exercises|things|ways|foods|sizes|shapes)/i }],
-    'pump':     [{ before: /\b(to|can|will|must|they|it|and)\s+$/i }],
+    'pump':     [{ before: /\b(to|can|will|must|they|it|and|ones)\s+$/i }, { after: /^\s+(blood|it|them)\b/i }],
     'pulse':    [{ after: /^\s+(of|through)\b/i }],
     'plaque':   [{ before: /\b(dental|tooth|teeth)\s+$/i }, { after: /^\s+on\s+(the\s+)?(teeth|tooth)/i }]
   };
@@ -200,19 +216,26 @@
   }
 
   function mark(text) {
+    arrowed = false;                              /* one arrow in a sentence at most */
     return underlineTags(underlineMarks(esc(text)).replace(RE, function (m, _g, at, whole) {
       var low = m.toLowerCase(), e = INFO[low];
       if (!e) return m;
       if (STAT[low]) return '<b class="t t--plain is-stat" data-stat="' + STAT[low] + '" data-term="' + esc(m) + '" tabindex="0" role="button">' + m + '</b>';
-      var before = String(whole).slice(0, at).replace(/<[^>]*>/g, '');
+      /* a word inside a syllabus phrase (_..._) is underlined, never clickable: it does not use up the
+         word's one mark, so the next time the word comes it is offered */
+      var raw = String(whole).slice(0, at);
+      if (raw.lastIndexOf(U0) > raw.lastIndexOf(U1)) return m;
+      var before = raw.replace(/<[^>]*>/g, '');
       if (NEGATED.test(before)) return m;
       if (wrongSense(low, before, String(whole).slice(at + m.length).replace(/<[^>]*>/g, ''), String(whole).replace(/<[^>]*>/g, ''))) return m;
       var cat = e[1], act = '', cls = '';
-      var first = !quiet && !(seen && seen[low]);
-      if (seen) seen[low] = true;
+      var def = defined(low), idea = def ? def.toLowerCase() : low;     /* "clots" and "blood clot" are one idea */
+      var first = !quiet && !(seen && (seen[low] || seen[idea]));
+      if (seen) { seen[low] = true; seen[idea] = true; }
       if (!first) return m;
+      if (NEVER_DOTTED[low]) def = null;
       var ctx = (CONTEXT[here] || {})[low];
-      var def = defined(low);
+      var canJump = teaching && !arrowed;
       var pk0 = ctx || PEEK[low];
       if (pk0 && !SHOWN[pk0[0]]) {
         var pk = pk0;
@@ -220,17 +243,14 @@
         cls = ' is-peek';
       } else if (JUMP[low] === here) {
         return '<b class="t t--' + cat + '">' + m + '</b>';
-      } else if (JUMP[low] && GOES_THERE[low] && !(wentTo && wentTo[JUMP[low]])) {
+      } else if (canJump && JUMP[low] && GOES_THERE[low] && !(wentTo && wentTo[JUMP[low]])) {
         if (wentTo) wentTo[JUMP[low]] = true;
+        arrowed = true;
         act = ' data-jump="' + JUMP[low] + '" tabindex="0" role="button"';
         cls = ' is-jump';
       } else if (def && !KNOWN[def.toLowerCase()]) {
         act = ' data-gloss="' + esc(def) + '" tabindex="0" role="button"';
         cls = ' is-gloss';
-      } else if (JUMP[low] && !(wentTo && wentTo[JUMP[low]])) {
-        if (wentTo) wentTo[JUMP[low]] = true;
-        act = ' data-jump="' + JUMP[low] + '" tabindex="0" role="button"';
-        cls = ' is-jump';
       }
       return '<b class="t t--' + cat + cls + '"' + act + (act ? ' data-term="' + esc(m) + '"' : '') + '>' + m + '</b>';
     }));
@@ -246,7 +266,7 @@
   }
 
   global.Terms = { setKnown: setKnown, isKnown: isKnown, forgetAll: forgetAll, knownCount: knownCount, mark: mark, legend: legend, unsee: unsee,
-                   CATS: CATS, setStation: setStation, setQuiet: setQuiet, setShown: setShown, PEEK: PEEK, JUMP: JUMP };
+                   CATS: CATS, setStation: setStation, setQuiet: setQuiet, setShown: setShown, teach: teach, PEEK: PEEK, JUMP: JUMP };
 })(window);
 
 /* A number never parts from its unit at a line break — 20 °C, 5 min, 48 mm, 60 %, 4 marks, pH 2 — wherever the page
