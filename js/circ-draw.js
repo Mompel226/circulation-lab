@@ -348,6 +348,20 @@
       var p = n.getAttribute('data-part'); (organs[p] = organs[p] || []).push(n);
     });
     var heartShape = organs.heart && organs.heart[0];
+    /* the vessels on the heart's surface were bare 1-unit lines; every other vessel in the drawing has a rim,
+       yellow round the arteries and pale blue round the veins. Give them the same, under all of them, so an
+       artery and its vein running together sit on one clean edge (Daniel, 25 Sep: "very badly drawn") */
+    (function () {
+      var first = new Map();
+      Array.prototype.forEach.call(artG.querySelectorAll('.cp-cor'), function (n) {
+        if (!first.has(n.parentNode)) first.set(n.parentNode, n);
+        var rim = n.cloneNode(false); rim.removeAttribute('id'); rim.classList.add('cp-cor-rim');
+        rim.style.stroke = n.classList.contains('cp-v') ? '#00a0c6' : '#ffbf00'; rim.style.strokeWidth = '2.2px';
+        rim.style.strokeLinecap = 'round'; rim.style.strokeLinejoin = 'round';
+        n.parentNode.insertBefore(rim, first.get(n.parentNode));
+        n.style.strokeWidth = '1.2px'; n.style.strokeLinecap = 'round'; n.style.strokeLinejoin = 'round';
+      });
+    })();
     var corShapes = artG.querySelectorAll('.cp-cor');
     if (skin) copyOf(skin, { fill: '#DCE7EC', stroke: 'none' }, halo);
 
@@ -373,6 +387,32 @@
     /* ----- the veil, and the lit parts above it ----- */
     var veil = el('g', { 'class': 'cp__veil' }, root);
     if (skin) copyOf(skin, { fill: SKIN, 'fill-opacity': .8, stroke: 'none' }, veil);
+    /* the spotlight (Daniel, 25 Sep: the lit heart "doesn't look quite right ... think like a professional"): in
+       the heart stations the veil opens round the heart, feathered, so the heart shows as the artist drew
+       it, joined to its aorta, pulmonary artery and venae cavae, with its own coronary vessels. The flat
+       copy it replaces was a pink blob cut off from its vessels. */
+    defs.insertAdjacentHTML('beforeend',
+      '<radialGradient id="' + U + 'spotg"><stop offset="0" stop-color="#000"/><stop offset=".6" stop-color="#000"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>' +
+      '<mask id="' + U + 'spot" maskUnits="userSpaceOnUse" x="-600" y="-600" width="' + (AW + 1200) + '" height="' + (AH + 1200) + '">' +
+        '<rect x="-600" y="-600" width="' + (AW + 1200) + '" height="' + (AH + 1200) + '" fill="#fff"/>' +
+        '<ellipse class="cp__spot" cx="222" cy="228" rx="46" ry="50" fill="url(#' + U + 'spotg)"/></mask>');
+    var spotSet = false;
+    function heartBoxInRoot() {                  /* the heart's outline, in the drawing's own units */
+      var b = heartShape.getBBox(), m = root.getCTM().inverse().multiply(heartShape.getCTM()), P = svg.createSVGPoint(), xs = [], ys = [];
+      [[b.x, b.y], [b.x + b.width, b.y], [b.x, b.y + b.height], [b.x + b.width, b.y + b.height]].forEach(function (c) { P.x = c[0]; P.y = c[1]; var q = P.matrixTransform(m); xs.push(q.x); ys.push(q.y); });
+      return [Math.min.apply(null, xs), Math.min.apply(null, ys), Math.max.apply(null, xs), Math.max.apply(null, ys)];
+    }
+    function spotlight(on) {
+      if (on && !spotSet && heartShape) {
+        try {
+          var hb = heartBoxInRoot(), e = defs.querySelector('#' + U + 'spot .cp__spot');
+          if (hb[2] > hb[0]) { spotSet = true;
+            e.setAttribute('cx', f2((hb[0] + hb[2]) / 2)); e.setAttribute('cy', f2((hb[1] + hb[3]) / 2 - 8));
+            e.setAttribute('rx', f2((hb[2] - hb[0]) / 2 + 17)); e.setAttribute('ry', f2((hb[3] - hb[1]) / 2 + 25)); }
+        } catch (x) {}
+      }
+      if (on) veil.setAttribute('mask', 'url(#' + U + 'spot)'); else veil.removeAttribute('mask');
+    }
     var litO = el('g', { 'class': 'cp__lito' }, root);          /* lit organs, under their vessels */
     var tubesBack = el('g', { 'class': 'cp__tubes' }, root);    /* lit vessels behind the heart */
     var litH = el('g', { 'class': 'cp__lito cp__lith' }, root); /* the lit heart and its coronary vessels */
@@ -380,6 +420,23 @@
 
     /* ----- the blood ----- */
     var flowG = el('g', { 'class': 'cp__flow' }, root);
+    /* the blood in the vessels BEHIND the heart (the drawing's arteries, pulmonary veins and veins) must not
+       run over its surface: a mask cuts the heart's body out of their dots. The roots of the great vessels
+       above it are drawn in front of it, so the cut starts below them. Only the parts that pass behind the
+       heart are masked, to keep the cost of a mask to the few that need it. */
+    var flowBackG = el('g', { 'class': 'cp__flowback' }, flowG), behindBox = null;
+    if (heartShape) {
+      defs.insertAdjacentHTML('beforeend', '<clipPath id="' + U + 'below"><rect x="-600" y="214" width="' + (AW + 1200) + '" height="' + (AH + 600) + '"/></clipPath>' +
+        '<mask id="' + U + 'behind" maskUnits="userSpaceOnUse" x="-600" y="-600" width="' + (AW + 1200) + '" height="' + (AH + 1200) + '">' +
+        '<rect x="-600" y="-600" width="' + (AW + 1200) + '" height="' + (AH + 1200) + '" fill="#fff"/><g class="cp__behind" clip-path="url(#' + U + 'below)"></g></mask>');
+      copyOf(heartShape, { fill: '#000', stroke: 'none' }, defs.querySelector('#' + U + 'behind .cp__behind'));
+      flowBackG.setAttribute('mask', 'url(#' + U + 'behind)');
+      behindBox = [185, 205, 262, 268];                            /* the heart's body, with room, in the drawing's units */
+    }
+    function passesBehind(P) {
+      if (!behindBox || !(P.c === 'a' || P.c === 'pv' || P.c === 'v')) return false;
+      var b = P.box; return b[0] < behindBox[2] && b[0] + b[2] > behindBox[0] && b[1] < behindBox[3] && b[1] + b[3] > behindBox[1];
+    }
     var DOT = { a: '#FFE2DC', ag: '#FFE2DC', pv: '#FFE2DC', v: '#DCEAFF', pa: '#DCEAFF', po: '#D8FBF6' };
     var SPEED = { a: 34, ag: 30, pv: 22, v: 17, pa: 26, po: 15 };
     var BUCKETS = [0, .8, 1.8, 3.4, 1e9];
@@ -394,7 +451,7 @@
         var list = byB[b], rs = list.map(medianR).sort(function (x, y) { return x - y; }), r = rs[rs.length >> 1];
         var dot = Math.max(.36, Math.min(1.7, r * .5)), dash = dot * 1.5, gap = Math.max(3, dot * 4.6);
         var p = el('path', { d: list.map(dAlong).join(''), fill: 'none', stroke: DOT[P.c], 'stroke-width': f2(dot), 'stroke-linecap': 'round',
-          'stroke-dasharray': f2(dash) + ' ' + f2(gap), 'class': 'cp__f', 'data-part': part, opacity: .82 }, flowG);
+          'stroke-dasharray': f2(dash) + ' ' + f2(gap), 'class': 'cp__f', 'data-part': part, opacity: .82 }, passesBehind(P) ? flowBackG : flowG);
         flows.push({ el: p, part: part, c: P.c, gap: gap + dash, speed: SPEED[P.c] * (.72 + Math.min(.55, r * .09)), off: 0 });
       });
     });
@@ -406,8 +463,13 @@
     function buildLens() {
       lensG.innerHTML = '';
       if (!global.HeartArt) return;
-      el('path', { d: 'M249 236 L' + LENS.x + ' 236', stroke: '#E8EEF1', 'stroke-width': .6, 'stroke-dasharray': '1.6 1.2', fill: 'none', 'class': 'cp__lensline' }, lensG);
-      el('circle', { cx: 247, cy: 236, r: 1.6, fill: 'none', stroke: '#E8EEF1', 'stroke-width': .6 }, lensG);
+      /* the magnifier: a frame round the heart on the body, and two lines out to the view beside it, so it
+         is plain which heart is being shown bigger */
+      var fb = [187, 205, 257, 266];
+      try { if (heartShape) { var hb1 = heartBoxInRoot(); if (hb1[2] > hb1[0]) fb = [hb1[0] - 5, hb1[1] - 5, hb1[2] + 5, hb1[3] + 5]; } } catch (x) {}
+      el('rect', { x: f2(fb[0]), y: f2(fb[1]), width: f2(fb[2] - fb[0]), height: f2(fb[3] - fb[1]), rx: 4, fill: 'none', stroke: '#FFD65A', 'stroke-opacity': .9, 'stroke-width': .7, 'class': 'cp__loupe' }, lensG);
+      el('path', { d: 'M' + f2(fb[2]) + ' ' + f2(fb[1]) + 'L' + LENS.x + ' ' + (LENS.y + 5) + 'M' + f2(fb[2]) + ' ' + f2(fb[3]) + 'L' + LENS.x + ' ' + (LENS.y + LENS.h - 5),
+        stroke: '#FFD65A', 'stroke-opacity': .55, 'stroke-width': .5, 'stroke-dasharray': '1.4 1.1', fill: 'none', 'class': 'cp__lensline' }, lensG);
       el('rect', { x: LENS.x, y: LENS.y, width: LENS.w, height: LENS.h, rx: 5, fill: '#0E1A22', stroke: '#E8EEF1', 'stroke-opacity': .5, 'stroke-width': .6 }, lensG);
       var clip = defs.querySelector('#' + U + 'lensclip rect');
       clip.setAttribute('x', LENS.x); clip.setAttribute('y', LENS.y); clip.setAttribute('width', LENS.w); clip.setAttribute('height', LENS.h);
@@ -438,6 +500,7 @@
     });
     if (heartShape) copyOf(heartShape, { fill: 'transparent', stroke: 'none', 'data-part': 'heart', 'class': 'cp__hit cp__hit--o' }, hitG);
     Array.prototype.forEach.call(corShapes, function (n) {      /* the vessels on the heart win over the heart itself: red, its arteries; blue, its veins */
+      if (n.classList.contains('cp-cor-rim')) return;
       copyOf(n, { fill: 'none', stroke: 'transparent', 'stroke-width': 8, 'vector-effect': 'non-scaling-stroke', 'data-part': n.classList.contains('cp-v') ? 'cardiac-vein' : 'coronary', 'class': 'cp__hit' }, hitG);
     });
     /* the vessels: the gut's small ones last, so they win where they cross the aorta */
@@ -487,7 +550,7 @@
     }
     function applyLight() {
       root.classList.toggle('is-lighting', !!lit);
-      litO.innerHTML = ''; litH.innerHTML = ''; heartLit = null;
+      litO.innerHTML = ''; litH.innerHTML = ''; heartLit = null; corLit = [];
       var heartOn = !!(lit && (lit.heart || lit.coronary || lit['cardiac-vein'] || anyChamber()));
       if (lit) {
         Object.keys(lit).forEach(function (p) {
@@ -498,11 +561,12 @@
             copyOf(n, { fill: 'none', stroke: '#6E7F8C', 'stroke-width': 2, 'vector-effect': 'non-scaling-stroke' }, litO);
           });
         });
-        if (heartOn && heartShape) {
+        if (heartOn && heartShape && !lensMode) {
           heartLit = copyOf(heartShape, {}, litH);
-          if (lit.coronary || lit['cardiac-vein'] || lit.heart) Array.prototype.forEach.call(corShapes, function (n) { copyOf(n, {}, litH); });
+          if (lit.coronary || lit['cardiac-vein'] || lit.heart) corLit = Array.prototype.map.call(corShapes, function (n) { return copyOf(n, {}, litH); });
         }
       }
+      spotlight(!!(lit && lensMode && heartOn));
       tubes(tubesBack, BACK, heartOn); tubes(tubesFront, FRONT, heartOn);
       flows.forEach(function (f) { f.el.classList.toggle('is-dim', !!lit && !lit[f.part]); });
       /* the lens: its chambers and valves, lit or dimmed */
@@ -514,7 +578,7 @@
       });
       layoutLabels();
     }
-    var heartLit = null;
+    var heartLit = null, corLit = [];
     function anyChamber() { if (!lit) return false; for (var k in CHAMBERS) if (lit[k]) return true; return false; }
     function light(ids) {
       if (!ids || !ids.length) { lit = null; applyLight(); return { colour: null }; }
@@ -532,7 +596,7 @@
       lensMode = want;
       lensG.setAttribute('opacity', want ? 1 : 0);
       lensG.style.pointerEvents = want ? '' : 'none';
-      layoutLabels();
+      applyLight();
     }
 
     /* ----- the heartbeat, and the blood moving with it ----- */
@@ -542,13 +606,38 @@
       return ph < .12 ? .5 : ph < .45 ? .5 + 1.9 * Math.sin(Math.PI * (ph - .12) / .33) : .5;
     }
     var heartBase = heartShape ? (heartShape.getAttribute('transform') || '') : '', heartC = null;
+    /* the beat. The ventricles squeezing make the heart SMALLER, shortening towards its apex, which hardly
+       moves (the valve plane comes down to it); the atria squeezing, a little. It used to swell as the
+       ventricles contracted, the opposite of the cut-open heart beside it (Daniel, 25 Sep: "they are not
+       beating at the same rhythm ... or they're actually opposite"). The vessels on its surface move with it. */
+    var corAnch = null;
+    function corAnchors() {                      /* the apex, in each coronary vessel's own coordinates */
+      var out = [];
+      try {
+        var mh = heartShape.getCTM();
+        Array.prototype.forEach.call(corShapes, function (n) {
+          var P = svg.createSVGPoint(); P.x = heartC[0]; P.y = heartC[1];
+          var mn = n.getCTM(); if (!mh || !mn) return;
+          var q = P.matrixTransform(mh).matrixTransform(mn.inverse());
+          out.push({ el: n, base: n.getAttribute('transform') || '', a: [q.x, q.y] });
+        });
+      } catch (x) {}
+      return out;
+    }
+    function scaleAbout(a, k) { return 'translate(' + f2(a[0]) + ' ' + f2(a[1]) + ') scale(' + k + ') translate(' + f2(-a[0]) + ' ' + f2(-a[1]) + ')'; }
     function paintBeat() {
-      var k = 1 + .028 * beat.vent - .012 * beat.atria;
-      if (heartShape && !heartC) { try { var hb0 = heartShape.getBBox(); if (hb0.width) heartC = [hb0.x + hb0.width / 2, hb0.y + hb0.height / 2]; } catch (x) {} }
+      var k = Math.round((1 - .035 * beat.vent - .006 * beat.atria) * 1000) / 1000;
+      if (heartShape && !heartC) { try { var hb0 = heartShape.getBBox(); if (hb0.width) heartC = [hb0.x + hb0.width * .83, hb0.y + hb0.height * .99]; } catch (x) {} }
       if (heartC) {
-        var sc = 'translate(' + f2(heartC[0]) + ' ' + f2(heartC[1]) + ') scale(' + (Math.round(k * 1000) / 1000) + ') translate(' + f2(-heartC[0]) + ' ' + f2(-heartC[1]) + ')';
+        if (!corAnch || !corAnch.length) corAnch = corAnchors();      /* measured once the plate is on screen */
+        var sc = scaleAbout(heartC, k);
         heartShape.setAttribute('transform', (heartBase ? heartBase + ' ' : '') + sc);
         if (heartLit) heartLit.setAttribute('transform', sc);
+        corAnch.forEach(function (c, i) {
+          var sc2 = scaleAbout(c.a, k);
+          c.el.setAttribute('transform', (c.base ? c.base + ' ' : '') + sc2);
+          if (corLit[i]) corLit[i].setAttribute('transform', sc2);
+        });
       }
       if (!lensMode || !global.HeartArt || !lensNodes.outer) return;
       var p = global.HeartArt.paths(beat);
