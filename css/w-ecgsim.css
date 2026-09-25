@@ -8,6 +8,7 @@
 .es__rule > b{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--k-heart,#A3213A);margin-bottom:2px}
 .es__rule i{display:inline-block;width:20px;font-style:normal;text-align:center;margin-right:4px}
 .es__up{color:#1E8A4C} .es__dn{color:#C0392B} .es__fl{color:#7A8A94}
+.es__rec{margin-top:4px;padding-top:6px;border-top:1px dashed var(--edge)} .es__rc{color:#4A6A7A}
 .es__leads{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
 .es__lead{font:inherit;display:flex;flex-direction:column;align-items:flex-start;gap:1px;min-height:44px;padding:5px 11px;border:1.5px solid var(--edge);border-radius:var(--r,10px);background:#fff;cursor:pointer;text-align:left;max-width:100%}
 .es__lead b{font-size:14px;color:var(--ink,#1A1A1A)}

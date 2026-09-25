@@ -125,7 +125,7 @@
     { ms: [244, 330], wave: null, h: 'All the ventricle muscle is excited',
       p: 'Every ventricle cell is excited, and the ventricles are contracting. No wave is moving, so the line is flat again: the ST segment. The atria have recovered by now: the small wave of their recovery was hidden inside the QRS complex.' },
     { ms: [330, 500], wave: 'T', h: 'The ventricles recover',
-      p: 'The ventricle cells recover, ready for the next beat. Recovery starts at the outside of each wall and moves inwards, the opposite way to the first wave. A recovery wave moving away from the + electrode draws the same shape as a signal moving towards it, so the T wave usually points the same way as the biggest wave of the QRS complex.' },
+      p: 'The ventricle cells recover, ready for the next beat. Recovery starts at the outside of each wall and moves inwards, the opposite way to the first wave. It also works the other way round: the surface of resting muscle is positive and of excited muscle negative, so recovery has its positive side behind it, where the signal had it in front. That is why recovery moving away from the + electrode makes the line rise. The two reversals cancel, so the T wave usually points the same way as the biggest wave of the QRS complex.' },
     { ms: [500, 800], wave: null, h: 'Rest until the next beat',
       p: 'The whole heart is at rest and the line is flat: the isoelectric line. Then the SA node fires again. At 75 beats a minute one beat lasts 0.8 s, so the next P wave starts here.' }
   ];
@@ -219,7 +219,9 @@
       '<b>How an ECG draws its line</b>' +
       '<span><i class="es__up" aria-hidden="true">▲</i> The signal moves <b>towards</b> the + electrode: the line <b>rises</b> (a peak).</span>' +
       '<span><i class="es__dn" aria-hidden="true">▼</i> It moves <b>away</b> from the + electrode: the line <b>falls</b> (a trough).</span>' +
-      '<span><i class="es__fl" aria-hidden="true">▬</i> It moves at right angles to the lead, or nothing moves: the line is <b>flat</b>.</span>'));
+      '<span><i class="es__fl" aria-hidden="true">▬</i> It moves at right angles to the lead, or nothing moves: the line is <b>flat</b>.</span>' +
+      '<span class="es__rec"><i class="es__rc" aria-hidden="true">⇢</i> <b>Recovery</b> (the T wave) is the other way round: recovery moving <b>away</b> from the + electrode makes the line <b>rise</b>. ' +
+        'Why: the surface of resting muscle is positive and of excited muscle negative, so the signal has its positive side in front of it, and recovery has its positive side behind it.</span>'));
 
     /* where the + electrode is */
     var pick = h('div', 'es__leads'); pick.setAttribute('role', 'group'); pick.setAttribute('aria-label', 'Choose the lead');
@@ -467,8 +469,8 @@
         : kind === 'flat' ? 'The signal is moving almost at right angles to ' + esc(who) + ', so the line hardly changes.'
         : kind === 'up' ? 'The signal is moving <b>towards</b> the + electrode of ' + esc(who) + ', so the line <b>rises</b>.'
         : 'The signal is moving <b>away from</b> the + electrode of ' + esc(who) + ', so the line <b>falls</b>.';
-      if (ms >= 330 && ms < 500 && kind !== 'none') line = 'The ventricles are recovering. ' + (kind === 'up' ? 'The recovery moves away from the + electrode of ' + esc(who) + ', so the line <b>rises</b>.'
-        : kind === 'down' ? 'The recovery moves towards the + electrode of ' + esc(who) + ', so the line <b>falls</b>.' : 'The recovery moves at right angles to ' + esc(who) + ', so the line hardly changes.');
+      if (ms >= 330 && ms < 500 && kind !== 'none') line = 'The ventricles are recovering, and recovery is <b>the other way round</b>. ' + (kind === 'up' ? 'It is moving away from the + electrode of ' + esc(who) + ', so the line <b>rises</b>.'
+        : kind === 'down' ? 'It is moving towards the + electrode of ' + esc(who) + ', so the line <b>falls</b>.' : 'It is moving at right angles to ' + esc(who) + ', so the line hardly changes.');
       now.innerHTML = line;
       /* which lead is chosen, on the buttons and the small traces */
       Object.keys(leadBtns).forEach(function (k) { var on = k === leadId; leadBtns[k].classList.toggle('is-on', on); leadBtns[k].setAttribute('aria-pressed', on ? 'true' : 'false'); });
