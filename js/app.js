@@ -1371,6 +1371,20 @@
       if (S[hsh] && hsh !== current) open(hsh);
       else if (OWNER[hsh]) openGroup(hsh);
     });
+    /* A widget's button that leads to a widget on another station (Inside the heart's "what starts
+       each beat" → the ECG simulation in Monitoring the heart): open that station, land on the
+       widget as a followed word does, and offer the way back. */
+    if (window.CircLearn) window.CircLearn.goToWidget = function (id, sel, what) {
+      if (!S[id]) return false;
+      var from = current;
+      markWhereWeAre(); closePeek();
+      open(id);
+      var target = document.querySelector('#panelInner ' + sel);
+      if (!target) { toStationTop(); return false; }
+      landOn(target, false);
+      if (from !== id && S[from]) showBackChip(from, what || S[id].name);
+      return true;
+    };
   }
 
   /* GitHub Pages caches the HTML for ten minutes; the page's own stamp comes from its script

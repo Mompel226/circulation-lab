@@ -1,0 +1,97 @@
+/* ============================================================
+   w-ecgsim.css — "Why an ECG has peaks and troughs" (js/w-ecgsim.js). Every class is es__.
+   The heart and its electrodes sit on the plate's dark ink; the ECG on pale red squared paper.
+   ============================================================ */
+.es__beyond{margin:6px 0 10px;padding:8px 12px;font-size:13.5px;line-height:1.45;color:#4A3B5E;background:#F4F0FA;border:1px solid #D9CCEC;border-left:4px solid #7B5BA8;border-radius:10px}
+.es__rule{display:flex;flex-direction:column;gap:4px;margin:0 0 12px;padding:10px 14px;background:#fff;border:1.5px solid var(--edge);border-radius:var(--r,10px);font-size:14px;line-height:1.45}
+.es__rule > b{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--k-heart,#A3213A);margin-bottom:2px}
+.es__rule i{display:inline-block;width:20px;font-style:normal;text-align:center;margin-right:4px}
+.es__up{color:#1E8A4C} .es__dn{color:#C0392B} .es__fl{color:#7A8A94}
+.es__leads{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.es__lead{font:inherit;display:flex;flex-direction:column;align-items:flex-start;gap:1px;min-height:44px;padding:5px 11px;border:1.5px solid var(--edge);border-radius:var(--r,10px);background:#fff;cursor:pointer;text-align:left;max-width:100%}
+.es__lead b{font-size:14px;color:var(--ink,#1A1A1A)}
+.es__lead small{font-size:11.5px;color:var(--grey,#6B6B6B);line-height:1.3}
+.es__lead:hover{border-color:#D8A3AE}
+.es__lead.is-on{border-color:var(--k-heart,#A3213A);background:#FBECEF}
+.es__lead.is-on b{color:var(--k-heart,#A3213A)}
+.es__lead:focus-visible,.es__mini:focus-visible{outline:2.5px solid var(--green,#14572B);outline-offset:2px}
+.es__barslot{margin:8px 0}
+.es__minis{margin:14px 0 4px}
+.es__minih{margin:0 0 6px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--grey,#6B6B6B)}
+.es__minig{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.es__mini{font:inherit;display:flex;flex-direction:column;align-items:stretch;padding:4px 4px 5px;border:1.5px solid var(--edge);border-radius:8px;background:#FFF7F7;cursor:pointer}
+.es__mini svg{width:100%;height:auto;display:block}
+.es__mini.is-on{border-color:var(--k-heart,#A3213A);background:#FBECEF}
+.es__mininame{font-size:12.5px;font-weight:700;color:var(--ink,#1A1A1A);text-align:center}
+.es__minibase{stroke:#E3AAAA;stroke-width:1;stroke-dasharray:3 3}
+.es__minitrace{fill:none;stroke:#1A1A1A;stroke-width:1.6;stroke-linejoin:round}
+/* the drawing */
+.es__home{margin:4px 0 8px}
+.es__fig{margin:0}
+.es__svg{width:100%;height:auto;display:block}
+.es__bg{fill:#0D1A22}
+.es__tri{fill:none;stroke:rgba(232,238,241,.16);stroke-width:1.5;stroke-dasharray:6 6}
+.es__heart{opacity:.9}
+.es__cell{fill:#FFE9A8;fill-opacity:.07}
+.es__cell.is-on{fill:#FFC23A;fill-opacity:.95}
+.es__c{fill:none;stroke:#F6E3A0;stroke-opacity:.35;stroke-width:3;stroke-linecap:round}
+.es__c.is-on{stroke:#FFD65A;stroke-opacity:1;stroke-width:5}
+.es__node{fill:#F6E3A0;fill-opacity:.55;stroke:#0D1A22;stroke-width:1.5}
+.es__node.is-on{fill:#FFD65A;fill-opacity:1;stroke:#FFF3C4;stroke-width:3}
+.es__el circle{fill:#1B2A33;stroke:#6E8391;stroke-width:2}
+.es__el.is-on circle{stroke:#E8EEF1}
+.es__el.is-plus circle{fill:#1F4D33;stroke:#9BE3A8;stroke-width:3}
+.es__el .es__centre{fill:#E8EEF1;stroke:#0D1A22}
+.es__free circle{cursor:grab}
+.es__elsign{fill:#FFFFFF;font:700 22px var(--sans,system-ui,sans-serif);text-anchor:middle;pointer-events:none}
+.es__elname{fill:#9FB3C0;font:600 13px var(--sans,system-ui,sans-serif);text-anchor:middle;letter-spacing:.02em}
+.es__el text.es__elname[text-anchor="start"]{text-anchor:start}
+.es__axis{stroke:#9BE3A8;stroke-width:2;stroke-dasharray:8 6;opacity:.75}
+.es__ring{fill:none;stroke:rgba(155,227,168,.35);stroke-width:1.5;stroke-dasharray:4 6}
+.es__arrow{stroke-width:7;stroke-linecap:round}
+.es__arrow--up{stroke:#56D38A} .es__arrow--down{stroke:#FF7A6E} .es__arrow--flat{stroke:#B8C4CC}
+.es__arrow--rec{stroke-dasharray:10 7}
+.es__arrowname{fill:#E8EEF1;font:600 13px var(--sans,system-ui,sans-serif);text-anchor:middle}
+.es__name line{stroke:#E8EEF1;stroke-opacity:.55;stroke-width:1.2}
+.es__name circle{fill:#FFFFFF}
+.es__name text{fill:#C9D8E0;font:500 14px var(--sans,system-ui,sans-serif)}
+.es__name.is-on text{fill:#FFD65A}
+.es__paper{fill:#FFF6F5;stroke:#E8B4B4;stroke-width:1}
+.es__g1{stroke:#F5CFCF;stroke-width:.7}
+.es__g2{stroke:#E9A5A5;stroke-width:1.3}
+.es__iso{stroke:#B98989;stroke-width:1;stroke-dasharray:5 4}
+.es__trace{fill:none;stroke:#1A1A1A;stroke-width:2.6;stroke-linejoin:round;stroke-linecap:round}
+.es__pen{fill:#D63C3B;stroke:#fff;stroke-width:2}
+.es__wave{fill:#A3213A;font:700 16px var(--sans,system-ui,sans-serif);text-anchor:middle}
+.es__seg{fill:#8A5A5A;font:600 12px var(--sans,system-ui,sans-serif);text-anchor:middle;letter-spacing:.04em}
+.es__stripname{fill:#7A3A3A;font:700 13px var(--sans,system-ui,sans-serif)}
+.es__now{margin:8px 0 0;padding:9px 12px;background:#fff;border:1px solid var(--edge);border-left:4px solid #56D38A;border-radius:10px;font-size:14.5px;line-height:1.5;color:#2A2A2A;min-height:3em}
+/* standing in the plate's column (CircLearn.stage): the drawing as large as the column allows, the
+   words of the step under it; the buttons, the steps and the six small traces stay in the text */
+.es.is-staged .sp__p{display:none!important}
+.sim > .es__pack{flex:1;min-height:0;display:flex;flex-direction:column;gap:6px}
+.sim > .es__pack .es__fig{flex:1;min-height:0;display:flex}
+.sim > .es__pack .es__svg{flex:1 1 0;min-height:0;width:100%;height:100%}
+.sim > .es__pack .sp__now{position:static;width:auto;height:auto;overflow:visible;clip:auto;white-space:normal;margin:0;padding:8px 12px;
+  background:#fff;border:1px solid var(--edge);border-left:4px solid var(--k-heart);border-radius:10px;font-size:13.5px;line-height:1.45;color:#2A2A2A}
+.sim > .es__pack .es__now{margin:0;min-height:0;font-size:13.5px}
+/* in the text (a phone, a tablet, a narrow window): the step's words right under the drawing, the
+   list below as a row of numbered steps, as in the lab's other stacked players */
+.es:not(.is-staged) .sp__now{position:static;width:auto;height:auto;overflow:visible;clip:auto;white-space:normal;margin:8px 0 0;padding:10px 13px;
+  background:#fff;border:1px solid var(--edge);border-left:4px solid var(--k-heart);border-radius:10px;font-size:14.5px;line-height:1.5;color:#2A2A2A}
+.es:not(.is-staged) .sp__p{display:none!important}
+.es:not(.is-staged) .sp__steps{flex-direction:row;flex-wrap:wrap;gap:5px}
+.es:not(.is-staged) .sp__step{flex:1 1 180px}
+@media (max-width:620px){
+  .es__minig{grid-template-columns:repeat(2,minmax(0,1fr))} .es__lead small{display:none}
+  /* the drawing is about half size here: its words grow so they stay readable */
+  .es__home{margin-left:-10px;margin-right:-10px}
+  .es__name text{font-size:19px}
+  .es__elname{font-size:19px}
+  .es__elsign{font-size:28px}
+  .es__wave{font-size:24px}
+  .es__seg{font-size:18px}
+  .es__stripname{font-size:21px}
+  .es__stripsay{display:none}
+  .es__arrowname{font-size:19px}
+}
