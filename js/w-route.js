@@ -112,7 +112,12 @@
     });
     listD.appendChild(listBox);
     side.appendChild(pick); side.appendChild(task); side.appendChild(trail); side.appendChild(say); side.appendChild(tools); side.appendChild(listD);
-    wrap.appendChild(map); wrap.appendChild(side);
+    /* on a wide screen the body stands in the plate's column, beside the puzzle (Daniel, 26 Sep: "you could
+       have that being the animation shown on the left rather than on the right") */
+    var mapHome = h('div', 'rt__maphome'), pack = h('div', 'rt__pack');
+    var packT = h('p', 'stg__title', esc(spec.title || 'Trace the route')); packT.hidden = true;
+    pack.appendChild(packT); pack.appendChild(map); mapHome.appendChild(pack);
+    wrap.appendChild(mapHome); wrap.appendChild(side);
     box.appendChild(wrap);
     box.appendChild(h('p', 'widget__note', 'Red is oxygenated blood and blue is deoxygenated blood, as on every diagram; real blood is never blue. The heart is shown cut open in the magnified view beside the body, seen from the front, so its right side is on your left. Scroll or pinch to zoom.'));
 
@@ -127,6 +132,9 @@
     function lightRoute() {
       if (!draw) return;
       var on = [PUZZLES[cur].start].concat(via, got);
+      /* the hepatic portal vein gathers the intestine's blood through the mesenteric vein: lit together, the route
+         runs unbroken from the intestine to the liver instead of stopping short above it */
+      if (on.indexOf('hepatic-portal-vein') >= 0 && on.indexOf('gut') >= 0) on = on.concat(['mesenteric-vein']);
       draw.light(on);
     }
     function paint() {
@@ -203,6 +211,8 @@
     var tries = 0;
     function init() {
       if (!box.isConnected || !global.CircDraw) { if (tries++ < 200) setTimeout(init, 60); return; }
+      /* not while the body is parked out of sight: it measures the organs as it is drawn */
+      if (!map.getBoundingClientRect().width) { setTimeout(init, 250); return; }
       draw = global.CircDraw(svg, {
         map: map, tag: tag, labels: false,
         onEnter: function (id, target) { if (!names) return; var nm = NAME[id] || (draw.G[id] && draw.G[id].label); if (nm) draw.pin(target, nm.charAt(0).toUpperCase() + nm.slice(1), draw.G[id] ? draw.G[id].colour : null); },
@@ -216,6 +226,10 @@
       paint();
     }
     setTimeout(init, 0);
+    var stg = L.stage ? L.stage({ box: box, spec: spec, pack: pack, home: mapHome, watch: function () { return box; },
+      onPlace: function (inColumn) { packT.hidden = !inColumn; box.classList.toggle('rt--staged', inColumn); } }) : null;
+    box.__onMove = function () { if (stg) stg.mount(); };
+    box.__onReset = function () { if (stg) stg.detach(); };
     box.__seek = function (t) { var i = Math.max(0, Math.min(PUZZLES.length - 1, Math.floor(t))); start(i); var n = Math.round((t - i) * 100); for (var k = 0; k < n && k < PUZZLES[i].steps.length; k++) choose(PUZZLES[i].steps[k]); return PUZZLES.length; };
     paint();
     return box;

@@ -1393,6 +1393,11 @@ picture{display:block;line-height:0}
 .rt__loading{position:absolute;inset:0;display:grid;place-items:center;margin:0;color:#8FA7B4;font-size:13px}
 .rt--nonames .rt__tag{display:none}
 .rt__side{display:flex;flex-direction:column;gap:10px;min-width:0}
+/* standing in the plate's column (CircLearn.stage): the body fills it; the puzzle takes the text's width */
+.rt.is-staged .rt__wrap{grid-template-columns:minmax(0,1fr)}
+.rt.is-staged .rt__maphome{display:none}
+.sim > .rt__pack{flex:1;min-height:0;display:flex;flex-direction:column;gap:6px}
+.sim > .rt__pack .rt__map{flex:1;min-height:0;height:auto}
 .rt__pick{display:flex;flex-wrap:wrap;gap:5px}
 .rt__pb{font:inherit;font-size:13px;font-weight:700;min-width:38px;height:36px;padding:0 10px;border-radius:9px;border:1.5px solid var(--edge);background:#fff;color:var(--ink);cursor:pointer}
 .rt__pb small{font-size:10px;font-weight:700;color:var(--k-vessel);margin-left:2px}
