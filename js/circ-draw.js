@@ -146,7 +146,8 @@
             with Beyond syllabus on (then the real names replace them)
          X  beyond the syllabus: every name the artist gave, at the tip of her own arrow, or where the
             tip lies under another vessel, the nearest point along the same stretch that nothing
-            covers (the internal iliac and peroneal arteries have none, and are left out)
+            covers (the internal iliac and peroneal arteries have none, and are left out; the common
+            iliac vein's short stretch is under the mesenteric vein, 26 Sep, and is left out too)
      at  a point on the part; it is moved onto the nearest centre line of that part when the plate is
          built, so a leader always touches its own vessel. An organ's point is a spot in it far from
          every vessel, so "liver" never seems to name a vessel inside the liver, and away from the
@@ -160,7 +161,7 @@
     { id: 'lungs', text: 'lung', at: [154.8, 243.3], alt: [[157.3, 223.8], [151.8, 262.8], [242.8, 185.6]], lv: 'A' },
     { id: 'liver', text: 'liver', at: [157.7, 310.4], alt: [[153.7, 288.4], [161.2, 298.9], [188.2, 284.4], [242.7, 274.9]], lv: 'A' },
     { id: 'kidneys', text: 'kidney', at: [260.4, 338.4], alt: [[259.9, 323.9], [171.5, 346.2]], lv: 'A' },
-    { id: 'gut', text: 'small intestine', at: [250, 375], alt: [[182.5, 370], [215, 402.5], [242.5, 392.5]], lv: 'A', needs: 'gut' },
+    { id: 'gut', text: 'small intestine', at: [250, 375], alt: [[182.5, 370], [190, 395], [242.5, 392.5]], lv: 'A', needs: 'gut' },
     { id: 'carotid', text: 'carotid artery', at: [224.9, 134.2], lv: 'A' },
     { id: 'radial-artery', text: 'radial artery', at: [65.9, 396.8], alt: [[71.4, 372.9]], lv: 'A' },
 
@@ -214,9 +215,8 @@
     { id: 'splenic-artery', text: 'splenic artery', at: [240.4, 293.3], lv: 'X', z: 1.6 },
     { id: 'mesenteric-artery', text: 'mesenteric artery', at: [221.1, 326.2], lv: 'X', z: 1.6 },
     { id: 'artery', text: 'gonadal artery', at: [231.7, 355.4], lv: 'X' },
-    { id: 'vein', text: 'gonadal vein', at: [236, 372.5], lv: 'X' },
+    { id: 'vein', text: 'gonadal vein', at: [232, 372.4], lv: 'X' },
     { id: 'leg-artery', text: 'common iliac artery', at: [226.8, 386.2], lv: 'X' },
-    { id: 'leg-vein', text: 'common iliac vein', at: [209.8, 387.6], lv: 'X' },
     { id: 'leg-artery', text: 'external iliac artery', at: [234.3, 407.5], lv: 'X', z: 1.6 },
     { id: 'leg-vein', text: 'external iliac vein', at: [232.3, 409.5], lv: 'X', z: 1.6 },
     { id: 'leg-artery', text: 'femoral artery', at: [243.9, 499.7], lv: 'X' },
@@ -441,10 +441,12 @@
     var SPEED = { a: 34, ag: 30, pv: 22, v: 17, pa: 26, po: 15 };
     var BUCKETS = [0, .8, 1.8, 3.4, 1e9];
     var flows = [];
+    var FANS = { 'mesenteric-vein': 1, 'mesenteric-artery': 1 };
     Object.keys(FLOW).forEach(function (part) {
       var P = FLOW[part], byB = {};
       P.e.forEach(function (e) {
         var r = medianR(e), b = 0; while (r >= BUCKETS[b + 1]) b++;
+        if (FANS[part] && r < .36) return;         /* the fine vessels fanning into the intestine: too small for dots */
         (byB[b] = byB[b] || []).push(e);
       });
       Object.keys(byB).forEach(function (b) {
@@ -521,6 +523,27 @@
     /* a lit vessel, drawn again as a tube along its centre line: the drawing's own rim colour, then its
        own fill, at the width the drawing gives it at every point */
     var TUBE = { a: ['#b62717', '#ffbf00'], ag: ['#b62717', '#ffbf00'], pv: ['#b62717', '#ffbf00'], v: ['#0060b6', '#00a0c6'], pa: ['#0060b6', '#00a0c6'], po: ['#0060b6', '#00d8c6'] };
+    function tubePaths(edges, c, parent) {        /* centre lines drawn as the drawing draws a vessel: a rim, then its fill */
+      var rim = {}, core = {};
+      edges.forEach(function (e) {
+        for (var i = 0; i + 5 < e.length; i += 3) {
+          var r = (e[i + 2] + e[i + 5]) / 2, seg = 'M' + e[i] + ' ' + e[i + 1] + 'L' + e[i + 3] + ' ' + e[i + 4];
+          var wr = Math.round((2 * r + .15) * 5) / 5, wc = Math.max(.3, Math.round((2 * r - .6) * 5) / 5);
+          rim[wr] = (rim[wr] || '') + seg; core[wc] = (core[wc] || '') + seg;
+        }
+      });
+      Object.keys(rim).forEach(function (w) { el('path', { d: rim[w], stroke: TUBE[c][1], 'stroke-width': w }, parent); });
+      Object.keys(core).forEach(function (w) { el('path', { d: core[w], stroke: TUBE[c][0], 'stroke-width': w }, parent); });
+    }
+    /* the vessels between the small intestine and its mesenteric vein and artery (js/circ-mesentery.js): the
+       artist's stop just above the intestine, which came from another of her drawings. Drawn into the drawing
+       itself, in front of the aorta and vena cava, as the mesenteric vessels lie (Daniel, 26 Sep: "you should
+       see capillaries going from the small intestine into the mesenteric vein") */
+    if (global.CIRC_MESENTERY) {
+      var mesG = el('g', { 'class': 'cp__mesentery', fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, artG);
+      tubePaths(global.CIRC_MESENTERY.vein, 'po', el('g', {}, mesG));
+      tubePaths(global.CIRC_MESENTERY.artery, 'ag', el('g', {}, mesG));
+    }
     var BACK = ['a', 'pv', 'v'], FRONT = ['pa', 'po', 'ag'];
     function tubes(host, layers, heartLitNow) {
       host.innerHTML = '';

@@ -1414,8 +1414,13 @@
     var wrapEl = h('div', 'bf__wrap');
     var left = h('div', 'bf__left'), fig = h('figure', 'bf__fig');
     fig.appendChild(svg); fig.appendChild(sp.now);
+    /* on a wide screen the drawing and its readings stand in the plate's column, beside the steps (Daniel,
+       26 Sep: "the after a meal ... also move it to the left") */
+    var pack = h('div', 'bf__pack');
+    var packT = h('p', 'stg__title', esc(spec.title || 'After a meal')); packT.hidden = true;
+    pack.appendChild(packT); pack.appendChild(fig); pack.appendChild(cap); pack.appendChild(read);
     /* the key's small pictures use the drawing's own shapes, from its defs */
-    left.appendChild(fig); left.appendChild(cap); left.appendChild(read); left.appendChild(key);
+    left.appendChild(pack); left.appendChild(key);
     wrapEl.appendChild(left); wrapEl.appendChild(sp.list);
     box.appendChild(sp.bar);
     box.appendChild(wrapEl);
@@ -1428,7 +1433,9 @@
     }
     applyLayout();
     function fit() {
-      var wpx = svg.getBoundingClientRect ? svg.getBoundingClientRect().width : 0;
+      /* the drawing's own width on screen: in the column it can be held back by the height instead */
+      var rb = svg.getBoundingClientRect ? svg.getBoundingClientRect() : { width: 0, height: 0 };
+      var wpx = rb.height && rb.height < rb.width ? rb.height * G.W / G.H : rb.width;
       var ww = wrapEl.getBoundingClientRect ? wrapEl.getBoundingClientRect().width : 0;
       if (ww) wrapEl.classList.toggle('bf--stack', ww < 640);
       if (!wpx) return;
@@ -1439,12 +1446,15 @@
     function watchSize() {
       if (ro || !global.ResizeObserver) return;
       ro = new ResizeObserver(function () { if (!box.isConnected) { ro.disconnect(); ro = null; return; } fit(); });
-      ro.observe(wrapEl);
+      ro.observe(wrapEl); ro.observe(fig);
     }
     watchSize();
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { widths = {}; if (box.isConnected) sp.paint(sp.time()); });
 
-    box.__onReset = function () { sp.stop(); if (ro) { ro.disconnect(); ro = null; } };
+    var stg = L.stage ? L.stage({ box: box, spec: spec, pack: pack, home: left, before: function () { return key; }, watch: function () { return box; },
+      onPlace: function (inColumn) { packT.hidden = !inColumn; box.classList.toggle('bf--staged', inColumn); requestAnimationFrame(fit); } }) : null;
+    box.__onMove = function () { if (stg) stg.mount(); };
+    box.__onReset = function () { sp.stop(); if (ro) { ro.disconnect(); ro = null; } if (stg) stg.detach(); };
     /* for the headless checks: draw any moment, after a meal or hours later */
     box.__seek = function (t, o) {
       o = o || {};

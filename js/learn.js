@@ -282,13 +282,19 @@
       try {
         io = new IntersectionObserver(function (es) {
           if (!es || !es.length) return;
-          if (!o.box.isConnected) { detach(); return; }
+          if (!o.box.isConnected) return;          /* not in the page yet, or gone: the tick below lets go of a widget that has gone */
           STAGE.want(claim, !!es[es.length - 1].isIntersecting);
         }, { root: STAGE.scrollerOf(o.box) || null, rootMargin: '-30px 0px -' + Math.round(LOWER * 100) + '% 0px', threshold: 0 });
         io.observe(o.watch());
       } catch (e) { io = null; }
     }
-    function mount() { place(STAGE.holding(claim)); watch(); }
+    /* a heavy station can put its widgets in the page a frame or two after building them (the main blood
+       vessels, 26 Sep: "Trace the route" never reached the column): wait for it, then watch */
+    var waits = 0;
+    function mount() {
+      if (!o.box.isConnected) { if (++waits < 180) requestAnimationFrame(mount); return; }
+      waits = 0; place(STAGE.holding(claim)); watch();
+    }
     function detach() {
       if (io) { io.disconnect(); io = null; }
       if (wideQ.removeEventListener) wideQ.removeEventListener('change', onWide);
