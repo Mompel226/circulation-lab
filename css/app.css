@@ -1225,6 +1225,15 @@ picture{display:block;line-height:0}
 .sim{flex:1;min-height:0;overflow:auto;padding:0 14px 16px;display:flex;flex-direction:column}
 .sim[hidden]{display:none}
 .sim .widget{margin-top:0;border:none;box-shadow:none;background:transparent;padding:0}
+/* a Learn-tab widget standing in the column (CircLearn.stage): the plate's own tools have nothing to do */
+.platecol.is-sim .tool-zoom,.platecol.is-sim .tool--t{display:none}
+.stg__park{display:none}
+.stg__title{margin:2px 0 0;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--k-heart)}
+.stg__title[hidden]{display:none}
+/* a wide figure: a picture with small labels, set across the column instead of in the margin */
+.photo.photo--wide{max-width:680px;margin:14px auto 8px}
+.exam-list li .photo.photo--wide{margin-left:auto}
+.photo.photo--wide figcaption{font-size:13px}
 .tool--sim{margin-right:auto}
 .bench{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;justify-content:center;gap:14px;padding:18px 18px 20px}
 .bench[hidden]{display:none}
@@ -1455,6 +1464,10 @@ picture{display:block;line-height:0}
 .cp-lab__txt{fill:#F1F5F7;font-family:var(--sans,Inter,sans-serif);font-weight:500;letter-spacing:.01em}
 .cp-lab.is-beyond .cp-lab__txt{fill:#C9D6DE;font-style:italic}
 .cp-lab.is-beyond .cp-lab__pill{stroke-dasharray:3 2}
+/* the names can be pressed: each flies to its own part */
+.cp-lab__pill,.cp-lab__txt{pointer-events:auto;cursor:pointer}
+.cp-lab:hover .cp-lab__pill{fill:#1C3A48;stroke-opacity:.85}
+.cp-lab:hover .cp-lab__lead{stroke:#FFFFFF}
 /* a name outside the station's light stays, quieter, while there is room for it */
 .cp-lab.is-dim{opacity:.5}
 

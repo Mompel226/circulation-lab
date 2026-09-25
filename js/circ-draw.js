@@ -727,6 +727,12 @@
       labSvg = document.createElementNS(NS, 'svg');
       labSvg.setAttribute('class', 'cp-labels'); labSvg.setAttribute('aria-hidden', 'true');
       opts.map.appendChild(labSvg);
+      /* a name is pressed like its part: the part is lit and the camera flies to it (Daniel, 25 Sep:
+         "it'd be very nice if I could click on the labels and also get the zoom") */
+      labSvg.addEventListener('click', function (e) {
+        var g = e.target && e.target.closest ? e.target.closest('.cp-lab') : null;
+        if (g && opts.onClick) opts.onClick(g.getAttribute('data-part'));
+      });
     }
     var labRaf = null;
     function layoutLabels() {                 /* at most once a frame; a newer request replaces an older one */

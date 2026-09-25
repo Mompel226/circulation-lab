@@ -3,7 +3,7 @@
    The stage is the plate's dark ink, so the heart reads as the same heart as on the body;
    the controls under it are the Learn tab's paper. The accent is the lab's heart ink.
    ============================================================ */
-.h3{--h3-ink:var(--k-heart,#A3213A);--h3-ink-tint:#FBEAEE;--h3-deo:#3B62B5;--h3-oxy:#D63C3B}
+.h3,.h3__stage{--h3-ink:var(--k-heart,#A3213A);--h3-ink-tint:#FBEAEE;--h3-deo:#3B62B5;--h3-oxy:#D63C3B}
 
 /* ---------- tabs ---------- */
 .h3__tabs{display:flex;gap:4px;margin:4px 0 10px;padding:3px;background:var(--edge-2,#EFE8DC);border-radius:var(--r-pill,999px);width:max-content;max-width:100%;flex-wrap:wrap}
@@ -17,6 +17,8 @@
   background:#060D12;background-image:radial-gradient(90% 75% at 50% 45%,#12252F 0%,#0A161D 62%,#060D12 100%);
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.04);touch-action:none;user-select:none;-webkit-user-select:none}
 .h3__gl,.h3__gl canvas{position:absolute;inset:0;display:block}
+/* standing in the plate's column: the whole column is the stage */
+.sim > .h3__stage{flex:1;min-height:0;aspect-ratio:auto;max-height:none;margin-top:4px}
 .h3__gl canvas{cursor:grab;outline:none}
 .h3__gl canvas:active{cursor:grabbing}
 .h3__load{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#C9D8E0;
@@ -183,3 +185,9 @@
   .h3__hint{font-size:9px}
 }
 @media (prefers-reduced-motion:reduce){ .h3__bplay.is-next{animation:none} .h3__labels{transition:none} .h3__bar i{transition:none} }
+/* a narrow stage (a phone): the view buttons smaller, and the view's name on one line */
+@media (max-width:560px){
+  .h3__vb{font-size:11px;padding:2px 7px}
+  .h3__where{max-width:calc(100% - 196px)}
+  .h3__where2{display:none}
+}
