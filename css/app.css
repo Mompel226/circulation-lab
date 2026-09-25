@@ -1235,13 +1235,6 @@ picture{display:block;line-height:0}
 .tag__pill{display:block;font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;
   color:#14191C;background:var(--c,#FFB3A8);padding:5px 11px;border-radius:2px;box-shadow:0 0 22px color-mix(in srgb,var(--c,#FFB3A8) 55%,transparent)}
 /* lit and dimmed: a station's parts glow, the rest step back */
-.cd [data-part]{transition:opacity .45s ease}
-.cd .is-dim{opacity:.18}
-.cd .cd__cell.is-dim{opacity:.08}
-.cd .is-lit{filter:url(#cdGlow)}
-.cd .cd__hit{cursor:pointer}
-.cd__cell{pointer-events:none}
-@media (prefers-reduced-motion: reduce){ .cd [data-part]{transition:none} }
 
 /* ---------- the colour language of the Learn tab ----------
    Four inks, one per part of the story, each dark enough to read on paper (all clear WCAG AA
@@ -1370,12 +1363,6 @@ picture{display:block;line-height:0}
 .rt__map{position:relative;height:min(74vh,620px);min-height:380px;background:#060D12;border-radius:14px;overflow:hidden}
 .rt__svg{width:100%;height:100%;display:block}
 .rt__loading{position:absolute;inset:0;display:grid;place-items:center;margin:0;color:#8FA7B4;font-size:13px}
-.rt .cd .rt-dim{opacity:.42}
-.rt .cd .rt-on{filter:url(#cdGlow)}
-.rt .cd .cd__heart .rt-on{stroke:#FFE58A;stroke-width:5;stroke-opacity:.95}
-.rt .cd .rt-hint{animation:rt-hint 1.1s ease-in-out 3}
-@keyframes rt-hint{0%,100%{opacity:1}50%{opacity:.15}}
-@media (prefers-reduced-motion:reduce){ .rt .cd .rt-hint{animation:none;filter:url(#cdGlow)} }
 .rt--nonames .rt__tag{display:none}
 .rt__side{display:flex;flex-direction:column;gap:10px;min-width:0}
 .rt__pick{display:flex;flex-wrap:wrap;gap:5px}
@@ -1439,3 +1426,43 @@ picture{display:block;line-height:0}
 
 /* every step player's buttons reach the 36 px a finger needs */
 .sp__play,.sp__all{min-height:36px}
+
+/* ---------- the plate on the real drawing (js/circ-draw.js) ---------- */
+.cp__veil{opacity:0;transition:opacity .45s ease;pointer-events:none}
+.cp.is-lighting .cp__veil{opacity:1}
+.cp__lit{display:none;pointer-events:none}
+.cp.is-lighting .cp__lit{display:inline}
+.cp__lito{pointer-events:none}
+.cp__flow{pointer-events:none}
+.cp__f{transition:opacity .45s ease}
+.cp__f.is-dim{opacity:.1}
+.cp__art,.cp__halo,.cp__bg{pointer-events:none}
+.cp__hits .cp__hit{pointer-events:stroke}
+.cp__hits .cp__hit--o{pointer-events:fill}
+.cp__lens{transition:opacity .45s ease}
+.cp__lens [data-part]{transition:opacity .35s ease}
+.cp__lens [data-part].is-dim{opacity:.26}
+.cp__lens .ha__sec [data-part]{cursor:pointer}
+.cp__lenscap{fill:#DCE7EC;font:600 5.2px var(--sans,Inter,sans-serif);letter-spacing:.06em;text-transform:uppercase}
+.cp__lensline{pointer-events:none}
+#body{cursor:grab;touch-action:none}
+#body.is-dragging{cursor:grabbing}
+.cp-labels{position:absolute;inset:0;pointer-events:none;z-index:3;overflow:visible}
+.cp-lab__lead{fill:none;stroke:#E8EEF1;stroke-width:1;stroke-linejoin:round}
+.cp-lab__halo{fill:none;stroke:#0B161D;stroke-opacity:.55;stroke-width:3;stroke-linejoin:round;stroke-linecap:round}
+.cp-lab__dot{fill:#fff;stroke:#0B161D;stroke-width:1}
+.cp-lab__pill{fill:#0D1A22;fill-opacity:.9;stroke:#E8EEF1;stroke-opacity:.35;stroke-width:1}
+.cp-lab__txt{fill:#F1F5F7;font-family:var(--sans,Inter,sans-serif);font-weight:500;letter-spacing:.01em}
+.cp-lab.is-beyond .cp-lab__txt{fill:#C9D6DE;font-style:italic}
+.cp-lab.is-beyond .cp-lab__pill{stroke-dasharray:3 2}
+
+/* the plate's tools: whole body, zoom, the names */
+.tool-zoom{display:inline-flex;gap:0}
+.tool--z{min-width:34px;justify-content:center;font-size:16px;line-height:1;padding-left:0;padding-right:0}
+.tool-zoom .tool--z:first-child{border-top-right-radius:0;border-bottom-right-radius:0}
+.tool-zoom .tool--z:last-child{border-top-left-radius:0;border-bottom-left-radius:0;margin-left:-1px}
+.tool--t[aria-pressed="true"]{background:rgba(232,238,241,.16);border-color:rgba(232,238,241,.7);color:#fff}
+.tool--t:disabled{opacity:.45;cursor:default}
+.platecol__tools{flex-wrap:wrap;row-gap:6px}
+@media (max-width:1000px){ .platecol__hint{display:none} .tool--t{font-size:11px} }
+@media (prefers-reduced-motion:reduce){ .cp__veil,.cp__f,.cp__lens,.cp__lens [data-part]{transition:none} }

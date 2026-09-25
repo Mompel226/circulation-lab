@@ -1,8 +1,9 @@
 /* ============================================================
    w-route.js — "Trace the route": the main blood vessels, in order.
 
-   The same body as the plate (js/circ-draw.js, drawn a second time inside the widget and kept
-   still), so the reader clicks the real vessels, chambers and organs, not boxes on a chart. Each
+   The same body as the plate (js/circ-draw.js, drawn a second time inside the widget), so the
+   reader clicks the real vessels and organs, and the chambers in the magnified heart beside it,
+   not boxes on a chart. Each
    puzzle names a start and an end; the reader clicks, in order, every chamber, vessel and organ
    the blood passes through. A right click lights that part and adds it to the route; a wrong one
    says why it is wrong, in the words of the station. Everything can also be chosen from a list,
@@ -107,7 +108,7 @@
     side.appendChild(pick); side.appendChild(task); side.appendChild(trail); side.appendChild(say); side.appendChild(tools); side.appendChild(listD);
     wrap.appendChild(map); wrap.appendChild(side);
     box.appendChild(wrap);
-    box.appendChild(h('p', 'widget__note', 'Red is oxygenated blood and blue is deoxygenated blood, as on every diagram; real blood is never blue. On the body, the heart is cut open and seen from the front, so its right side is on your left. Each organ is drawn with one bed of capillaries.'));
+    box.appendChild(h('p', 'widget__note', 'Red is oxygenated blood and blue is deoxygenated blood, as on every diagram; real blood is never blue. The heart is shown cut open in the magnified view beside the body, seen from the front, so its right side is on your left. Scroll or pinch to zoom.'));
 
     var solved = {}, cur = 0, got = [], wrong = 0, names = true, draw = null;
     PUZZLES.forEach(function (p, i) {
@@ -119,13 +120,8 @@
 
     function lightRoute() {
       if (!draw) return;
-      var on = {}; on[PUZZLES[cur].start] = 1; got.forEach(function (id) { on[id] = 1; });
-      Array.prototype.forEach.call(svg.querySelectorAll('[data-part]'), function (e) {
-        if (e.classList.contains('cd__hit')) return;
-        var p = e.getAttribute('data-part');
-        e.classList.toggle('rt-on', !!on[p]);
-        e.classList.toggle('rt-dim', !on[p] && !e.closest('.cd__heart'));
-      });
+      var on = [PUZZLES[cur].start].concat(got);
+      draw.light(on);
     }
     function paint() {
       var P = PUZZLES[cur], done = got.length === P.steps.length;
@@ -177,7 +173,6 @@
       say.textContent = 'Next: the ' + NAME[want] + '. Find it on the body.';
       if (draw) {
         var e = draw.elFor(want);
-        Array.prototype.forEach.call(svg.querySelectorAll('[data-part="' + want + '"]'), function (x) { if (!x.classList.contains('cd__hit')) { x.classList.remove('rt-hint'); void x.getBoundingClientRect(); x.classList.add('rt-hint'); } });
         if (e && names) draw.pin(e, NAME[want], null);
       }
     });
@@ -196,13 +191,14 @@
     function init() {
       if (!box.isConnected || !global.CircDraw) { if (tries++ < 200) setTimeout(init, 60); return; }
       draw = global.CircDraw(svg, {
-        map: map, tag: tag,
+        map: map, tag: tag, labels: false,
         onEnter: function (id, target) { if (!names) return; var nm = NAME[id] || (draw.G[id] && draw.G[id].label); if (nm) draw.pin(target, nm.charAt(0).toUpperCase() + nm.slice(1), draw.G[id] ? draw.G[id].colour : null); },
         onLeave: function () { tag.classList.remove('on'); },
         onClick: function (id) { choose(id); }
       });
-      draw.__seek(.15, 3);                         /* one still moment of the beat: cells in place, nothing moving */
-      draw.jump({ x: 470, y: 486, w: 340, h: 640 });
+      draw.lens('section');                        /* the chambers are pressed in the magnified heart */
+      draw.jump({ x: 118, y: 150, w: 256, h: 250 });
+      draw.start();
       loading.remove();
       paint();
     }

@@ -11,3 +11,5 @@ js/data/keys.enc.js
 # test harnesses: built in the repo so they can load the lab as same-origin, never shipped
 _*.html
 _*.js
+_*.svg
+_*.json

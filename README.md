@@ -29,7 +29,7 @@ questions that say right or wrong — never the answer.
 |---|---|
 | 🫀 **12 stations** | the circulatory system · single and double circulation · the heart · one heartbeat · monitoring the heart · exercise and heart rate · your gym investigation · coronary heart disease · arteries, veins and capillaries · the main blood vessels · what blood is made of · clotting |
 | ✍️ **97 questions** | fill the gaps · multiple choice · put in order · match up · sort into groups · **click the heart** |
-| 🩸 **The body is the map** | a whole body with its circulation drawn inside it: red cells flow along every vessel, turn from red to blue in the capillaries of the body and back in the lungs, and pulse with the heartbeat; each station lights and flies to the part it teaches |
+| 🩸 **The body is the map** | a real anatomical drawing of the whole circulation (public domain, from Gray's Anatomy and Sobotta): blood flows along every vessel, away from the heart in the arteries and back in the veins, surging with each beat; each station lights and flies to the part it teaches, the heart stations open a magnified heart that beats, and you can zoom, drag and pull back to the whole body |
 | ▶️ **Animations that wait** | one heartbeat, valve by valve, with the two heart sounds; a journey from artery to vein; a real heart in 3D; blood after a meal, from the gut through the liver; why the heart rate rises in exercise; a blocked coronary artery; a phagocyte at work; a cut clotting — every step holds until **Next step** |
 | 🧭 **Trace the route** | the same body again: click the vessels, chambers and organs in the order the blood passes through them, from a kidney to the lungs or from the small intestine to the heart |
 | 📝 **The gym investigation, not done for them** | the station says what the task is, what is handed in and how it is marked, gives the rules for a perfect results table and graph, and links every part of the report to the Write-Up Lab — but it writes no research question, method, table or graph for them, because those are the assessment |
@@ -50,11 +50,12 @@ The **← The body** button goes back up.
 
 <br>
 
-**The body is drawn, not pictured.** The outline is Mikael Häggström's "Man shadow" (public
-domain), the same one the Human Body Hub uses; everything inside it — the heart, the lungs, the
-liver, the kidneys, the gut, and every vessel the syllabus names — is drawn by the page. Red is
-oxygenated blood and blue is deoxygenated blood, as on every diagram, and the lab says that real
-blood is never blue.
+**The body is a real anatomical drawing.** Mariana Ruiz Villarreal's *Circulatory System*
+(LadyofHats, public domain), drawn from Gray's Anatomy and the Sobotta atlas — the same artist as
+the Digestion Lab's body. Nothing on it is placed by hand: the blood flows along the centre line of
+every vessel she drew, traced from the drawing itself, and the vessels are named from the arrow tips
+of her own labelled version. Red is oxygenated blood and blue is deoxygenated blood, as on every
+diagram, and the lab says that real blood is never blue.
 
 **Why the answers are not in the page.** Each question carries a *scrambled fingerprint* of its
 answer. When a student answers, the page scrambles what they did in the same way and compares the
