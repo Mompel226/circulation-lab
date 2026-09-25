@@ -1,0 +1,75 @@
+/* ============================================================
+   w-defence.css — the two defence widgets (js/w-defence.js).
+     .ph__*   "A phagocyte at work" (station blood)
+     .cl__*   "A cut, step by step" (station clotting)
+   The step player (.sp__*) and the labels (.lb__*) are the lab's own, in app.css. Colours set
+   by the script as attributes (gradients, opacity) are not styled here, so they are not overridden.
+   ============================================================ */
+
+/* ---------- layout, shared by both ---------- */
+.ph__wrap,.cl__wrap{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-items:start}
+.ph__wrap.ph--side,.cl__wrap.cl--side{grid-template-columns:minmax(0,1.9fr) minmax(220px,1fr)}
+.ph__left,.cl__left{min-width:0}
+.ph__fig,.cl__fig{margin:0;position:relative}
+.ph__svg,.cl__svg{width:100%;height:auto;display:block}
+.ph--tall .ph__fig,.cl--narrow .cl__fig{margin:0 -8px}
+.ph__read,.cl__read{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.ph__pill,.cl__pill{font-size:12.5px;line-height:1.35;border-radius:var(--r-pill);padding:3px 10px;border:1.5px solid var(--edge);background:#fff;color:#3C3C3C;transition:background .25s,border-color .25s}
+.ph__pill i,.cl__pill i{font-style:normal;font-weight:700;letter-spacing:.02em;margin-left:3px}
+.ph__pill.is-plain i,.cl__pill.is-plain i{color:var(--k-blood)}
+.ph__pill.is-ok,.cl__pill.is-ok{border-color:#7CC08E;background:#EAF6ED}
+.ph__pill.is-ok i,.cl__pill.is-ok i{color:#1E7A3E}
+.ph__pill.is-warn,.cl__pill.is-warn{border-color:#E1BF78;background:#FBF3E3}
+.ph__pill.is-warn i,.cl__pill.is-warn i{color:#8A5A0E}
+.ph__pill.is-bad,.cl__pill.is-bad{border-color:#E2B9A9;background:#FBEFEA}
+.ph__pill.is-bad i,.cl__pill.is-bad i{color:#A3213A}
+.ph__fence,.cl__fence{border-left:3px solid var(--line);padding-left:9px}
+
+/* ---------- phagocyte: the drawing ---------- */
+.ph__bg{fill:#0D1A22}
+.ph__fib path{fill:none;stroke:#FFFFFF;stroke-opacity:.055;stroke-width:4;stroke-linecap:round}
+.ph__chem circle{fill:#E4F59C}
+.ph__vac{fill:#CFE4EE}
+.ph__gran circle{fill:#A77AAE}
+.ph__nuc{stroke:#35205F;stroke-width:1.2}
+.ph__chr ellipse{fill:#34196B;opacity:.42}
+.ph__enz circle{fill:#FFA83A;stroke:#7A3E00;stroke-width:.6}
+.ph__rod{stroke:#3B6A1D;stroke-width:2}
+.ph__dna{fill:none;stroke:#E8F8C8;stroke-width:1.3;stroke-linecap:round}
+.ph__prod circle{fill:#9EDB5E;stroke:#3B6A1D;stroke-width:.5}
+.ph__memo{fill:none;stroke:#F8ECF2;stroke-width:3.6;stroke-linejoin:round}
+.ph__memi{fill:none;stroke:#7B4868;stroke-width:1.3;stroke-linejoin:round}
+
+/* ---------- clot: the drawing ---------- */
+.cl__bg{fill:#0D1A22}
+.cl__col path{fill:none;stroke:#F8E0D6;stroke-opacity:.55;stroke-width:1.2}
+.cl__fb ellipse{fill:#98594F;opacity:.55}
+.cl__ecell rect{fill:#F2D9C8;stroke:#C99A86;stroke-width:.8}
+.cl__enuc ellipse{fill:#9A6156;opacity:.85}
+.cl__horn{fill:#F5E6D6}
+.cl__hornl path{stroke:#D5B9A1;stroke-width:.8}
+.cl__wall{fill:#C06A5F;stroke:#8C4138;stroke-width:.8}
+.cl__endo{fill:#F5DED4}
+.cl__wnuc ellipse{fill:#8C4138;opacity:.7}
+.cl__air{fill:#0D1A22}
+.cl__blood{fill:#F1C7AA}
+.cl__rod{fill:none;stroke:#A0640F;stroke-width:1.8;stroke-linecap:round}
+.cl__rbc circle,.cl__rbc path{fill:#D63C3B;stroke:#7A1E21;stroke-width:.9}
+.cl__rbc .cl__rbcc{fill:#EE8A80;stroke:none}
+.cl__wbc circle{fill:#E8DBEF;stroke:#8C6FA8;stroke-width:1}
+.cl__wbcn{fill:#6A48A8;stroke:#3F2672;stroke-width:.6}
+.cl__plt ellipse,.cl__plt path{fill:#CDB4E3;stroke:#5F437F;stroke-width:.7}
+.cl__plt circle{fill:#5F437F}
+.cl__plt.is-act path{fill:#BE9FDF}
+.cl__chem{fill:#FFE27A}
+.cl__fibrin{fill:none;stroke:#A0640F;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
+.cl__clot{fill:#7A1E21}
+.cl__rep{fill:#E4B5A3}
+.cl__wallfix{fill:#C06A5F;stroke:#8C4138;stroke-width:.8}
+.cl__new rect{fill:#F5D2C4;stroke:#CE9784;stroke-width:.8}
+.cl__new .cl__newbg{fill:#EBC6B3;stroke:none}
+.cl__newtop{fill:#F5E3D3;stroke:#DCC2AC;stroke-width:.8}
+.cl__new .cl__nn{fill:#A0675C}
+.cl__scabf{stroke:#3B1B10;stroke-width:1}
+.cl__scabt ellipse{fill:#3B1B10;opacity:.45}
+.cl__bug{fill:#7DB43F;stroke:#3B6A1D;stroke-width:.6}
