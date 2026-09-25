@@ -100,8 +100,10 @@
     var hintB = h('button', 'wbtn wbtn--quiet', 'Hint'); hintB.type = 'button';
     var againB = h('button', 'wbtn wbtn--quiet', 'Start this puzzle again'); againB.type = 'button';
     var nextB = h('button', 'wbtn', 'Next puzzle →'); nextB.type = 'button'; nextB.hidden = true;
-    var namesB = h('button', 'wbtn wbtn--quiet', 'Hide the names'); namesB.type = 'button'; namesB.setAttribute('aria-pressed', 'false');
-    tools.appendChild(hintB); tools.appendChild(againB); tools.appendChild(namesB); tools.appendChild(nextB);
+    /* no "Hide the names": it only stopped a part being named when pointed at, so pressing it changed
+       nothing on screen, and it tested finding the parts, not the order the blood takes (Daniel, 26 Sep:
+       "I'm clicking it and nothing changes. So what are you referring to?") */
+    tools.appendChild(hintB); tools.appendChild(againB); tools.appendChild(nextB);
     var listD = document.createElement('details'); listD.className = 'rt__list';
     listD.innerHTML = '<summary>Or choose from a list</summary>';
     var listBox = h('div', 'rt__listbox');
@@ -121,7 +123,7 @@
     box.appendChild(wrap);
     box.appendChild(h('p', 'widget__note', 'Red is oxygenated blood and blue is deoxygenated blood, as on every diagram; real blood is never blue. The heart is shown cut open in the magnified view beside the body, seen from the front, so its right side is on your left. Scroll or pinch to zoom.'));
 
-    var solved = {}, cur = 0, got = [], via = [], wrong = 0, names = true, draw = null;
+    var solved = {}, cur = 0, got = [], via = [], wrong = 0, draw = null;
     PUZZLES.forEach(function (p, i) {
       var b = h('button', 'rt__pb', String(i + 1) + (p.sup ? ' <small>S</small>' : '')); b.type = 'button';
       b.setAttribute('aria-label', 'Puzzle ' + (i + 1) + ': ' + p.title + (p.sup ? ' (Supplement)' : ''));
@@ -194,17 +196,11 @@
       say.textContent = 'Next: the ' + NAME[want] + '. Find it on the body.';
       if (draw) {
         var e = draw.elFor(want);
-        if (e && names) draw.pin(e, NAME[want], null);
+        if (e) draw.pin(e, NAME[want], null);
       }
     });
     againB.addEventListener('click', function () { start(cur); });
     nextB.addEventListener('click', function () { if (cur < PUZZLES.length - 1) start(cur + 1); });
-    namesB.addEventListener('click', function () {
-      names = !names; namesB.setAttribute('aria-pressed', names ? 'false' : 'true');
-      namesB.textContent = names ? 'Hide the names' : 'Show the names';
-      box.classList.toggle('rt--nonames', !names);
-      if (!names) tag.classList.remove('on');
-    });
 
     /* the body is drawn once the widget is on the page: the beds are laid out by measuring the
        organs, which needs the drawing to be in the document */
@@ -215,7 +211,7 @@
       if (!map.getBoundingClientRect().width) { setTimeout(init, 250); return; }
       draw = global.CircDraw(svg, {
         map: map, tag: tag, labels: false,
-        onEnter: function (id, target) { if (!names) return; var nm = NAME[id] || (draw.G[id] && draw.G[id].label); if (nm) draw.pin(target, nm.charAt(0).toUpperCase() + nm.slice(1), draw.G[id] ? draw.G[id].colour : null); },
+        onEnter: function (id, target) { var nm = NAME[id] || (draw.G[id] && draw.G[id].label); if (nm) draw.pin(target, nm.charAt(0).toUpperCase() + nm.slice(1), draw.G[id] ? draw.G[id].colour : null); },
         onLeave: function () { tag.classList.remove('on'); },
         onClick: function (id) { choose(id); }
       });

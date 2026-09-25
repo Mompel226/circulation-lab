@@ -16,7 +16,9 @@
    Three magnified views open from it like a lens: a villus (B), liver cells beside a blood space
    (C), and a capillary between two muscle cells (D).
 
-   What the biology is, and where it was checked (the full audit is in the report to Daniel):
+   What the biology is, and where it was checked (the full audit is in the report to Daniel; a second
+   audit, 26 Sep 2026, added the carbon dioxide made by the villus cells and the liver cells, one liver
+   cell that shows glucose joining its glycogen or coming off it, and the respiration equation):
      · absorption: glucose and amino acids enter the villus capillaries; most fat leaves the
        epithelial cells as fat droplets, into the lacteal and the lymph, and so does not pass through
        the liver first; glycerol, which dissolves in water, enters the capillaries (OpenStax Anatomy
@@ -47,6 +49,7 @@
   function ease(k) { k = clamp01(k); return k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2; }
   function sm(k) { k = clamp01(k); return k * k * (3 - 2 * k); }
   function lerp(a, b, k) { return a + (b - a) * k; }
+  function lerp2(p, q, k) { return [lerp(p[0], q[0], k), lerp(p[1], q[1], k)]; }
   function n2(v) { return Math.round(v * 100) / 100; }
   function n4(v) { return Math.round(v * 10000) / 10000; }
   function rgb(c) { return [parseInt(c.slice(1, 3), 16), parseInt(c.slice(3, 5), 16), parseInt(c.slice(5, 7), 16)]; }
@@ -366,6 +369,20 @@
   })();
   /* a glycogen granule: glucose units joined in branches. The order is the order they are added. */
   var GLY = [[0, 0], [1.7, 0], [3.4, .1], [5.1, .4], [2.5, 1.5], [4.2, 1.8], [2.5, -1.5], [4.1, -1.9], [5.9, -1.7], [5.9, 2.2], [6.8, .5], [7.6, -1.2], [1, 2.9], [7.4, 3], [1.1, -3]];
+  /* each unit is joined to the nearest unit before it, so a granule reads as glucose joined in
+     branching chains (26 Sep, Daniel: make it clear that glucose is stored as glycogen), and a unit
+     is never shown without the one it hangs from */
+  var GLY_UP = GLY.map(function (u, i) {
+    var best = -1, bd = Infinity;
+    for (var j = 0; j < i; j++) { var d = Math.hypot(u[0] - GLY[j][0], u[1] - GLY[j][1]); if (d < bd) { bd = d; best = j; } }
+    return best;
+  });
+  /* a granule's joins, as one path, for the first n units, spaced k apart, mirrored if sx is -1 */
+  function glyJoins(n, k, sx) {
+    var d = '';
+    for (var i = 1; i < n; i++) { var a = GLY[GLY_UP[i]], b = GLY[i]; d += 'M' + n2(a[0] * k * sx) + ' ' + n2(a[1] * k) + 'L' + n2(b[0] * k * sx) + ' ' + n2(b[1] * k); }
+    return d || 'M0 0';
+  }
 
   /* ---- D: a capillary between two muscle cells ---- */
   var MUS = (function () {
@@ -381,8 +398,8 @@
       p: 'The left ventricle pumps oxygenated blood into the aorta. Each organ of the body receives its own branch of the aorta.',
       beyond: 'The arteries to the intestine are the mesenteric arteries. The hepatic artery branches from a short artery, the coeliac artery; here it is drawn straight from the aorta.' },
     { t: T.s2, h: 'In a villus: oxygen', tag: 'C 9.3.2',
-      p: 'Blood flows through the capillaries of each villus. Oxygen diffuses from the blood into the respiring cells of the villus. The blood becomes deoxygenated.',
-      beyond: 'The respiring cells also add carbon dioxide to the blood.' },
+      p: 'Blood flows through the capillaries of each villus. Oxygen diffuses from the blood into the respiring cells of the villus, and carbon dioxide diffuses from the cells into the blood. The blood becomes deoxygenated.',
+      beyond: 'Villus cells absorb some of the glucose and amino acids by active transport, which uses energy from respiration. So they respire fast: they use a lot of oxygen and make a lot of carbon dioxide.' },
     { t: T.s3, h: 'In a villus: absorption', tag: 'S 7.5.5',
       p: 'Glucose and amino acids are absorbed into the blood in the capillaries. Most fat is absorbed into the lacteal instead.',
       later: 'Hours after a meal, the food has already been digested and absorbed. Few glucose and amino acid molecules are left to absorb.',
@@ -392,23 +409,23 @@
       later: 'Veins from the intestine join to form the hepatic portal vein. Hours after a meal, its deoxygenated blood carries much less glucose and fewer amino acids.',
       beyond: 'The veins from the intestine are the mesenteric veins. The hepatic portal vein also collects blood from the stomach, the large intestine, the pancreas and the spleen.' },
     { t: T.s5, h: 'In the liver: glucose', tag: 'S 9.3.6 · S 14.4.4',
-      p: 'The hepatic artery also brings oxygenated blood. Liver cells convert excess glucose to glycogen and store it. Muscle cells store glycogen too.',
-      later: 'The hepatic artery also brings oxygenated blood. Between meals, liver cells convert glycogen to glucose and release it into the blood.',
+      p: 'The hepatic artery also brings oxygenated blood. Liver cells use the oxygen in respiration, and carbon dioxide diffuses into the blood. After a meal, liver cells convert excess glucose to glycogen and store it.',
+      later: 'The hepatic artery also brings oxygenated blood. Liver cells use the oxygen in respiration, and carbon dioxide diffuses into the blood. Between meals, liver cells convert glycogen to glucose and release it into the blood.',
       beyond: 'The liver removes only part of the glucose absorbed after a meal, roughly a quarter to a third. The muscles store much of the rest as glycogen. So the glucose concentration in the hepatic vein still rises after a meal, but less than in the hepatic portal vein.' },
     { t: T.s6, h: 'In the liver: amino acids', tag: 'S 13.1.6–13.1.8',
-      p: 'Liver cells use some amino acids to make proteins, such as fibrinogen. Excess amino acids cannot be stored, so liver cells deaminate them. This forms urea.',
+      p: 'Liver cells assimilate some amino acids by converting them to proteins, such as fibrinogen. Excess amino acids cannot be stored, so liver cells deaminate them: they remove the nitrogen-containing part, which forms urea.',
       beyond: 'Deamination removes the nitrogen-containing part of the amino acid as ammonia, which is toxic. Liver cells convert the ammonia to urea. The rest of the amino acid is respired, or converted to glucose or fat.' },
     { t: T.s7, h: 'Back to the heart', tag: 'S 9.3.6 · C 9.3.3',
       p: 'The hepatic veins carry the blood into the vena cava, which returns it to the right atrium. The right ventricle pumps it into the pulmonary artery.',
       beyond: 'There are two venae cavae. Blood from the liver, the kidneys and the legs returns in the inferior vena cava.' },
-    { t: T.s8, h: 'Through the lungs', tag: 'C 9.3.3',
-      p: 'In the lungs, oxygen diffuses into the blood and carbon dioxide diffuses out. The pulmonary veins carry the oxygenated blood to the left atrium.',
+    { t: T.s8, h: 'Through the lungs', tag: 'C 9.3.3 · C 13.1.1',
+      p: 'In the lungs, oxygen diffuses into the blood, and carbon dioxide diffuses out of the blood and is excreted. The pulmonary veins carry the oxygenated blood to the left atrium.',
       beyond: 'Each lung receives its own pulmonary artery. Usually four pulmonary veins, two from each lung, return the blood to the left atrium.' },
     { t: T.s9, h: 'Urea to the kidneys', tag: 'C 9.3.3 · C 13.1.2',
       p: 'The aorta and the renal arteries bring urea to the kidneys. The kidneys excrete it in urine, so the renal veins carry less urea.',
       beyond: 'About a fifth of the blood that the heart pumps to the body flows through the kidneys.' },
-    { t: T.s10, h: 'Glucose to the respiring cells', tag: 'C 9.3.2',
-      p: 'In the capillaries of every organ, glucose and oxygen diffuse into the respiring cells. The cells use them in respiration to release energy.',
+    { t: T.s10, h: 'Glucose to the respiring cells', tag: 'C 9.3.2 · C 12.2.2',
+      p: 'In the capillaries of every organ, glucose and oxygen diffuse into the respiring cells. The cells use them in aerobic respiration to release energy, and carbon dioxide diffuses into the blood.',
       beyond: 'Muscle cells store glycogen too, but they use it themselves. The liver is the organ that releases glucose from glycogen into the blood.' }
   ];
 
@@ -444,7 +461,7 @@
     svg.setAttribute('viewBox', '0 0 ' + G.W + ' ' + G.H);
     svg.setAttribute('class', 'bf__svg');
     svg.setAttribute('role', 'img');
-    svg.setAttribute('aria-label', 'An animation in ten steps. The aorta carries oxygenated blood to every organ. In a villus of the small intestine, oxygen leaves the blood. Glucose and amino acids are absorbed into the capillaries, and fat enters the lacteal. The hepatic portal vein carries this blood to the liver, which also receives the hepatic artery. Liver cells store excess glucose as glycogen, make proteins from some amino acids and deaminate the rest, forming urea. The hepatic veins carry the blood to the vena cava and the heart, then through the lungs and back to the heart. The aorta carries urea to the kidneys, which excrete it, and glucose to respiring muscle cells.');
+    svg.setAttribute('aria-label', 'An animation in ten steps. The aorta carries oxygenated blood to every organ. In a villus of the small intestine, oxygen diffuses from the blood into the respiring cells, and carbon dioxide diffuses into the blood. Glucose and amino acids are absorbed into the capillaries, and fat enters the lacteal. The hepatic portal vein carries this blood to the liver, which also receives the hepatic artery. Liver cells respire, adding carbon dioxide to the blood. After a meal they convert excess glucose to glycogen; between meals they convert glycogen to glucose and release it. They make proteins from some amino acids and deaminate the rest, forming urea. The hepatic veins carry the blood to the vena cava and the heart, then through the lungs and back to the heart. The aorta carries urea to the kidneys, which excrete it, and glucose to respiring muscle cells, which release carbon dioxide into the blood.');
 
     var defs =
       '<defs>' +
@@ -624,6 +641,7 @@
         '</g>' +
         '<circle data-r="rim" class="bf__rim" r="0"/>' +
         '<g data-r="tagline" class="bf__tagline"><rect data-r="tagbg" rx="9"/><text data-r="tagtx"></text></g>' +
+        '<g data-r="eqline" class="bf__tagline bf__eqline"><rect data-r="eqbg" rx="9"/><text data-r="eqtx"></text></g>' +
       '</g>' +
       '<rect data-r="viewline" class="bf__viewline" rx="12"/>' +
       '<g data-r="labels"></g>';
@@ -740,6 +758,24 @@
                       lac: [150 + (p2[0] < 150 ? -5 : 5), ly], t0: 18 + ni * .52, rank: r() });
       }
     })();
+    /* carbon dioxide from the respiring cells of the villus into the blood (Daniel, 26 Sep: carbon dioxide
+       "is also generated by the respiration of the epithelial cells in the villus") */
+    BF.co2 = [];
+    (function () {
+      var r = rng(903);
+      for (var ni = 0; ni < 16; ni++) {
+        var si = lerp(60, VIL.inner.total - 60, (ni + .5) / 16) + (r() - .5) * 10, j = 0;
+        while (j < VIL.inner.len.length - 1 && VIL.inner.len[j] < si) j++;
+        var q = VIL.inner.pts[j], nn = VIL.nrm[Math.min(j, VIL.nrm.length - 1)], best = null, bd = Infinity;
+        VIL.routes.forEach(function (rc) { for (var k = 0; k < rc.pts.length; k += 2) { var d = Math.hypot(rc.pts[k][0] - q[0], rc.pts[k][1] - q[1]); if (d < bd) { bd = d; best = rc.pts[k]; } } });
+        BF.co2.push({ e: use('co2', R.dotsB), from: [q[0] - nn[0] * VIL.EP * .45, q[1] - nn[1] * VIL.EP * .45], to: [best[0], best[1]], ph: r() });
+      }
+      /* one oxygen, into a cell on the right, and one carbon dioxide, out of a cell on the left: named */
+      function pick(list, want, ok) { var b = null; list.forEach(function (o) { if (ok(o) && (!b || Math.hypot(o.from[0] - want[0], o.from[1] - want[1]) < Math.hypot(b.from[0] - want[0], b.from[1] - want[1]))) b = o; }); return b; }
+      var o = pick(BF.o2, [185, 300], function (x) { return x.to[0] > 150; }), c = pick(BF.co2, [90, 340], function (x) { return x.from[0] < 150; });
+      BF.lo2 = { e: use('o2', R.dotsB), from: o.from, to: o.to };
+      BF.lco2 = { e: use('co2', R.dotsB), from: c.from, to: c.to };
+    })();
     /* the two the story follows, in the villus: one glucose and one amino acid, on the left side */
     function pickFood(sym, want) { var best = null; BF.food.forEach(function (f) { if (f.sym === sym && !f.tracer && (!best || Math.abs(f.edge[1] - want) < Math.abs(best.edge[1] - want)) && f.edge[0] < 150) best = f; }); return best; }
     var fG = pickFood('glu', 250), fA = pickFood('aa', 330);
@@ -760,15 +796,41 @@
       LIV.cells.forEach(function (c, ci) {
         c.gang = (ci * 47) % 50 - 25;
         var g = mk('g', { transform: 'translate(' + c.gx + ' ' + c.gy + ') rotate(' + c.gang + ')' }, R.glyC), units = [];
+        var joins = mk('path', { d: 'M0 0', fill: 'none', stroke: C.gluLine, 'stroke-width': 1.5, 'stroke-linecap': 'round' }, g);
         GLY.forEach(function (u) { var e = mk('use', { href: '#' + id('glu'), transform: 'translate(' + n2(u[0] * 5.4 * (c.side < 0 ? -1 : 1)) + ' ' + n2(u[1] * 5.4) + ') scale(3.1)' }, g); units.push(e); });
-        CF.gly.push({ g: g, units: units, cell: c, seed: ci });
+        CF.gly.push({ g: g, units: units, joins: joins, cell: c, seed: ci, n: -1 });
       });
       /* glucose between the blood and the cells: after a meal it goes into the cells and onto the
          glycogen; hours later it comes off the glycogen and out into the blood */
       for (i = 0; i < 10; i++) {
-        var c = LIV.cells[(i * 3) % 8], ty = c.cy + (r() - .5) * 40;
+        var ci3 = (i * 3) % 8; if (ci3 === 3) ci3 = 5;          /* cell 3 shows the conversion itself (FOCUS, below) */
+        var c = LIV.cells[ci3], ty = c.cy + (r() - .5) * 40;
         CF.events.push({ e: use('glu', R.dotsC), cell: c, bx: c.side < 0 ? 140 : 160, by: ty + 30, t0: 36.6 + i * .5 + r() * .2 });
       }
+    })();
+    /* one cell shows the conversion unit by unit: after a meal, glucose from the blood joins its glycogen;
+       hours later, glucose comes off its glycogen and leaves for the blood (Daniel, 26 Sep: "it is clear that
+       glucose is stored in the form of glycogen and then that glycogen can be broken down when in need") */
+    var FOCUS = LIV.cells[3], FX = [];
+    for (var fi = 0; fi < 6; fi++) FX.push({ e: use('glu', R.dotsC), t0: 36.9 + fi * .85 });
+    function unitAt(c, j) {
+      var ga = (c.gang || 0) * Math.PI / 180, ox = GLY[j][0] * 5.4 * (c.side < 0 ? -1 : 1), oy = GLY[j][1] * 5.4;
+      return [c.gx + ox * Math.cos(ga) - oy * Math.sin(ga), c.gy + ox * Math.sin(ga) + oy * Math.cos(ga)];
+    }
+    /* respiration in the liver cells: oxygen from the blood into the cells, carbon dioxide out into the blood
+       (Daniel, 26 Sep: carbon dioxide "is generated by the respiration of the hepatocytes") */
+    CF.o2 = []; CF.co2 = [];
+    (function () {
+      var r = rng(1301), i;
+      for (i = 0; i < 8; i++) {
+        var c = LIV.cells[(i * 5 + 1) % 8], y = c.cy + (r() - .5) * 50;
+        CF.o2.push({ e: use('o2', R.dotsC), from: [c.side < 0 ? 138 + r() * 6 : 156 + r() * 6, y], to: [c.side < 0 ? c.x1 - 18 - r() * 18 : c.x0 + 18 + r() * 18, y + (r() - .5) * 10], ph: r() });
+      }
+      for (i = 0; i < 8; i++) {
+        var c2 = LIV.cells[(i * 3 + 2) % 8], y2 = c2.cy + (r() - .5) * 50;
+        CF.co2.push({ e: use('co2', R.dotsC), from: [c2.side < 0 ? c2.x1 - 20 - r() * 16 : c2.x0 + 20 + r() * 16, y2], to: [c2.side < 0 ? 140 + r() * 6 : 154 + r() * 6, y2 - 14], ph: r() });
+      }
+      CF.lo2 = use('o2', R.dotsC); CF.lco2 = use('co2', R.dotsC);
     })();
     /* step 6: four amino acids join into a protein (fibrinogen); one is deaminated and its nitrogen
        leaves as urea; more are deaminated in other cells */
@@ -809,6 +871,7 @@
       DF.gly = [];
       [[236, 180], [60, 290], [240, 440], [64, 150]].forEach(function (p, gi) {
         var g = mk('g', { transform: 'translate(' + p[0] + ' ' + p[1] + ')' }, R.glyD);
+        mk('path', { d: glyJoins(7, 4.4, 1), fill: 'none', stroke: C.gluLine, 'stroke-width': 1.2, 'stroke-linecap': 'round' }, g);
         GLY.slice(0, 7).forEach(function (u) { mk('use', { href: '#' + id('glu'), transform: 'translate(' + n2(u[0] * 4.4) + ' ' + n2(u[1] * 4.4) + ') scale(2.5)' }, g); });
         DF.gly.push(g);
       });
@@ -890,10 +953,13 @@
         else renderD(t, M);
         var tag = lens.id === 'B' ? 'Magnified: one villus' : lens.id === 'C' ? 'Magnified: liver cells' : 'Magnified: a leg muscle';
         tagline(tag, seg(k, .6, 1));
+        /* the word equation, as the muscle cell respires (C 12.2.2) */
+        tagline('glucose + oxygen → carbon dioxide + water', lens.id === 'D' ? seg(k, .6, 1) * seg(t, 84.4, 85.2) : 0, true);
       } else {
         if (R.M.__on !== false) { R.M.style.display = 'none'; R.M.__on = false; }
         R.rim.setAttribute('opacity', 0);
         tagline('', 0);
+        tagline('', 0, true);
       }
       R.mbg.setAttribute('x', G.VX); R.mbg.setAttribute('y', G.VY); R.mbg.setAttribute('width', G.VW); R.mbg.setAttribute('height', G.VH);
       drawLabels();
@@ -901,16 +967,19 @@
       var st = stepAt(t);
       if (st !== lastStep) { lastStep = st; syncBeyond(st); }
     }
-    function tagline(text, op) {
-      if (!(op > .01) || !text) { R.tagline.style.display = 'none'; return; }
-      R.tagline.style.display = '';
-      if (R.tagtx.textContent !== text) R.tagtx.textContent = text;
+    /* a line of words across the view: at the top, what the lens shows; at the bottom (low), an equation */
+    function tagline(text, op, low) {
+      var gl = low ? R.eqline : R.tagline, tx = low ? R.eqtx : R.tagtx, bg = low ? R.eqbg : R.tagbg;
+      if (!(op > .01) || !text) { gl.style.display = 'none'; return; }
+      gl.style.display = '';
+      if (tx.textContent !== text) tx.textContent = text;
       /* the tag fits the window: smaller type on a narrow screen rather than a cut word */
-      var fs = Math.round(G.font * .78 * 10) / 10, w = textW(text, fs, 500) + 18;
+      var fs = Math.round(G.font * (low ? .86 : .78) * 10) / 10, w = textW(text, fs, 500) + 18;
       if (w > G.VW - 12) { fs = Math.round(fs * (G.VW - 30) / (w - 18) * 10) / 10; w = textW(text, fs, 500) + 18; }
-      R.tagtx.setAttribute('x', n2(G.VX + G.VW / 2)); R.tagtx.setAttribute('y', n2(G.VY + 10 + fs * .95)); R.tagtx.style.fontSize = fs + 'px';
-      R.tagbg.setAttribute('x', n2(G.VX + G.VW / 2 - w / 2)); R.tagbg.setAttribute('y', n2(G.VY + 8)); R.tagbg.setAttribute('width', n2(w)); R.tagbg.setAttribute('height', n2(fs * 1.5));
-      R.tagline.setAttribute('opacity', n2(op));
+      var y0 = low ? G.VY + G.VH - 8 - fs * 1.5 : G.VY + 8;
+      tx.setAttribute('x', n2(G.VX + G.VW / 2)); tx.setAttribute('y', n2(y0 + 2 + fs * .95)); tx.style.fontSize = fs + 'px';
+      bg.setAttribute('x', n2(G.VX + G.VW / 2 - w / 2)); bg.setAttribute('y', n2(y0)); bg.setAttribute('width', n2(w)); bg.setAttribute('height', n2(fs * 1.5));
+      gl.setAttribute('opacity', n2(op));
     }
 
     /* ---------- A: the body ---------- */
@@ -1067,6 +1136,16 @@
         var u = fract((t - 10) / 1.9 + o.ph), e = sm(u);
         place(o.e, lerp(o.from[0], o.to[0], e), lerp(o.from[1], o.to[1], e), 8.5, 0, wO * Math.sin(Math.PI * Math.min(1, u * 1.15)));
       });
+      /* carbon dioxide, from the respiring cells into the blood, at the same time */
+      BF.co2.forEach(function (o) {
+        var u = fract((t - 10.6) / 2.1 + o.ph), e = sm(u);
+        place(o.e, lerp(o.from[0], o.to[0], e), lerp(o.from[1], o.to[1], e), 8.5, 0, wO * Math.sin(Math.PI * Math.min(1, u * 1.15)));
+      });
+      /* one of each, named: oxygen into a cell, then carbon dioxide out of one */
+      var uo = seg(t, 10.9, 13.1), po = lerp2(BF.lo2.from, BF.lo2.to, sm(uo)), oo = t > 10.9 && t < 13.6 ? 1 - seg(t, 13.1, 13.6) : 0;
+      place(BF.lo2.e, po[0], po[1], 9.5, 0, oo);
+      var uc = seg(t, 13.3, 15.5), pc = lerp2(BF.lco2.from, BF.lco2.to, sm(uc)), oc = t > 13.3 && t < 16.3 ? 1 - seg(t, 15.5, 16.3) : 0;
+      place(BF.lco2.e, pc[0], pc[1], 9.5, 0, oc);
       /* food: after a meal every molecule is absorbed; hours later only a few are there to absorb */
       BF.food.forEach(function (f) {
         var present = meal ? 1 : (f.tracer || f.rank < .22 ? 1 : 0);
@@ -1109,6 +1188,9 @@
       L3('to the hepatic portal vein', 'L', 106, 522, 11.6, 25.6);
       L3('lacteal', 'R', 157, 420, 18.2, 25.6);
       L3('microvilli', 'L', 120, 94, 17.4, 25.6);
+      L3('lumen of the small intestine', 'R', 252, 372, 17.4, 25.6);
+      if (oo > .01) L3('oxygen', 'R', po[0], po[1], 11, 13.6);
+      if (oc > .01) L3('carbon dioxide', 'L', pc[0], pc[1], 13.4, 16.3);
       var g = fG.__p, a = fA.__p;
       if (g) L3('glucose', 'L', g[0], g[1], 17.9, 25.6, 'is-tracer');
       if (a) L3('amino acid', 'L', a[0], a[1], 18.6, 25.6, 'is-tracer');
@@ -1141,12 +1223,40 @@
         var dens = meal ? lerp(.9, .35, up) : lerp(.25, .15, up);
         place(g.e, g.x, y, 5.2, 0, (g.th < dens ? 1 : 0) * Math.min(1, (470 - y) / 12, (y - 80) / 12) * win(t, 42.8, 60, .6));
       });
-      /* glycogen in each cell: grows after a meal, shrinks hours later */
+      /* the cell that shows the conversion: after a meal each glucose joins the end of a branch of its
+         glycogen; hours later glucose units come off the ends and leave for the blood */
+      var F0 = meal ? 6 : 13, fn = F0;
+      FX.forEach(function (x, k) {
+        var j = meal ? F0 + k : F0 - 1 - k, u = seg(t, x.t0, x.t0 + 1.5);
+        var memb = [FOCUS.x0 + 3, FOCUS.cy + 26 - k * 6], blood = [155 + (k % 3) * 4, FOCUS.cy + 40 - k * 6], unit = unitAt(FOCUS, j), q;
+        if (meal) {
+          if (u >= 1) fn = Math.max(fn, j + 1);
+          q = u < .45 ? lerp2(blood, memb, sm(u / .45)) : lerp2(memb, unit, sm((u - .45) / .55));
+          place(x.e, q[0], q[1], 5.6, 0, t > x.t0 && u < 1 ? 1 : 0);
+        } else {
+          if (u > 0) fn = Math.min(fn, j);
+          q = u < .55 ? lerp2(unit, memb, sm(u / .55)) : lerp2(memb, blood, sm((u - .55) / .45));
+          var up = Math.max(0, t - x.t0 - 1.5) * 24;          /* then the blood carries it up, to the hepatic vein */
+          place(x.e, q[0], q[1] - up, 5.6, 0, t > x.t0 && q[1] - up > 90 ? 1 : 0);
+        }
+      });
+      /* glycogen in each cell: grows after a meal, shrinks hours later; each unit joined to the one it hangs from */
       var kG = meal ? lerp(.3, .82, sm(seg(t, 36.8, 42))) : lerp(.85, .32, sm(seg(t, 36.8, 42)));
       CF.gly.forEach(function (gl, i) {
-        var n = Math.round(GLY.length * clamp01(kG + ((i * 37) % 7 - 3) * .025));
+        var n = gl.cell === FOCUS ? fn : Math.round(GLY.length * clamp01(kG + ((i * 37) % 7 - 3) * .025));
+        if (gl.n === n) return;
+        gl.n = n;
         gl.units.forEach(function (e, j) { e.style.display = j < n ? '' : 'none'; });
+        gl.joins.setAttribute('d', glyJoins(n, 5.4, gl.cell.side < 0 ? -1 : 1));
       });
+      /* respiration: oxygen into the liver cells and carbon dioxide out, through steps 5 and 6 */
+      var wR = win(t, 35.6, 51.6, .8) * (t > T.s6 ? .5 : 1);
+      CF.o2.forEach(function (o) { var u = fract((t - 35) / 2.4 + o.ph), e = sm(u); place(o.e, lerp(o.from[0], o.to[0], e), lerp(o.from[1], o.to[1], e), 6.4, 0, wR * Math.sin(Math.PI * u)); });
+      CF.co2.forEach(function (o) { var u = fract((t - 35) / 2.6 + o.ph), e = sm(u); place(o.e, lerp(o.from[0], o.to[0], e), lerp(o.from[1], o.to[1], e), 6.4, 0, wR * Math.sin(Math.PI * u)); });
+      var ro = seg(t, 36.4, 38.4), rpo = lerp2([158, 344], [204, 336], sm(ro)), roo = t > 36.4 && t < 38.9 ? 1 - seg(t, 38.4, 38.9) : 0;
+      place(CF.lo2, rpo[0], rpo[1], 7, 0, roo);
+      var rc = seg(t, 38.8, 41), rpc = lerp2([208, 420], [160, 404], sm(rc)), rco = t > 38.8 && t < 41.8 ? 1 - seg(t, 41, 41.8) : 0;
+      place(CF.lco2, rpc[0], rpc[1], 7, 0, rco);
       /* glucose going into cells (after a meal) or coming out of them (hours later) */
       CF.events.forEach(function (ev) {
         var u = seg(t, ev.t0, ev.t0 + 1.8), c = ev.cell, ga = (c.gang || 0) * Math.PI / 180, ox = GLY[2][0] * 5.4 * (c.side < 0 ? -1 : 1), oy = GLY[2][1] * 5.4;
@@ -1201,7 +1311,10 @@
       var vis = seg(M.k, .7, 1);
       function L3(text, side, x, y, a0, b0, cls) { var op = win(t, a0, b0, .4) * vis; if (op > .01) { var s = S2(x, y); lab(text, side, s[0], s[1], op, cls); } }
       L3('liver cell', 'L', 30, 330, 36, 51.6);
-      L3('glycogen', 'R', LIV.cells[3].gx + 36, LIV.cells[3].gy - 2, 36.6, 51.6);
+      L3(meal ? 'glucose → glycogen' : 'glycogen → glucose', 'R', FOCUS.gx + 36, FOCUS.gy - 2, 36.6, 43.4);
+      L3('glycogen', 'R', FOCUS.gx + 36, FOCUS.gy - 2, 43.4, 51.6);
+      if (roo > .01) L3('oxygen', 'R', rpo[0], rpo[1], 36.5, 38.9);
+      if (rco > .01) L3('carbon dioxide', 'R', rpc[0], rpc[1], 38.9, 41.8);
       L3('blood from the hepatic portal vein', 'L', 34, 492, 36.2, 51.6);
       L3('blood from the hepatic artery', 'R', 246, 521, 36.4, 51.6);
       L3('blood to the hepatic vein', 'R', 262, 56, 36.8, 51.6);
@@ -1238,7 +1351,7 @@
       place(TRD.co2b, lerp(tg[0] + 6, 146, ec), lerp(tg[1] + 6, tg[1] - 16, ec), 5.6, 0, t > a3 + .3 ? 1 : 0);
       var vis = seg(M.k, .7, 1);
       function L3(text, side, x, y, a0, b0, cls) { var op = win(t, a0, b0, .4) * vis; if (op > .01) { var s = S2(x, y); lab(text, side, s[0], s[1], op, cls); } }
-      L3('capillary', 'L', 137, 506, 80.8, 99);
+      L3('capillary', 'L', 137, 430, 80.8, 99);            /* clear of the equation along the bottom */
       L3('muscle cell', 'L', 26, 214, 81, 99);
       L3('mitochondrion', 'R', tg[0] + 15, tg[1] + 4, 81.4, 99);
       L3('glycogen', 'R', 236 + 36, 180, 81.8, 99);
@@ -1401,7 +1514,7 @@
       '<span class="bf__ki"><i class="bf__sw bf__sw--oxy"></i>oxygenated blood</span>' +
       '<span class="bf__ki"><i class="bf__sw bf__sw--deo"></i>deoxygenated blood</span>' +
       '<span class="bf__ki">' + glyph('glu') + 'glucose</span>' +
-      '<span class="bf__ki"><svg class="bf__kg bf__kg--wide" viewBox="-4 -9 30 18" aria-hidden="true">' + GLY.slice(0, 9).map(function (u) { return '<use href="#' + id('glu') + '" transform="translate(' + n2(u[0] * 3) + ' ' + n2(u[1] * 3) + ') scale(1.8)"/>'; }).join('') + '</svg>glycogen</span>' +
+      '<span class="bf__ki"><svg class="bf__kg bf__kg--wide" viewBox="-4 -9 30 18" aria-hidden="true"><path d="' + glyJoins(9, 3, 1) + '" stroke="' + C.gluLine + '" stroke-width=".9" fill="none"/>' + GLY.slice(0, 9).map(function (u) { return '<use href="#' + id('glu') + '" transform="translate(' + n2(u[0] * 3) + ' ' + n2(u[1] * 3) + ') scale(1.8)"/>'; }).join('') + '</svg>glycogen</span>' +
       '<span class="bf__ki">' + glyph('aa') + 'amino acid <small>(violet: the part with nitrogen)</small></span>' +
       '<span class="bf__ki"><svg class="bf__kg bf__kg--wide" viewBox="-6 -8 50 16" aria-hidden="true"><path d="M0 -3L12 3L24 -3L36 3" stroke="' + C.aaLine + '" stroke-width="2" fill="none"/>' + [0, 12, 24, 36].map(function (x, i) { return '<use href="#' + id('aa0') + '" transform="translate(' + x + ' ' + (i % 2 ? 3 : -3) + ') scale(4.4)"/>'; }).join('') + '</svg>protein</span>' +
       '<span class="bf__ki">' + glyph('urea') + 'urea</span>' +
@@ -1424,7 +1537,7 @@
     wrapEl.appendChild(left); wrapEl.appendChild(sp.list);
     box.appendChild(sp.bar);
     box.appendChild(wrapEl);
-    box.appendChild(h('p', 'widget__note bf__note', 'Red is oxygenated blood and blue is deoxygenated blood, as on the body. Only the substances each step follows are drawn; blood always carries some glucose, amino acids and urea. Molecules are drawn far larger than they are, and a protein as four amino acids: fibrinogen has nearly 3,000. The kidneys are drawn above the small intestine so that both can be seen.'));
+    box.appendChild(h('p', 'widget__note bf__note', 'Red is oxygenated blood and blue is deoxygenated blood, as on the body. Only the substances each step follows are drawn; blood always carries some glucose, amino acids, urea and carbon dioxide. Molecules are drawn far larger than they are, and a protein as four amino acids: fibrinogen has nearly 3,000. The kidneys are drawn above the small intestine so that both can be seen.'));
 
     /* ----- size: the lettering stays about 12.5 px on screen at any width ----- */
     function applyLayout() {
