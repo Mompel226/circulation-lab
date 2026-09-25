@@ -138,7 +138,13 @@ export async function mount(host, opts) {
 
   /* ---------------- the model ---------------- */
   const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
-  const gltf = await loader.loadAsync(opts.model, (ev) => { if (opts.onProgress) opts.onProgress(ev.loaded, ev.total); });
+  let gltf;
+  try { gltf = await loader.loadAsync(opts.model, (ev) => { if (opts.onProgress) opts.onProgress(ev.loaded, ev.total); }); }
+  catch (e) {
+    /* the model did not arrive: leave nothing behind, so the widget can try again or draw the 2D heart */
+    controls.dispose(); envTex.dispose(); renderer.dispose(); gl.remove();
+    throw e;
+  }
   if (dead) return null;
   const X = gltf.scene.userData || {};            /* the paths, rings and plane written by the build */
   heart.add(gltf.scene);
@@ -1005,9 +1011,9 @@ void main() {
       const nm = labelText(id), hgt = lineH * (nm.sub ? 2 : 1) + 6;
       let cx = 0, cy = 0; pts.forEach((p) => { cx += p[0]; cy += p[1]; }); cx /= pts.length || 1; cy /= pts.length || 1;
       pts.sort((a, b) => (a[0] - cx) ** 2 + (a[1] - cy) ** 2 - ((b[0] - cx) ** 2 + (b[1] - cy) ** 2));
-      /* the stage's own furniture keeps its space: the view name and buttons along the top, the hint
-         and the colour key along the bottom */
-      return { id, nm, hgt, pts: pts.filter((p) => p[1] - hgt / 2 >= 66 && p[1] + hgt / 2 <= h - 74) };
+      /* the stage's own furniture keeps its space: the view name, its buttons, the top arrow and the stage
+         caption along the top; the hint, the bottom arrow and the colour key along the bottom */
+      return { id, nm, hgt, pts: pts.filter((p) => p[1] - hgt / 2 >= (phoneish ? 112 : 80) && p[1] + hgt / 2 <= h - 74) };
     }
     const put = (c, p) => ({ id: c.id, x: p[0], y: p[1], top: p[1] - c.hgt / 2, bot: p[1] + c.hgt / 2, nm: c.nm, side: p[0] < midX ? 'L' : 'R', c });
     /* no two labels may share a band of height: horizontal leaders at distinct heights never cross, and
@@ -1048,11 +1054,13 @@ void main() {
     });
     lsvg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
     lsvg.innerHTML = svg;
-    /* a label whose box would leave the stage is pulled in and given a solid background */
+    /* a label whose box would leave the stage, or reach under the turning arrow at the middle of either
+       side, is pulled in and given a solid background */
+    const hb = host.getBoundingClientRect(), midY = hb.top + hb.height / 2;
     Array.prototype.forEach.call(over.querySelectorAll('.h3__lab'), (el) => {
-      const r = el.getBoundingClientRect(), hb = host.getBoundingClientRect();
-      if (r.left < hb.left + 2) { el.style.right = ''; el.style.left = '4px'; el.classList.add('is-tight'); }
-      if (r.right > hb.right - 2) { el.style.left = ''; el.style.right = '4px'; el.classList.add('is-tight'); }
+      const r = el.getBoundingClientRect(), gut = r.top < midY + 26 && r.bottom > midY - 26 ? 48 : 4;
+      if (r.left < hb.left + gut - 2) { el.style.right = ''; el.style.left = gut + 'px'; el.classList.add('is-tight'); }
+      if (r.right > hb.right - gut + 2) { el.style.left = ''; el.style.right = gut + 'px'; el.classList.add('is-tight'); }
     });
     over.classList.add('is-on'); labelsShown = true;
     if (opts.onLabels) opts.onLabels(lastLayout.slice());

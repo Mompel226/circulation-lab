@@ -203,7 +203,8 @@
     /* turning with buttons (Daniel, 25 Sep: "can you add maybe arrows so that ... if I just want to turn it
        I click those arrows and it turns more easily, and then if I just want to flip it then I can use
        the mouse"): a press turns the heart 30 degrees, the way a drag in that direction would; holding the
-       button keeps it turning */
+       button keeps it turning. Each arrow sits at the middle of its own side of the stage (his second
+       look: "place them where actually it makes sense"), not in a corner */
     var pad = h('div', 'h3__pad'); pad.setAttribute('role', 'group'); pad.setAttribute('aria-label', 'Turn the heart');
     var TURNS = [['up', '▲', 'Tip the heart up', 0, 1], ['left', '◀', 'Turn the heart left', 1, 0], ['right', '▶', 'Turn the heart right', -1, 0], ['down', '▼', 'Tip the heart down', 0, -1]];
     TURNS.forEach(function (t) {
@@ -224,7 +225,7 @@
       pad.appendChild(b);
     });
     stage.appendChild(pad);
-    var hint = h('p', 'h3__hint', coarse() ? 'Arrows or drag to turn · pinch to zoom · tap a part' : 'Arrows or drag to turn · scroll to zoom · press a part to name it');
+    var hint = h('p', 'h3__hint', coarse() ? 'Drag to turn · pinch to zoom<br>tap a part to name it' : 'Drag to turn · scroll to zoom<br>press a part to name it');
     stage.appendChild(hint);
     /* the colour key (Daniel, 25 Sep: "you should add a legend ... I see blue and I see red"): the blood
        and the outline of the side of the heart that carries it share a colour */
@@ -379,7 +380,7 @@
     /* =====================================================================
        state
        ===================================================================== */
-    var view = null, loading = false, failed = false, flat = null;
+    var view = null, loading = false, failed = false, flat = null, retried = false;
     var mode = 'explore', selected = null, allNames = false;
     var stageIdx = 0, settings = STAGES.map(function () { return { tri: false, mit: false, pul: false, aor: false }; });
     var solved = [false, false, false];
@@ -648,6 +649,8 @@
         /* the reader left the station while the model was loading (the ECG link does this): the
            fetch is cut off, but nothing failed that anyone sees, and the next visit loads afresh */
         if (!box.isConnected) return;
+        /* a dropped connection (a school network, a busy server): try once more before the 2D heart */
+        if (!retried && !/WebGL/.test(String(e && e.message))) { retried = true; loadT.textContent = 'Loading the heart again…'; setTimeout(start, 1500); return; }
         failed = true;
         if (global.console) console.warn('heart3d: 3D unavailable, using the 2D section', e);
         fallback2D();
