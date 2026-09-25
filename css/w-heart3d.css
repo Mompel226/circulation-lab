@@ -35,22 +35,26 @@
 .h3__vb.is-on{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.4);color:#fff}
 .h3__vb[hidden]{display:none}
 /* the turning pad: four arrows in a cross, bottom left */
-.h3__pad{position:absolute;left:10px;bottom:26px;z-index:4;display:grid;grid-template-columns:repeat(3,32px);grid-template-rows:repeat(3,32px);gap:3px}
-.h3__turn{font:inherit;display:grid;place-items:center;width:32px;height:32px;padding:0;border-radius:50%;cursor:pointer;touch-action:none;
-  color:#E8EEF1;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.22);font-size:12px;line-height:1;-webkit-tap-highlight-color:transparent}
+/* the turning arrows, each at the middle of the side it turns the heart towards (Daniel, 25 Sep: "put the
+   buttons at the top, right, left and bottom ... where actually it makes sense") */
+.h3__pad{position:absolute;inset:0;z-index:4;pointer-events:none}
+.h3__turn{position:absolute;pointer-events:auto;font:inherit;display:grid;place-items:center;width:34px;height:34px;padding:0;border-radius:50%;cursor:pointer;touch-action:none;
+  color:#E8EEF1;background:rgba(6,13,18,.55);border:1px solid rgba(255,255,255,.26);font-size:12px;line-height:1;-webkit-tap-highlight-color:transparent}
 .h3__turn:hover{background:rgba(255,255,255,.17);border-color:rgba(255,255,255,.4)}
 .h3__turn.is-held,.h3__turn:active{background:rgba(255,255,255,.28);border-color:#fff;color:#fff}
 .h3__turn:focus-visible{outline:2.5px solid #9BE3A8;outline-offset:2px}
-.h3__turn--up{grid-column:2;grid-row:1} .h3__turn--left{grid-column:1;grid-row:2} .h3__turn--right{grid-column:3;grid-row:2} .h3__turn--down{grid-column:2;grid-row:3}
+.h3__turn--up{top:8px;left:50%;margin-left:-17px} .h3__turn--down{bottom:8px;left:50%;margin-left:-17px}
+.h3__turn--left{left:8px;top:50%;margin-top:-17px} .h3__turn--right{right:8px;top:50%;margin-top:-17px}
 .h3--flat .h3__pad,.h3__load:not([hidden]) ~ .h3__pad{display:none}
-.h3__hint{position:absolute;left:0;right:0;bottom:8px;margin:0;z-index:4;text-align:center;pointer-events:none;
+/* how to use it, in the bottom left corner, clear of the arrow at the bottom's middle */
+.h3__hint{position:absolute;left:12px;bottom:9px;max-width:calc(50% - 36px);margin:0;z-index:4;text-align:left;line-height:1.5;pointer-events:none;
   font-family:var(--mono,ui-monospace,monospace);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#7F98A5}
 .h3__legend{position:absolute;right:12px;bottom:26px;margin:0;z-index:4;pointer-events:none;font-family:var(--sans,system-ui,sans-serif);
   font-size:12px;color:#DCE7EC;background:rgba(6,13,18,.6);padding:4px 9px;border-radius:8px}
 .h3__legend[hidden]{display:none}
 .h3__legend .h3__key{display:block;line-height:1.55}
 /* what the beat is doing now, on the heart itself */
-.h3__stagecap{position:absolute;left:50%;top:38px;transform:translateX(-50%);z-index:4;margin:0;pointer-events:none;white-space:nowrap;
+.h3__stagecap{position:absolute;left:50%;top:50px;transform:translateX(-50%);z-index:4;margin:0;pointer-events:none;white-space:nowrap;
   font-family:var(--sans,system-ui,sans-serif);font-size:13px;color:#F4F7F8;background:rgba(6,13,18,.74);border:1px solid rgba(255,255,255,.16);
   border-radius:999px;padding:4px 12px}
 .h3__stagecap b{font-weight:700;color:#FFE2B3;margin-right:5px}
@@ -199,15 +203,21 @@
   .h3__vgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .h3__cut{flex-wrap:wrap}
   .h3__cutval{min-width:0}
-  .h3__legend{bottom:24px;font-size:11px}
-  .h3__pad{grid-template-columns:repeat(3,30px);grid-template-rows:repeat(3,30px);bottom:12px;left:8px}
-  .h3__turn{width:30px;height:30px}
+  .h3__legend{bottom:48px;right:8px;font-size:11px}
+  .h3__turn{width:32px;height:32px}
+  .h3__turn--up,.h3__turn--down{margin-left:-16px} .h3__turn--left,.h3__turn--right{margin-top:-16px}
+  .h3__turn--left{left:5px} .h3__turn--right{right:5px}
   .h3__hint{font-size:9px}
 }
 @media (prefers-reduced-motion:reduce){ .h3__bplay.is-next{animation:none} .h3__labels{transition:none} .h3__bar i{transition:none} }
 /* a narrow stage (a phone): the view buttons smaller, and the view's name on one line */
 @media (max-width:560px){
   .h3__vb{font-size:11px;padding:2px 7px}
+  /* the view's name and buttons fill the top row here: the top arrow goes just under them, and the hint
+     gives way to the arrows, which explain themselves */
+  .h3__turn--up{top:40px}
+  .h3__stagecap{top:80px}
+  .h3__hint{display:none}
   .h3__where{max-width:calc(100% - 196px)}
   .h3__where2{display:none}
 }
