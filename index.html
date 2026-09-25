@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Circulation Lab — IGCSE Biology 0610 Topic 9, Transport in animals</title>
+<meta name="description" content="An interactive lab on Cambridge IGCSE Biology 0610 Topic 9, Transport in animals: single and double circulation, the heart and how it beats, monitoring the heart, the effect of exercise on heart rate, coronary heart disease, arteries, veins and capillaries, the main blood vessels, and blood and clotting.">
+<meta name="author" content="Dr Daniel Mompel Riera">
+<meta name="copyright" content="Dr Daniel Mompel Riera, NLCS Jeju">
+<meta name="theme-color" content="#14572B">
+<!-- The tab icon: a heart with a heartbeat line, on the labs' green. -->
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%2314572B'/><path d='M16 26.5C8.5 21 5 17 5 12.2C5 8.8 7.6 6.3 10.8 6.3C13.1 6.3 14.9 7.6 16 9.4C17.1 7.6 18.9 6.3 21.2 6.3C24.4 6.3 27 8.8 27 12.2C27 17 23.5 21 16 26.5Z' fill='%23F5B7AE'/><path d='M7.5 15H12L14 11L17.2 18.4L19.2 15H24.5' fill='none' stroke='%2314572B' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- The plate's two faces, loaded WITHOUT blocking the first paint: behind a school captive
+     portal a cross-origin stylesheet HANGS rather than failing, so it is fetched at low
+     priority and swapped in when it arrives. Offline, the plate uses the system fallbacks. -->
+<link rel="stylesheet" media="print" onload="this.media='all'"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500&display=swap">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500&display=swap"></noscript>
+<link rel="stylesheet" href="css/app.css?v=1790310297">
+  <link rel="stylesheet" href="css/w-journey.css?v=1790310297">
+  <link rel="stylesheet" href="css/w-monitor.css?v=1790310297">
+  <link rel="stylesheet" href="css/w-chd.css?v=1790310297">
+  <link rel="stylesheet" href="css/w-defence.css?v=1790310297">
+  <link rel="stylesheet" href="css/w-bodyflow.css?v=1790310297">
+  <link rel="stylesheet" href="css/w-heart3d.css?v=1790310297">
+</head>
+<body>
+<div class="app">
+
+  <header class="hdr">
+    <div class="hdr__mark">
+      <h1 class="hdr__title">Circulation Lab</h1>
+      <span class="hdr__sub">Topic 9 · Transport in animals — the heart, the vessels, the blood</span>
+      <a class="hdr__by" href="https://github.com/Mompel226" target="_blank" rel="noopener"
+         title="Who made this — Biology, NLCS Jeju. Opens my GitHub">by Dr Daniel Mompel Riera</a>
+    </div>
+    <button class="badge" id="btnSyllabus" type="button" title="The syllabus, as Cambridge publishes it — click to open">IGCSE 0610</button>
+    <div class="hdr__spacer"></div>
+    <div class="hdr__stats">
+      <span class="stat" title="Questions answered correctly">
+        <svg class="ring" viewBox="0 0 26 26">
+          <circle class="bg" cx="13" cy="13" r="11"></circle>
+          <circle id="ringFg" class="fg" cx="13" cy="13" r="11" transform="rotate(-90 13 13)" stroke-dasharray="0 69.1"></circle>
+        </svg>
+        <b><span id="qDone">0</span>/<span id="qTotal">0</span></b> <span class="stat__lbl">questions</span>
+      </span>
+      <span class="stat stat--stations" title="Stations finished">
+        <b><span id="stDone">0</span>/<span id="stTotal">12</span></b> <span class="stat__lbl">stations</span>
+      </span>
+      <button class="hbtn hbtn--save tip tip--right" id="btnSubmit" hidden data-tip="Signed in, your work is sent to Dr Mompel’s records on its own as you go. Press to see, or to sign in.">Saves as you go</button>
+      <a class="hbtn" href="https://nlcsbiology.com/human-body-hub/"
+         title="The human body: every body topic, and this lab">← The body</a>
+      <button class="hbtn" id="btnGloss" title="Every word the labs use, with its definition"><span class="hbtn__long">Glossary</span><span class="hbtn__short" aria-hidden="true">A–Z</span></button>
+      <button class="hbtn" id="btnHelp"><span class="hbtn__long">How to use</span><span class="hbtn__short" aria-hidden="true">?</span></button>
+      <button class="hbtn" id="btnReset" title="Clear every answer and start again"><span class="hbtn__long">Reset</span><span class="hbtn__short" aria-hidden="true">↺ Reset</span></button>
+    </div>
+  </header>
+
+  <main class="stage">
+    <section class="platecol" aria-label="The body and its circulation">
+      <div class="platecol__tools">
+        <button class="tool tool--whole" id="tWhole" hidden title="Pull back to the whole body">⤢ Whole body</button>
+        <button class="tool tool--sim" id="simBtn" type="button" hidden></button>
+        <span class="platecol__hint" id="plateHint">Click any part of the body to open its station</span>
+        <button class="tool fold" id="plateFold" type="button" aria-expanded="true" data-what="the body" title="Fold the body away to read the notes on their own">▲ Hide the body</button>
+      </div>
+      <div class="platewrap" id="map">
+        <svg id="body" preserveAspectRatio="xMidYMid meet" role="group" aria-label="A human body with its circulation drawn inside it: the heart, the lungs, the liver, the kidneys and the gut, and the arteries, veins and capillaries between them. Red is oxygenated blood, blue is deoxygenated blood. Click a part to open the station that teaches it.">
+          <defs></defs>
+        </svg>
+        <div class="tag" id="tag" aria-hidden="true"><span class="tag__pill"></span></div>
+      </div>
+      <div class="bench" id="benchHost" hidden aria-label="The bench"></div>
+      <div class="sim" id="simHost" hidden role="region" aria-label="The simulation, beside the questions"></div>
+      <p class="said" id="said"><span class="said__name">One body, two circulations</span><span class="said__note">Red: oxygenated · Blue: deoxygenated</span></p>
+    </section>
+
+    <section class="panel" id="panel">
+      <div class="panel__inner" id="panelInner">
+        <p class="bootnote" role="status">Opening the lab… the first station will appear here.</p>
+      </div>
+    </section>
+  </main>
+
+  <nav class="rail" aria-label="The stations, in order">
+    <div class="rail__track" id="railTrack"></div>
+  </nav>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="toast" id="updBar" role="status" aria-live="polite"></div>
+
+<div class="modal lb" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Enlarged image">
+  <figure class="lb__box"><div class="lb__stage"><img alt=""></div><figcaption class="lb__cap"></figcaption>
+  <div class="lb__hint">Click anywhere to close</div></figure>
+</div>
+
+<div class="modal" id="subDlg" hidden role="dialog" aria-modal="true" aria-label="Your work and the records">
+  <div class="modal__box modal__box--sm">
+    <button class="modal__close" id="subClose" aria-label="Close">×</button>
+    <h2>Your work</h2>
+    <div id="subBody"></div>
+    <div class="dlgrow"><button class="btn" id="subGo">Save now</button></div>
+  </div>
+</div>
+
+<div class="modal" id="glossDlg" hidden role="dialog" aria-modal="true" aria-label="Glossary">
+  <div class="modal__box">
+    <button class="modal__close" id="glossClose" aria-label="Close">×</button>
+    <h2>Glossary</h2>
+    <p class="st-sub">Every word the labs use, with the definition it is examined on. The short list at the foot of each station is only the words that are new there.</p>
+    <input class="gloss__find" id="glossFind" type="search" autocomplete="off"
+           placeholder="Type a word — or part of one" aria-label="Search the key words">
+    <p class="gloss__count" id="glossCount"></p>
+    <p class="gloss__known" id="glossKnown" hidden></p>
+    <div id="glossList"></div>
+  </div>
+</div>
+
+<div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-label="How to use the Circulation Lab">
+  <div class="modal__box">
+    <button class="modal__close" id="modalClose" aria-label="Close">×</button>
+    <h2>Circulation Lab</h2>
+    <p class="st-sub">Cambridge IGCSE Biology 0610 · Topic 9, Transport in animals: 9.1 circulatory systems, 9.2 the heart, 9.3 blood vessels, 9.4 blood</p>
+
+    <h3>In one minute</h3>
+    <ul>
+      <li><b>Click any part of the body</b>, or any step on the bar along the bottom. The body on the left lights the part each station is about, and the blood in it keeps flowing.</li>
+      <li>Each station has two tabs: <b>Learn</b> — what you must know, with something to press, drag or watch in every section — and <b>Practise</b>, the questions.</li>
+      <li><b>Check as often as you like.</b> You are told which parts are wrong, <b>never the answer</b> — you have to work it out. Keep going until it is all right.</li>
+      <li>An underlined word can be clicked: <b>🔍</b> opens a picture there and then, <b>↗</b> jumps to the station that explains it and brings you back, and a faint dotted line opens the definition.</li>
+      <li>Your work is kept <b>in this browser</b> and, once you sign in with your school account, sent to Dr&nbsp;Mompel&rsquo;s records on its own as you go &mdash; there is nothing to hand in. Signed in, it follows you to another computer.</li>
+    </ul>
+    <p class="fineprint">The answers are never shown. Sign in with your school Google account so Dr&nbsp;Mompel knows whose work it is. Anyone else is welcome to use the lab &mdash; their work simply stays in their own browser.</p>
+
+    <details class="helpmore">
+      <summary>What the colours mean</summary>
+      <ul>
+        <li><b>On the body:</b> red is <b>oxygenated</b> blood and blue is <b>deoxygenated</b> blood. That is the convention every diagram uses. Real blood is never blue: deoxygenated blood is dark red.</li>
+        <li><b>In the text:</b> <b>crimson</b> words are about the heart; <b>amber</b> words are about the blood vessels and the routes the blood takes; <b>violet</b> words are about the blood itself; <b>teal</b> words are about exercise, measuring the heart and coronary heart disease.</li>
+        <li>A <b>box with a red border</b> is the mistake students most often make there. A small <b>S</b> badge means Supplement (Paper 4 only). <b>“Beyond the syllabus”</b> is worth knowing but not named in 0610.</li>
+      </ul>
+    </details>
+
+    <details class="helpmore">
+      <summary>What is simplified here</summary>
+      <ul>
+        <li>The heart is drawn as every exam diagram draws it: cut from the front, so its right side is on <b>your</b> left. The aorta and the pulmonary artery leave the top side by side; in the body the pulmonary artery twists round the front of the aorta.</li>
+        <li>Each atrioventricular valve is drawn as two flaps. The one on the right side of the heart really has three.</li>
+        <li>The body shows one capillary bed for each part of the body. A real organ has millions of capillaries.</li>
+        <li>The veins from the right lung pass <b>behind</b> the heart to the left atrium, so on the body they fade where they go behind it.</li>
+        <li>The large vessels of the head, the arms and the legs are drawn so the blood has somewhere to go. 0610 does not ask you to name them; point at one and it says so.</li>
+        <li>In the animations, cells and molecules are drawn much larger and far fewer than in real life, and every process is slowed down so each step can be read.</li>
+        <li>The fish and mammal circuits are circuit diagrams, not drawings of real hearts: there the aorta leaves the side of the left ventricle, and one vena cava is drawn.</li>
+        <li>In the coronary artery, the blood flow falls as the fatty deposit grows. At rest a real artery keeps its flow until it is badly narrowed; the shortage shows first during exercise.</li>
+      </ul>
+    </details>
+
+    <details class="helpmore">
+      <summary>Where the content and the pictures come from</summary>
+      <ul>
+        <li>The definitions are the 2026–28 syllabus wording. Where the slides use an older wording it is given in brackets.</li>
+        <li>The stations follow Dr&nbsp;Mompel's own Year 10 lessons on Topic 9, and most of the pictures are the ones shown in those lessons.</li>
+        <li>The body outline is Mikael Häggström's <i>Human body diagrams</i> (Wikimedia Commons, CC0) — the same body as the Human Body Hub. The heart, the vessels and the blood flowing in them are drawn for this lab.</li>
+        <li>The 3D heart is a real human heart: the HuBMAP Human Reference Atlas (Browne and Schlehlein 2024), made from the Visible Human Male of the US National Library of Medicine, CC BY 4.0. Its moving valve cusps, tendons and blood paths are added for this lab.</li>
+        <li>Every other picture is credited under it and listed in full below and in <code>assets/photos/CREDITS.md</code>.</li>
+      </ul>
+      <p class="fineprint" id="creditsList"></p>
+    </details>
+
+    <p class="fineprint"><a class="by-me" href="https://github.com/Mompel226" target="_blank" rel="noopener" title="Who made this — and everything else that is free to use"><b>Dr Daniel Mompel Riera</b></a> — Biology, North London Collegiate School Jeju.
+       Questions or corrections: <a href="mailto:dmompelriera@nlcsjeju.kr">dmompelriera@nlcsjeju.kr</a>.
+       One of the <a href="https://nlcsbiology.com/human-body-hub/">Human Body</a> labs ·
+       <a href="https://nlcsbiology.com/biology-hub/">Biology Hub</a></p>
+  </div>
+</div>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="js/config.js?v=1790310297" defer></script>
+<script src="js/data/glossary.js?v=1790310297" defer></script>
+<script src="js/data/syllabus.js?v=1790310297" defer></script>
+<script src="js/data/stations.js?v=1790310297" defer></script>
+<script src="js/data/photos.js?v=1790310297" defer></script>
+<script src="js/body-art.js?v=1790310297" defer></script>
+<script src="js/heart-art.js?v=1790310297" defer></script>
+<script src="js/circ-draw.js?v=1790310297" defer></script>
+<script src="js/terms.js?v=1790310297" defer></script>
+<script src="js/marking.js?v=1790310297" defer></script>
+<script src="js/sync.js?v=1790310297" defer></script>
+<script src="js/signin.js?v=1790310297" defer></script>
+<script src="js/engine.js?v=1790310297" defer></script>
+<script src="js/syllabus.js?v=1790310297" defer></script>
+<script src="js/widgets.js?v=1790310297" defer></script>
+<script src="js/learn.js?v=1790310297" defer></script>
+<script src="js/w-common.js?v=1790310297" defer></script>
+<script src="js/w-heart.js?v=1790310297" defer></script>
+  <script src="js/w-task.js?v=1790310297" defer></script>
+  <script src="js/w-route.js?v=1790310297" defer></script>
+  <script src="js/w-exercise.js?v=1790310297" defer></script>
+  <script src="js/w-journey.js?v=1790310297" defer></script>
+  <script src="js/w-monitor.js?v=1790310297" defer></script>
+  <script src="js/w-chd.js?v=1790310297" defer></script>
+  <script src="js/w-defence.js?v=1790310297" defer></script>
+  <script src="js/w-bodyflow.js?v=1790310297" defer></script>
+  <script src="js/w-heart3d.js?v=1790310297" defer></script>
+<script src="js/engine-ext.js?v=1790310297" defer></script>
+<script src="js/plate.js?v=1790310297" defer></script>
+<script src="js/app.js?v=1790310297" defer></script>
+<!-- The lab offline. The worker lives at this lab's root, so on Pages its scope is exactly
+     /<lab>/. It fetches the HTML network-first, so a deploy always reaches an online student
+     and the cache is only the fall-back for when the wifi is not there. -->
+<script>
+(function () {
+  if (!("serviceWorker" in navigator)) return;
+  if (location.protocol.slice(0, 4) !== "http") return;
+  addEventListener("load", function () {
+    navigator.serviceWorker.register(new URL("sw.js", document.baseURI), {
+      scope: new URL("./", document.baseURI).pathname,
+      updateViaCache: "none"
+    }).catch(function () {});
+  });
+})();
+</script>
+</body>
+</html>

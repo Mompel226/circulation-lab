@@ -1,0 +1,127 @@
+/* ============================================================
+   w-chd.css — the two widgets of the coronary heart disease station (js/w-chd.js).
+     .ar__*   "Inside a coronary artery": the step player (.sp__*) and the labels (.lb__*) are the
+              lab's own, in app.css; what is here is the layout, the read-outs and the drawing.
+     .pf__*   "Who is most at risk?": six profile cards to put in order, the check, the frame.
+   ============================================================ */
+
+/* ---------- artery: layout ---------- */
+.ar__wrap{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-items:start}
+.ar__wrap.ar--side{grid-template-columns:minmax(0,1.9fr) minmax(220px,1fr)}
+.ar__left{min-width:0}
+.ar__fig{margin:0;position:relative}
+.ar__svg{width:100%;height:auto;display:block}
+.ar--tall .ar__fig{margin:0 -8px}
+.ar__read{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.ar__pill{font-size:12.5px;line-height:1.35;border-radius:var(--r-pill);padding:3px 10px;border:1.5px solid var(--edge);background:#fff;color:#3C3C3C;transition:background .25s,border-color .25s}
+.ar__pill i{font-style:normal;font-weight:700;letter-spacing:.02em;margin-left:3px}
+.ar__pill.is-plain i{color:var(--k-health)}
+.ar__pill.is-ok{border-color:#7CC08E;background:#EAF6ED}
+.ar__pill.is-ok i{color:#1E7A3E}
+.ar__pill.is-warn{border-color:#E1BF78;background:#FBF3E3}
+.ar__pill.is-warn i{color:#8A5A0E}
+.ar__pill.is-bad{border-color:#E2B9A9;background:#FBEFEA}
+.ar__pill.is-bad i{color:#A3213A}
+.ar__fence{border-left:3px solid var(--line);padding-left:9px}
+
+/* ---------- artery: the drawing ---------- */
+.ar__bg{fill:#0D1A22}
+.ar__fib path{fill:none;stroke:#FFE3DA;stroke-opacity:.1;stroke-width:3.6}
+.ar__str path{fill:none;stroke:#3A0D12;stroke-opacity:.24;stroke-width:3.6;stroke-dasharray:1.1 2.4}
+.ar__mnuc ellipse{fill:#4A1318;opacity:.5}
+.ar__cap path{fill:none;stroke:#E4484B;stroke-width:1.5;stroke-opacity:.7;stroke-linecap:round}
+.ar__fat{fill:#D8B86B}
+.ar__fatc path{fill:#EDD48F;stroke:#BF9A4E;stroke-width:.7}
+.ar__col path{fill:none;stroke:#EFD5C7;stroke-opacity:.55;stroke-width:.9}
+.ar__adv{fill:#D5B09F}
+.ar__med{stroke:none}
+.ar__el path{fill:none;stroke:#F7D8CB;stroke-opacity:.62;stroke-width:1.1}
+.ar__iel path{fill:none;stroke:#FCE8DD;stroke-width:1.7;stroke-opacity:.95}
+.ar__smc ellipse{fill:#7A2C28;opacity:.55}
+.ar__lin,.ar__linf{fill:#F4E4DB}
+.ar__enuc ellipse,.ar__enuc2{fill:#9A665D}
+.ar__depf{stroke:#B78734;stroke-width:.8}
+.ar__capf{fill:#EAD7C2}
+.ar__drop{fill:#FCEBB6;stroke:#D5AE52;stroke-width:.5}
+.ar__xtal{fill:none;stroke:#FFF8DE;stroke-width:1.5;stroke-linecap:round}
+.ar__plt{fill:#F9DFEC;stroke:#8C4B68;stroke-width:.6}
+.ar__clotf{stroke:#4B0C13;stroke-width:.9}
+.ar__ccell{fill:#C23840;stroke:#560D15;stroke-width:.7}
+.ar__fibr{fill:none;stroke:#F6D2D5;stroke-opacity:.55;stroke-width:1}
+.ar__rbc{fill:#FF8A7E;stroke:#7A1E21;stroke-width:1}
+.ar__bw{fill:none;stroke:#C98579;stroke-width:21;stroke-linejoin:round}
+.ar__bw--s{stroke-width:15}
+.ar__bl{fill:none;stroke:#B92F33;stroke-width:13;stroke-linejoin:round;stroke-linecap:round}
+.ar__bl--s{stroke-width:9}
+.ar__brlB .ar__bl{stroke:inherit}
+.ar__dir path{fill:none;stroke:#FFFFFF;stroke-opacity:.6;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- profiles ---------- */
+.pf__how{font-size:14px;margin:0 0 10px;color:#3C3C3C}
+.pf__live{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:0}
+.pf__list{list-style:none;margin:0 0 12px;padding:0;display:flex;flex-direction:column;gap:8px}
+.pf__card{position:relative;display:grid;grid-template-columns:38px 16px 104px minmax(0,1fr);gap:0 11px;align-items:start;
+  background:#fff;border:1.5px solid var(--edge);border-radius:12px;padding:9px 12px 10px 8px;box-shadow:0 1px 2px rgba(60,45,25,.05)}
+.pf__list.is-dragging .pf__card{transition:transform .16s ease}
+.pf__list.is-dragging .pf__card.is-drag{transition:none;z-index:5;box-shadow:var(--shadow-lg);border-color:var(--k-health)}
+.pf__ctl{display:flex;flex-direction:column;align-items:center;gap:3px}
+.pf__mv{width:36px;height:36px;border-radius:9px;border:1.5px solid var(--edge);background:#fff;color:var(--k-health);font-size:12px;line-height:1;cursor:pointer;padding:0}
+.pf__mv:hover:not(:disabled){border-color:var(--k-health);background:#E6F3EF}
+.pf__mv:focus-visible{outline:2.5px solid var(--k-health);outline-offset:1px}
+.pf__mv:disabled{opacity:.3;cursor:default}
+.pf__num{font-weight:700;font-size:17px;color:var(--k-health);line-height:1.15;font-variant-numeric:tabular-nums}
+.pf__grip{align-self:stretch;min-height:44px;cursor:grab;touch-action:none;display:grid;place-items:center;border-radius:7px;background:#F4F1EA}
+.pf__grip:hover{background:#E6F3EF}
+.pf__card.is-drag .pf__grip{cursor:grabbing}
+.pf__grip i{display:block;width:9px;height:24px;background-image:radial-gradient(circle,#7E8B87 1.3px,transparent 1.6px);background-size:4.5px 6px}
+.pf__who{display:flex;flex-direction:column;gap:5px;align-items:flex-start;min-width:0}
+.pf__av{width:44px;height:44px;flex:none}
+.pf__avbg{fill:#E3ECE9}
+.pf__avfg{fill:#98ADA8}
+.pf__id{min-width:0}
+.pf__name{display:block;font-size:16px;line-height:1.25}
+.pf__facts{margin:0;columns:2;column-gap:14px;min-width:0}
+.pf__f{break-inside:avoid;margin-bottom:3px;padding:3px 6px 3px 8px;border-left:3px solid transparent;border-radius:0 6px 6px 0;font-size:13px;line-height:1.38;transition:background .2s,border-color .2s}
+.pf__f dt{display:inline;font-weight:700;color:var(--ink)}
+.pf__f dt::after{content:": "}
+.pf__f dd{display:inline;margin:0;color:#434343}
+.pf__f--x,.pf__f--x dt,.pf__f--x dd{color:#7A7A7A}
+.pf__no{display:inline-block;margin-left:5px;font-size:12px;font-weight:600;color:#666;border:1px solid var(--line);border-radius:4px;padding:0 5px;line-height:1.5;vertical-align:1px;white-space:nowrap}
+.pf__f.is-risk{border-left-color:#C0473C;background:#FBEDEA}
+.pf__f.is-can{border-left-color:var(--k-health);background:#E6F3EF}
+.pf__f.is-cannot{border-left-color:#8C7B6B;background:#F3EFE9}
+.pf__chip{display:inline-block;margin-left:6px;font-size:12px;font-weight:700;letter-spacing:.01em;border-radius:var(--r-pill);padding:0 8px;line-height:1.55;background:#B8403A;color:#fff;vertical-align:1px;white-space:nowrap}
+.pf__f.is-can .pf__chip{background:var(--k-health)}
+.pf__f.is-cannot .pf__chip{background:#6F6053}
+.pf__why{display:block;font-size:12px;color:#6A4B3C;font-style:italic;margin-top:1px}
+.pf__why[hidden]{display:none}
+.pf__out{grid-column:1 / -1;margin:8px 0 0;padding-top:7px;border-top:1px dashed var(--edge);display:flex;flex-wrap:wrap;gap:4px 12px;font-size:13px;line-height:1.4}
+.pf__out[hidden]{display:none}
+.pf__count{font-weight:700;color:#A3213A}
+.pf__pos.is-ok{color:#1E7A3E;font-weight:600}
+.pf__pos.is-off{color:#8A5A0E;font-weight:600}
+.pf__cc{flex-basis:100%;color:#3C3C3C}
+.pf__btns{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 10px}
+.pf__btns .wbtn{min-height:38px;padding:7px 16px;font-size:14px}
+.pf__btns .wbtn:disabled{opacity:.45;cursor:default;background:#fff}
+/* the second button's help opens leftwards, so it never runs off a phone screen */
+.pf__split[data-tip]::after{left:auto;right:0}
+.pf__split[data-tip]::before{left:auto;right:16px}
+.pf__result p{margin:0 0 7px;font-size:14px;line-height:1.5}
+.pf__result p:last-child{margin-bottom:0}
+.pf__verdict.is-ok{color:#1E7A3E;font-weight:700}
+.pf__verdict.is-off{color:#8A5A0E;font-weight:700}
+.pf__frame{margin-top:12px;border:1px solid var(--edge);border-left:4px solid var(--k-health);border-radius:10px;background:#fff;padding:12px 14px}
+.pf__fh{font-weight:700;margin:0 0 4px;color:var(--k-health);font-size:14px}
+.pf__fs{margin:0 0 9px;font-size:14.5px;line-height:1.8}
+.pf__bl{display:inline-block;min-width:4.2em;border-bottom:1.5px solid #8E9A96;color:transparent;line-height:1.1}
+.pf__lab{display:block;font-size:12.5px;color:var(--grey);margin-bottom:3px}
+.pf__ta{display:block;width:100%;font:inherit;font-size:14.5px;line-height:1.45;border:1.5px solid var(--edge);border-radius:8px;padding:8px 10px;resize:vertical;background:#FFFEFB;color:var(--ink)}
+.pf__ta:focus{outline:2.5px solid var(--k-health);outline-offset:0;border-color:var(--k-health)}
+.pf__bank{font-size:13px;color:#4A4A4A;margin:8px 0 0;line-height:1.55}
+
+/* a narrow card: the controls and the person on one row, the facts beneath, one to a line */
+.pf.pf--narrow .pf__card{grid-template-columns:38px 16px minmax(0,1fr);padding-right:10px}
+.pf.pf--narrow .pf__who{flex-direction:row;align-items:center;gap:10px;align-self:center}
+.pf.pf--narrow .pf__facts{grid-column:1 / -1;columns:1;margin-top:8px}
+@media (prefers-reduced-motion:reduce){.pf__list.is-dragging .pf__card{transition:none}}
