@@ -39,6 +39,15 @@
 .h3__legend{position:absolute;right:12px;bottom:26px;margin:0;z-index:4;pointer-events:none;font-family:var(--sans,system-ui,sans-serif);
   font-size:12px;color:#DCE7EC;background:rgba(6,13,18,.6);padding:4px 9px;border-radius:8px}
 .h3__legend[hidden]{display:none}
+.h3__legend .h3__key{display:block;line-height:1.55}
+/* what the beat is doing now, on the heart itself */
+.h3__stagecap{position:absolute;left:50%;top:38px;transform:translateX(-50%);z-index:4;margin:0;pointer-events:none;white-space:nowrap;
+  font-family:var(--sans,system-ui,sans-serif);font-size:13px;color:#F4F7F8;background:rgba(6,13,18,.74);border:1px solid rgba(255,255,255,.16);
+  border-radius:999px;padding:4px 12px}
+.h3__stagecap b{font-weight:700;color:#FFE2B3;margin-right:5px}
+.h3__stagecap i{font-style:italic;color:#FFB4A8;margin-left:4px}
+.h3__stagecap[hidden]{display:none}
+.h3__row--side .h3__lead{font-size:13px;font-weight:600;color:var(--grey,#6B6B6B)}
 .h3__sw{display:inline-block;width:10px;height:10px;border-radius:50%;margin:0 5px 0 8px;vertical-align:-1px}
 .h3__sw:first-child{margin-left:0}
 .h3__sw--deo{background:var(--h3-deo)} .h3__sw--oxy{background:var(--h3-oxy)}

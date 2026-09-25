@@ -881,7 +881,15 @@
     }
     function labels(on, beyond) { if (on != null) labOn = !!on; if (beyond != null) labBeyond = !!beyond; layoutLabels(); }
     if (global.ResizeObserver && opts.map) {
-      var ro = new ResizeObserver(function () { if (!svg.isConnected) { ro.disconnect(); return; } jump(cam && isZoomed() ? cam : FULL, true); });
+      var ro = new ResizeObserver(function () {
+        if (!svg.isConnected) { ro.disconnect(); return; }
+        /* hidden (a widget is standing in the column): keep the view exactly as it is. Re-fitting it to a
+           box of no size stretched it, and the body came back zoomed out (Daniel, 25 Sep: "It should
+           remain zoomed in, even if I scroll up, and only zoom out if I click whole body") */
+        var r = opts.map.getBoundingClientRect();
+        if (r.width < 4 || r.height < 4) return;
+        jump(cam && isZoomed() ? cam : FULL, true);
+      });
       ro.observe(opts.map);
     }
 
