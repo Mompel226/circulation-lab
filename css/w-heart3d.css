@@ -34,6 +34,15 @@
 .h3__vb:hover{background:rgba(255,255,255,.14)}
 .h3__vb.is-on{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.4);color:#fff}
 .h3__vb[hidden]{display:none}
+/* the turning pad: four arrows in a cross, bottom left */
+.h3__pad{position:absolute;left:10px;bottom:26px;z-index:4;display:grid;grid-template-columns:repeat(3,32px);grid-template-rows:repeat(3,32px);gap:3px}
+.h3__turn{font:inherit;display:grid;place-items:center;width:32px;height:32px;padding:0;border-radius:50%;cursor:pointer;touch-action:none;
+  color:#E8EEF1;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.22);font-size:12px;line-height:1;-webkit-tap-highlight-color:transparent}
+.h3__turn:hover{background:rgba(255,255,255,.17);border-color:rgba(255,255,255,.4)}
+.h3__turn.is-held,.h3__turn:active{background:rgba(255,255,255,.28);border-color:#fff;color:#fff}
+.h3__turn:focus-visible{outline:2.5px solid #9BE3A8;outline-offset:2px}
+.h3__turn--up{grid-column:2;grid-row:1} .h3__turn--left{grid-column:1;grid-row:2} .h3__turn--right{grid-column:3;grid-row:2} .h3__turn--down{grid-column:2;grid-row:3}
+.h3--flat .h3__pad,.h3__load:not([hidden]) ~ .h3__pad{display:none}
 .h3__hint{position:absolute;left:0;right:0;bottom:8px;margin:0;z-index:4;text-align:center;pointer-events:none;
   font-family:var(--mono,ui-monospace,monospace);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#7F98A5}
 .h3__legend{position:absolute;right:12px;bottom:26px;margin:0;z-index:4;pointer-events:none;font-family:var(--sans,system-ui,sans-serif);
@@ -191,6 +200,8 @@
   .h3__cut{flex-wrap:wrap}
   .h3__cutval{min-width:0}
   .h3__legend{bottom:24px;font-size:11px}
+  .h3__pad{grid-template-columns:repeat(3,30px);grid-template-rows:repeat(3,30px);bottom:12px;left:8px}
+  .h3__turn{width:30px;height:30px}
   .h3__hint{font-size:9px}
 }
 @media (prefers-reduced-motion:reduce){ .h3__bplay.is-next{animation:none} .h3__labels{transition:none} .h3__bar i{transition:none} }

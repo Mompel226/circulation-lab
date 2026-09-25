@@ -200,7 +200,31 @@
       vbar.appendChild(b); viewBtn[v[0]] = b;
     });
     stage.appendChild(vbar);
-    var hint = h('p', 'h3__hint', coarse() ? 'Drag to turn · pinch to zoom · tap a part' : 'Drag to turn · scroll to zoom · press a part to name it');
+    /* turning with buttons (Daniel, 25 Sep: "can you add maybe arrows so that ... if I just want to turn it
+       I click those arrows and it turns more easily, and then if I just want to flip it then I can use
+       the mouse"): a press turns the heart 30 degrees, the way a drag in that direction would; holding the
+       button keeps it turning */
+    var pad = h('div', 'h3__pad'); pad.setAttribute('role', 'group'); pad.setAttribute('aria-label', 'Turn the heart');
+    var TURNS = [['up', '▲', 'Tip the heart up', 0, 1], ['left', '◀', 'Turn the heart left', 1, 0], ['right', '▶', 'Turn the heart right', -1, 0], ['down', '▼', 'Tip the heart down', 0, -1]];
+    TURNS.forEach(function (t) {
+      var b = h('button', 'h3__turn h3__turn--' + t[0], '<span aria-hidden="true">' + t[1] + '</span>'); b.type = 'button';
+      b.setAttribute('aria-label', t[2]);
+      var hold = null;
+      function stop() { if (hold) { clearTimeout(hold); hold = null; } if (view) view.spin(0, 0); b.classList.remove('is-held'); }
+      b.addEventListener('pointerdown', function (e) {
+        if (!view || e.button > 0) return;
+        e.preventDefault();
+        try { b.setPointerCapture(e.pointerId); } catch (x) {}
+        view.turn(t[3] * 30, t[4] * 30); setWhere('own');
+        hold = setTimeout(function () { hold = null; b.classList.add('is-held'); view.spin(t[3] * 70, t[4] * 70); }, 420);
+      });
+      b.addEventListener('pointerup', stop); b.addEventListener('pointercancel', stop); b.addEventListener('lostpointercapture', stop);
+      /* the keyboard: Enter or Space turns one step */
+      b.addEventListener('click', function (e) { if (e.detail === 0 && view) { view.turn(t[3] * 30, t[4] * 30); setWhere('own'); } });
+      pad.appendChild(b);
+    });
+    stage.appendChild(pad);
+    var hint = h('p', 'h3__hint', coarse() ? 'Arrows or drag to turn · pinch to zoom · tap a part' : 'Arrows or drag to turn · scroll to zoom · press a part to name it');
     stage.appendChild(hint);
     /* the colour key (Daniel, 25 Sep: "you should add a legend ... I see blue and I see red"): the blood
        and the outline of the side of the heart that carries it share a colour */
