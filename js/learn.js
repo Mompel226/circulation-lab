@@ -199,7 +199,7 @@
      the reader's hand. #simHost holds one thing, so one arbiter owns it: of the widgets that want it,
      the one nearest the middle of the reading area. ---------- */
   var STAGE = (function () {
-    var claims = [], holder = null;
+    var claims = [], holder = null, pin = null;
     function scrollerOf(el) {
       var n = el && el.parentNode;
       while (n && n.nodeType === 1) {
@@ -215,6 +215,7 @@
       return Math.abs((r.top + r.bottom) / 2 - (t + b) / 2);
     }
     function choose() {
+      if (pin) return null;                      /* a part pressed on the body keeps the column (hold, below) */
       var best = null, bestD = Infinity;
       for (var i = claims.length - 1; i >= 0; i--) {
         var c = claims[i];
@@ -234,7 +235,67 @@
       if (win && win.on) win.on();
       if (global.Plate && global.Plate.stageSim) global.Plate.stageSim(!!win);
     }
+    /* A part pressed on the body (app.js openGroup) lands the reader on the sentence about it, and the
+       body shows that part beside it. Daniel, 26 Sep: pressing the mesenteric vein landed on its
+       sentence while "Trace the route", just below, took the column and showed the vena cava; and back
+       at the top of the station the body still showed the mesenteric vein. So the body keeps the column
+       while that sentence is in the reading band, and when the reader moves on (scrolls it out of the
+       band, or starts a widget) onEnd puts the station's own picture back and the widgets may claim again. */
+    /* the sentence itself: a widget or a picture placed under it sits in the same list item, and "Trace
+       the route" under the mesenteric vein's sentence made it look 600 px tall */
+    function extent(el) {
+      var r = el.getBoundingClientRect(), bottom = r.bottom, text = false;
+      for (var n = el.firstChild; n; n = n.nextSibling) {
+        if (n.nodeType === 3) { if (n.data.trim()) text = true; continue; }
+        if (n.nodeType !== 1) continue;
+        var block = /^(DIV|FIGURE|SECTION|ASIDE|DETAILS)$/.test(n.tagName);
+        if (block && text) { bottom = n.getBoundingClientRect().top; break; }
+        if (!block) text = true;
+      }
+      return { top: r.top, bottom: Math.max(r.top + 1, bottom) };
+    }
+    function inBand(el, sc) {
+      var r = extent(el), t = 0, b = global.innerHeight || 800;
+      if (sc) { var q = sc.getBoundingClientRect(); t = q.top; b = q.bottom; }
+      return r.bottom > t + 30 && r.top < b - (b - t) * .35;
+    }
+    function release(tell) {
+      var h = pin; if (!h) return;
+      pin = null; h.off();
+      if (tell && h.onEnd) h.onEnd();
+      apply();
+    }
+    function hold(el, onEnd) {
+      release(false);                            /* a second press replaces the first */
+      var sc = scrollerOf(el || document.getElementById('panelInner')), h = pin = { onEnd: onEnd }, seen = false, t0 = Date.now(), raf = 0;
+      function pos() { return sc ? sc.scrollTop : (global.pageYOffset || 0); }
+      function high() { return sc ? sc.clientHeight : (global.innerHeight || 800); }
+      var y0 = pos();
+      function check() {
+        raf = 0;
+        if (pin !== h) return;
+        /* a part named where the reader is, with no sentence to land on: moving on is scrolling on */
+        if (!el) { if (Math.abs(pos() - y0) > high() * .4) release(true); return; }
+        if (!el.isConnected) { release(false); return; }      /* the panel was rebuilt: its new owner sets the picture */
+        if (inBand(el, sc)) seen = true;
+        else if (seen || Date.now() - t0 > 1800) release(true);
+      }
+      function later() { if (!raf) raf = requestAnimationFrame(check); }
+      /* pressing or tabbing into a widget that stands in the column is moving on */
+      function use(e) { if (claims.some(function (c) { return c.box.contains(e.target); })) release(true); }
+      var tgt = sc || global;
+      tgt.addEventListener('scroll', later, { passive: true });
+      document.addEventListener('pointerdown', use, true); document.addEventListener('focusin', use, true);
+      h.off = function () {
+        tgt.removeEventListener('scroll', later);
+        document.removeEventListener('pointerdown', use, true); document.removeEventListener('focusin', use, true);
+        if (raf) cancelAnimationFrame(raf);
+      };
+      apply();
+      requestAnimationFrame(check);
+    }
     return {
+      hold: hold, release: function () { release(true); }, drop: function () { release(false); },
       add: function (c) { c.wants = false; claims.push(c); return c; },
       drop: function (c) {
         var i = claims.indexOf(c); if (i >= 0) claims.splice(i, 1);
@@ -314,7 +375,8 @@
 
   var MAKERS = [['video', video], ['watch', watch], ['curio', curio], ['labelphoto', labelphoto], ['figure', figure]];
   global.CircLearn = { add: function (name, fn) { MAKERS.push([name, fn]); W.register(name, fn); }, diagram: function (name, fn) { DIAGRAMS[name] = fn; },
-                       h: h, esc: esc, mk: mk, head: head, svgEl: svgEl, stage: stage };
+                       h: h, esc: esc, mk: mk, head: head, svgEl: svgEl, stage: stage,
+                       holdPlate: STAGE.hold, releasePlate: STAGE.release, dropPlateHold: STAGE.drop };
   MAKERS.forEach(function (m) { W.register(m[0], m[1]); });
   global.Learn = { widget: W.widget, reap: W.reap, svgFor: svgFor, DIAGRAMS: DIAGRAMS };
 })(window);

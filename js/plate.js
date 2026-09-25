@@ -30,9 +30,9 @@
     if (!svg || !global.CircDraw) return;
     draw = global.CircDraw(svg, {
       map: map, tag: tag,
-      onEnter: function (id, target) { var g = draw.G[id]; if (g) draw.pin(target, g.label, g.colour); },
+      onEnter: function (id, target) { var g = draw.G[PRESS_AS[id] || id]; if (g) draw.pin(target, g.label, g.colour); },
       onLeave: function () { if (tag) tag.classList.remove('on'); },
-      onClick: function (id) { onPick(id); }
+      onClick: function (id) { onPick(PRESS_AS[id] || id); }
     });
     if (whole) { whole.hidden = false; whole.addEventListener('click', flyHome); }
     var zin = document.getElementById('tZoomIn'), zout = document.getElementById('tZoomOut');
@@ -69,7 +69,7 @@
 
   function showStation(st) {
     if (!draw) return;
-    current = st;
+    current = st; focused = null;
     if (col) col.classList.remove('is-sim');
     if (sim) sim.hidden = true;
     var s = spec(st), ids = s.light || [];
@@ -81,7 +81,7 @@
     draw.heartMode(s.heart === 'exterior' ? 'exterior' : 'section');
     draw.lens(wantsLens(s));
     draw.setRate(s.rate || 72);
-    if (hint) hint.textContent = 'Click a part to open its station · scroll or pinch to zoom';
+    if (hint) hint.textContent = 'Click a part to see what it does · scroll or pinch to zoom';
     var r = draw.light(ids);
     shown = { name: st.name, n: ids.length };
     var names = ids.map(function (id) { return draw.G[id] ? draw.G[id].label.toLowerCase() : id; });
@@ -91,17 +91,41 @@
     draw.flyTo(box);
   }
 
-  /* one part, named and framed: the student clicked it on the body or in the text. An organ comes
-     with the vessels that bring its blood and take it away: the liver with its three */
+  /* the small branches of the aortic arch in the magnified heart are pressed as the aorta itself */
+  var PRESS_AS = { 'aorta-branch': 'aorta' };
+  /* an organ comes with the vessels that bring its blood and take it away (circ-draw's organVessels);
+     the small intestine also with the hepatic portal vein, since the sentence it lands on says where
+     its blood goes: "the hepatic portal vein brings blood from the small intestine" */
+  var FOCUS_WITH = { gut: ['gut', 'mesenteric-artery', 'mesenteric-vein', 'hepatic-portal-vein'] };
+  function boxOfAll(ids, pad) {
+    var b = null;
+    ids.forEach(function (k) {
+      var q = draw.boxOf(k, pad); if (!q || q === draw.FULL) return;
+      if (!b) b = { x0: q.x, y0: q.y, x1: q.x + q.w, y1: q.y + q.h };
+      else { b.x0 = Math.min(b.x0, q.x); b.y0 = Math.min(b.y0, q.y); b.x1 = Math.max(b.x1, q.x + q.w); b.y1 = Math.max(b.y1, q.y + q.h); }
+    });
+    return b ? { x: b.x0, y: b.y0, w: b.x1 - b.x0, h: b.y1 - b.y0 } : draw.FULL;
+  }
+
+  /* one part, named and framed: the student clicked it on the body or in the text */
+  var focused = null;
   function focus(id) {
     if (!draw || !draw.G[id]) return;
     var g = draw.G[id];
-    var lit = draw.organVessels(id) || [id];
+    var lit = FOCUS_WITH[id] || draw.organVessels(id) || [id];
     var r = draw.light(lit);
+    focused = id;
     shown = { name: g.label, n: lit.length };
     say(g.label, g.note || '', r.colour);
     if (CHAMBER[id] || id === 'heart') draw.lens('section');
-    draw.flyTo(draw.boxOf(id, 40), function () { var e = draw.elFor(id); if (e) draw.pin(e, g.label, r.colour); });
+    draw.flyTo(FOCUS_WITH[id] ? boxOfAll(lit, 40) : draw.boxOf(id, 40), function () { var e = draw.elFor(id); if (e && focused === id) draw.pin(e, g.label, r.colour); });
+  }
+  /* the reader has moved on from the part: the station's own picture comes back */
+  function unfocus() {
+    if (!focused) return;
+    focused = null;
+    if (tag) tag.classList.remove('on');
+    if (current) showStation(current);
   }
 
   function flyHome() {
@@ -128,7 +152,7 @@
   }
   function showBench(on) { if (bench) bench.hidden = !on; }
 
-  global.Plate = { init: init, showStation: showStation, focus: focus, home: flyHome, showSim: showSim, stageSim: stageSim,
+  global.Plate = { init: init, showStation: showStation, focus: focus, unfocus: unfocus, home: flyHome, showSim: showSim, stageSim: stageSim,
                    showBench: showBench, setRate: function (b) { if (draw) draw.setRate(b); },
                    partsOf: function (st) { return spec(st).light || []; }, draw: function () { return draw; } };
 })(window);

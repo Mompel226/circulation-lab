@@ -64,6 +64,44 @@ const { STATIONS } = await import(pathToFileURL(MASTER).href);
   }
 }
 
+/* ---------- every part you can press on the body is answered, or is meant only to be named ----------
+   app.js openGroup: a pressed part lands on the sentence whose `group` names it — in the station being
+   read, else in the part's own station (plate.owns, then plate.light) — and the body shows it beside
+   that sentence. A part that no sentence explains is named on the body, with its note, where the reader
+   is (Daniel, 26 Sep 2026: "not every single button needs to take you somewhere ... is the student going
+   to learn more about that?"). So each part has a sentence in its own station, or is on NAMED_ONLY on
+   purpose; a group that names no part is a typo. */
+{
+  const draw = readFileSync(resolve(REPO, 'js/circ-draw.js'), 'utf8');
+  const g0 = draw.indexOf('var G = {'), block = draw.slice(g0, draw.indexOf('\n  };', g0));
+  const PARTS = [...block.matchAll(/^\s{4}'?([a-z-]+)'?:\s*\{\s*label:/gm)].map(m => m[1]);
+  /* vessels beyond the syllabus that the lab names but does not teach, and the one organ it only names */
+  const NAMED_ONLY = ['cardiac-vein', 'head', 'coeliac-artery', 'gastric-artery', 'splenic-artery', 'mesenteric-artery', 'head-artery', 'jugular',
+                      'head-vein', 'arm-artery', 'arm-vein', 'head-arm-vein', 'leg-artery', 'leg-vein', 'artery', 'vein'];
+  const NOT_PRESSABLE = ['arms', 'legs', 'body'];         /* names a station lights by; nothing is drawn to press */
+  const OWNER = {};
+  for (const st of STATIONS) for (const g of ((st.plate || {}).owns || [])) OWNER[g] = st.id;
+  for (const st of STATIONS) for (const g of ((st.plate || {}).light || [])) if (!OWNER[g]) OWNER[g] = st.id;
+  const answers = {};                                      /* station -> parts its sentences answer */
+  const bad = [];
+  for (const st of STATIONS) {
+    const a = answers[st.id] = new Set();
+    const take = (o, where) => { if (o && typeof o === 'object' && o.group) for (const g of [].concat(o.group)) { a.add(g); if (!PARTS.includes(g)) bad.push(`    ${st.id} ${where}: group "${g}" is no part of the body`); } };
+    ((st.learn && st.learn.exam) || []).forEach((b, i) => { take(b, '#' + i); ((b && b.list) || []).forEach((x, k) => take(x, '#' + i + '.' + k)); });
+  }
+  if (PARTS.length < 40) bad.push(`    found only ${PARTS.length} parts in js/circ-draw.js: has its G block changed shape?`);
+  for (const id of PARTS) {
+    if (NOT_PRESSABLE.includes(id)) continue;
+    const own = OWNER[id], answered = !!(own && answers[own] && answers[own].has(id));
+    if (NAMED_ONLY.includes(id) && answered) bad.push(`    ${id}: on NAMED_ONLY, but ${own} has a sentence for it — take it off the list`);
+    if (!NAMED_ONLY.includes(id) && !answered) bad.push(`    ${id}: pressing it lands nowhere — give a sentence in ${own || 'its station'} the group "${id}", or put it on NAMED_ONLY`);
+  }
+  if (bad.length) {
+    console.error('\n  BODY PARTS FAILED — where a press on the body takes the student:\n' + bad.join('\n') + '\n');
+    process.exit(1);
+  }
+}
+
 /* ---------- the shared folder ----------
    labs-shared/ is an ancestor of this repo. It holds the glossary every lab prints from, and
    the engine, marking, sync, sign-in and Learn widgets every lab runs. Edit them there; a

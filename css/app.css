@@ -1220,10 +1220,12 @@ picture{display:block;line-height:0}
 .tool[hidden]{display:none}
 .platewrap{position:relative;flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:0}
 .platewrap svg#body{width:100%;height:100%;display:block;overflow:hidden}
-.said{position:relative;z-index:4;text-align:center;padding:0 14px 12px;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+/* the name of what is lit, and a line on what it does: for a part beyond the syllabus that line is all
+   the lab says about it, so it is a sentence to read, wrapped, never cut off (26 Sep) */
+.said{position:relative;z-index:4;text-align:center;padding:0 16px 12px;pointer-events:none;
   background:linear-gradient(180deg,rgba(6,13,18,0),rgba(6,13,18,.86))}
 .said__name{display:block;font-family:var(--sans);font-size:15px;font-weight:500;color:var(--c,#FFE7E2)}
-.said__note{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#9CB4C0;margin-top:3px}
+.said__note{display:block;font-family:var(--sans);font-size:13px;line-height:1.4;color:#B4C8D2;margin-top:2px}
 /* the colour key under the body (Daniel, 25 Sep: "if you're going to color code veins and arteries, you
    should add a legend"): the colours are the blood's, so the pulmonary artery is blue and the pulmonary
    veins red; the hepatic portal system is outlined in turquoise */
@@ -1455,7 +1457,7 @@ picture{display:block;line-height:0}
 .cy--stack .sp__step,.mx--stack .sp__step{flex:1 1 180px}
 
 /* the line under the body wraps on a phone rather than being cut off */
-@media (max-width:1000px){ .said{white-space:normal} .said__note{line-height:1.5} }
+
 
 /* every step player's buttons reach the 36 px a finger needs */
 .sp__play,.sp__all{min-height:36px}

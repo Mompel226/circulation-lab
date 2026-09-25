@@ -148,6 +148,7 @@
     var st = S[current]; if (!st) return;
     var host = document.getElementById('panelInner'), sc = stationScore(current);
     parkSim();                                      /* out of the panel before it is emptied */
+    if (window.CircLearn && CircLearn.dropPlateHold) CircLearn.dropPlateHold();   /* a part pressed on the old panel lets go */
     host.innerHTML = '';
     if (window.Learn && Learn.reap) Learn.reap();   /* the old station's widgets are detached now */
 
@@ -400,10 +401,14 @@
       var badge = '';
       if (typeof b === 'object' && b.sup) badge = '<span class="sup tip" tabindex="0" data-tip="Supplement — examined on Paper 4 (Extended) only. Core candidates can skip it.">S</span>';
       if (typeof b === 'object' && b.ext) badge = '<span class="sup sup--ext tip" tabindex="0" data-tip="Extension — not in the 2026–28 syllabus. Here to make sense of the rest; you will not be asked to write it.">extension</span>';
+      /* the sentences a student reads, not the extensions: the only place a word takes you to another station */
+      var teachHere = !(typeof b === 'object' && b.ext);
+      if (window.Terms && Terms.teach) Terms.teach(teachHere);
       li.innerHTML = badge + M(txt);
-      /* the part of the body this sentence answers. Clicking that part on the drawing opens the
-         station and lands here (openGroup looks for exactly this attribute). */
-      if (typeof b === 'object' && b.group) li.setAttribute('data-group', b.group);
+      if (window.Terms && Terms.teach) Terms.teach(false);
+      /* the parts of the body this sentence answers. Pressing one on the drawing lands here
+         (openGroup looks for exactly this attribute); a list item can name its own */
+      if (typeof b === 'object' && b.group) li.setAttribute('data-group', [].concat(b.group).join(' '));
       /* A small picture beside the sentence, with the words running round it. One idea each and
          about the size of a postage stamp: a reader takes a picture in faster than a clause, and
          a big diagram in the middle of a paragraph stops the reading instead of helping it. */
@@ -420,7 +425,14 @@
          it is what the mark scheme is counting, so it is what the eye should be able to count */
       if (typeof b === 'object' && b.list) {
         var ol = document.createElement('ol'); ol.className = 'exam-steps';
-        b.list.forEach(function (x) { var s2 = document.createElement('li'); s2.innerHTML = M(x); ol.appendChild(s2); });
+        b.list.forEach(function (x) {
+          var s2 = document.createElement('li');
+          if (window.Terms && Terms.teach) Terms.teach(teachHere);
+          s2.innerHTML = M(typeof x === 'object' ? x.text : x);
+          if (window.Terms && Terms.teach) Terms.teach(false);
+          if (typeof x === 'object' && x.group) s2.setAttribute('data-group', [].concat(x.group).join(' '));
+          ol.appendChild(s2);
+        });
         li.appendChild(ol);
       }
       /* Run AFTER the nested list is in place, or a (1) inside one of the numbered facts is
@@ -708,19 +720,42 @@
   }
   function toStationTop() { var sc = panelScroller(); if (sc) sc.scrollTop = 0; }
 
-  /* a part clicked on the body opens the station that teaches it, on that part */
+  /* A part pressed on the body. Daniel, 26 Sep: "when the student clicks that word, where is it taking
+     the student? Is the student going to learn more about that?" Three answers, in this order:
+       · the station being read explains it: the reader lands on that sentence, and stays in the station;
+       · its own station explains it: that station opens on the sentence, with a chip to go back;
+       · nothing in the lab explains it (a vessel beyond the syllabus): the body names it, with a line
+         on what it does, and the page stays where it is.
+     The body shows the part beside its sentence until the reader moves on; then the station's own
+     picture comes back (CircLearn.holdPlate). Which sentence answers which part is the `group` of a
+     sentence in stations.master.js; tools/build.mjs checks that every part has one or is meant to have none. */
+  function explains(id, gid) {
+    var st = S[id]; if (!st || !st.learn) return false;
+    function has(o) { return !!(o && typeof o === 'object' && o.group && [].concat(o.group).indexOf(gid) >= 0); }
+    return (st.learn.exam || []).some(function (b) { return has(b) || (b && b.list || []).some(has); });
+  }
   function openGroup(gid) {
-    var id = OWNER[gid];
-    if (!id) { toast('No station is about that part yet.'); return; }
-    var changed = current !== id;
-    if (changed || tab !== 'learn') { current = id; tab = 'learn'; p(id).opened = true; save(); if (changed && window.Plate) window.Plate.showStation(S[id]); paintPanel(); paintRail(); }   /* the plate must hear of the new station too: its bend, sap, breathing and hint belong to a station */
+    var here = current, id = OWNER[gid];
+    var dest = explains(here, gid) ? here : (id && explains(id, gid) ? id : null);
+    if (dest && (dest !== here || tab !== 'learn')) {
+      if (dest !== here) markWhereWeAre();
+      current = dest; tab = 'learn'; p(dest).opened = true; save();
+      if (dest !== here && window.Plate) window.Plate.showStation(S[dest]);   /* the plate must hear of the new station too */
+      paintPanel(); paintRail();
+      if (dest !== here && S[here]) {
+        var G = window.Plate && window.Plate.draw() ? window.Plate.draw().G : {};
+        showBackChip(here, (G[gid] && G[gid].label) || gid);
+      }
+    }
     if (window.Plate) window.Plate.focus(gid);
     history.replaceState(null, '', '#' + gid);
-    var target = document.querySelector('#panelInner [data-group="' + gid + '"]');
-    if (!target) return;
-    landOn(target, true);
-    target.classList.add('flash');
-    setTimeout(function () { target.classList.remove('flash'); }, 2800);
+    var target = dest ? document.querySelector('#panelInner [data-group~="' + gid + '"]') : null;
+    if (target) {
+      landOn(target, true);
+      target.classList.add('flash');
+      setTimeout(function () { target.classList.remove('flash'); }, 2800);
+    }
+    if (window.CircLearn && CircLearn.holdPlate) CircLearn.holdPlate(target, function () { if (window.Plate && window.Plate.unfocus) window.Plate.unfocus(); });
   }
 
   /* Plurals English refuses to make regularly, and which this lab uses constantly. */
