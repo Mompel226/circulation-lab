@@ -9,6 +9,7 @@
        opts.steps   [{ t, h, p, tag? }]   start time (s), heading, one short paragraph
        opts.end     the last moment (s)
        opts.render  render(t) — must be a pure function of t, so any moment can be drawn on demand
+       opts.rate    optional: a function returning how fast time runs (1 normal, 2 twice as fast)
        returns { bar, list, now, paint(t), seek(t), stop(), isStill() }
 
    CircLearn.labels(opts)   labels in two margins, each at its own part's height, joined to it by a
@@ -94,7 +95,7 @@
       if (!bar.isConnected) { stop(); return; }
       if (last == null) last = ts;
       var lim = stopAt == null ? END : stopAt;
-      T = Math.min(lim, T + Math.min(.1, (ts - last) / 1000)); last = ts;
+      T = Math.min(lim, T + Math.min(.1, (ts - last) / 1000) * (opts.rate ? opts.rate() : 1)); last = ts;
       if (T >= lim) { playing = false; raf = null; paint(T); if (opts.onHold) opts.onHold(stepAt(T)); return; }
       paint(T);
       raf = requestAnimationFrame(frame);
