@@ -32,6 +32,7 @@
 (function (global) {
   'use strict';
   var CL = global.CircLearn;
+  var beyondOpen = false;
   if (!CL) return;
   var h = CL.h, esc = CL.esc, mk = CL.mk, head = CL.head;
 
@@ -338,8 +339,17 @@
       '<p>At the <b>atrioventricular node</b> the signal is delayed by about 0.1 s, so the atria finish contracting first. It then passes down the septum to the apex, and the ventricles contract from the bottom up.</p>' +
       '<p>At 75 beats a minute one beat lasts 0.8 s. The atria contract for about 0.1 s; the ventricles contract for about 0.27 s and relax for about 0.43 s. <b>Real speed</b> in the Blood flow tab uses these times.</p>' +
       '<p>At the start of each contraction and relaxation of the ventricles, all four valves are closed for a moment. The pressure changes, but no blood moves.</p>' +
+      '<p class="h3__golink"><button type="button" class="wbtn h3__goecg">See the signal spread, and why an ECG has peaks and troughs →</button>' +
+      '<span class="h3__golinkw">in Monitoring the heart</span></p>' +
       '<p class="h3__src">Sources: IB Biology guide, first assessment 2025, B3.2.15–B3.2.16 · OpenStax, <i>Anatomy and Physiology</i> 2e (2022), sections 19.2 and 19.3, CC BY 4.0.</p></div>';
     box.appendChild(more);
+    /* opened once, it stays open when the station is drawn again (the ECG link's way back) */
+    if (beyondOpen) more.open = true;
+    more.addEventListener('toggle', function () { beyondOpen = more.open; });
+    /* Daniel, 25 Sep: from here, "click a button so that it takes you to then the ECG simulation" */
+    more.querySelector('.h3__goecg').addEventListener('click', function () {
+      if (!(CL.goToWidget && CL.goToWidget('monitor', '.es', 'the ECG simulation'))) location.hash = 'monitor';
+    });
     box.appendChild(h('p', 'h3__credit', 'The heart is a real one: HuBMAP Human Reference Atlas (Browne and Schlehlein 2024), from the Visible Human Male, US National Library of Medicine. CC BY 4.0. The moving valve cusps, the tendons and the blood paths are added for this lab.'));
 
     /* =====================================================================
