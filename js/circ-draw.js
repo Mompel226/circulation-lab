@@ -144,7 +144,9 @@
          B  the vessels of an organ, and the gut's veins that feed the hepatic portal vein: from closer
          G  "artery / vein in the arm" and so on, where nothing else is named: from closer, and not
             with Beyond syllabus on (then the real names replace them)
-         X  beyond the syllabus: every name the artist gave, at the tip of her own arrow
+         X  beyond the syllabus: every name the artist gave, at the tip of her own arrow, or where the
+            tip lies under another vessel, the nearest point along the same stretch that nothing
+            covers (the internal iliac and peroneal arteries have none, and are left out)
      at  a point on the part; it is moved onto the nearest centre line of that part when the plate is
          built, so a leader always touches its own vessel. An organ's point is a spot in it far from
          every vessel, so "liver" never seems to name a vessel inside the liver, and away from the
@@ -153,30 +155,29 @@
          same line as a more needed name. z: the zoom (screen px per unit) it needs. */
   var LABELS = [
     { id: 'heart', text: 'heart', at: [238.7, 247.7], alt: [[235.2, 240.2], [233.2, 253.7]], lv: 'A' },
-    { id: 'aorta', text: 'aorta', at: [220.8, 193.5], alt: [[225.9, 198.4], [226.9, 210.1]], lv: 'A' },
-    { id: 'vena-cava', text: 'vena cava', at: [201.1, 257.2], lv: 'A' },
+    { id: 'aorta', text: 'aorta', at: [225.9, 198.4], alt: [[213.4, 195.6], [222.4, 260.3]], lv: 'A' },
+    { id: 'vena-cava', text: 'vena cava', at: [204.8, 254.2], alt: [[206.8, 316], [202.5, 199.1]], lv: 'A' },
     { id: 'lungs', text: 'lung', at: [154.8, 243.3], alt: [[157.3, 223.8], [151.8, 262.8], [242.8, 185.6]], lv: 'A' },
     { id: 'liver', text: 'liver', at: [157.7, 310.4], alt: [[153.7, 288.4], [161.2, 298.9], [188.2, 284.4], [242.7, 274.9]], lv: 'A' },
     { id: 'kidneys', text: 'kidney', at: [260.4, 338.4], alt: [[259.9, 323.9], [171.5, 346.2]], lv: 'A' },
-    { id: 'gut', text: 'small intestine', at: [214, 372], alt: [[228, 390], [212, 395]], lv: 'A', needs: 'gut' },
-    { id: 'carotid', text: 'carotid artery', at: [224.9, 134.2], alt: [[224.9, 147.8], [225.9, 116.8]], lv: 'A' },
-    { id: 'radial-artery', text: 'radial artery', at: [65.9, 396.8], alt: [[64.1, 403.2], [71.4, 372.9]], lv: 'A' },
+    { id: 'gut', text: 'small intestine', at: [250, 375], alt: [[182.5, 370], [215, 402.5], [242.5, 392.5]], lv: 'A', needs: 'gut' },
+    { id: 'carotid', text: 'carotid artery', at: [224.9, 134.2], lv: 'A' },
+    { id: 'radial-artery', text: 'radial artery', at: [65.9, 396.8], alt: [[71.4, 372.9]], lv: 'A' },
 
-    { id: 'vena-cava', text: 'vena cava', at: [201.6, 211.4], alt: [[202.6, 192.2]], lv: 'B' },
     { id: 'pulmonary-artery', text: 'pulmonary artery', at: [184, 206], alt: [[187.1, 200.2], [189.8, 225.6]], lv: 'B' },
     { id: 'pulmonary-vein', text: 'pulmonary vein', at: [258, 216], alt: [[253.1, 205.4], [257.4, 232.8]], lv: 'B' },
     { id: 'hepatic-vein', text: 'hepatic vein', at: [195, 266], alt: [[187.2, 271.2]], lv: 'B' },
     { id: 'hepatic-artery', text: 'hepatic artery', at: [196, 290.5], alt: [[188.1, 295.6]], lv: 'B' },
-    { id: 'hepatic-portal-vein', text: 'hepatic portal vein', at: [197, 300.5], alt: [[163.2, 313.2], [209.6, 305.9]], lv: 'B' },
+    { id: 'hepatic-portal-vein', text: 'hepatic portal vein', at: [197, 300.5], alt: [[163.2, 313.2]], lv: 'B' },
     { id: 'mesenteric-vein', text: 'mesenteric vein', at: [215.9, 321.1], alt: [[217.3, 328.5], [212.6, 311.8]], lv: 'B' },
-    { id: 'splenic-vein', text: 'splenic vein', at: [236.9, 300.2], alt: [[262.4, 295.2], [215.8, 305.4]], lv: 'B' },
+    { id: 'splenic-vein', text: 'splenic vein', at: [236.9, 300.2], alt: [[215.8, 305.4]], lv: 'B' },
     { id: 'spleen', text: 'spleen', at: [272.3, 301.2], alt: [[268.8, 288.7], [270.3, 314.7]], lv: 'B' },
-    { id: 'renal-artery', text: 'renal artery', at: [233.9, 327.6], alt: [[243.8, 312.4], [247.9, 335.6]], lv: 'B' },
-    { id: 'renal-vein', text: 'renal vein', at: [198.8, 331.5], alt: [[185.6, 337.8], [183.2, 319.1]], lv: 'B' },
+    { id: 'renal-artery', text: 'renal artery', at: [233.9, 327.6], lv: 'B' },
+    { id: 'renal-vein', text: 'renal vein', at: [198.8, 331.5], lv: 'B' },
     { id: 'coronary', text: 'coronary arteries', at: [230.7, 235.9], alt: [[227.1, 230.4], [207.3, 224.5]], lv: 'B', z: 1.6 },
     { id: 'cardiac-vein', text: 'cardiac vein', at: [200.9, 239.1], alt: [[231.7, 246.7]], lv: 'B', z: 1.6 },
     { id: 'head', text: 'head', at: [199.7, 51.4], alt: [[220.1, 53.7], [188, 78]], lv: 'B' },
-    { id: 'carotid', text: 'carotid artery', at: [197.9, 139.8], alt: [[198.6, 150], [199.5, 128]], lv: 'B' },
+    { id: 'carotid', text: 'carotid artery', at: [197.9, 139.8], alt: [[199.5, 128]], lv: 'B' },
     { id: 'radial-artery', text: 'radial artery', at: [320.4, 387.8], alt: [[322.5, 395], [318.5, 378]], lv: 'B' },
 
     { id: 'arm-artery', text: 'artery in the arm', at: [113.6, 287.4], lv: 'G' },
@@ -185,12 +186,11 @@
     { id: 'arm-vein', text: 'vein in the arm', at: [303.2, 256.9], lv: 'G' },
     { id: 'leg-artery', text: 'artery in the leg', at: [244.9, 507.1], lv: 'G' },
     { id: 'leg-vein', text: 'vein in the leg', at: [240.6, 529.1], lv: 'G' },
-    { id: 'leg-artery', text: 'artery in the leg', at: [181.6, 474.1], lv: 'G' },
     { id: 'leg-vein', text: 'vein in the leg', at: [181.8, 484.8], lv: 'G' },
     { id: 'head-artery', text: 'artery in the head', at: [236.8, 90.4], lv: 'G', z: 1.5 },
     { id: 'head-vein', text: 'vein in the head', at: [246.2, 61.8], lv: 'G', z: 1.5 },
 
-    { id: 'arm-artery', text: 'subclavian artery', at: [162.2, 175.5], lv: 'X' },
+    { id: 'arm-artery', text: 'subclavian artery', at: [157.2, 182.5], lv: 'X' },
     { id: 'arm-vein', text: 'subclavian vein', at: [162.2, 177.5], lv: 'X' },
     { id: 'arm-artery', text: 'axillary artery', at: [139.7, 196.2], lv: 'X' },
     { id: 'arm-vein', text: 'axillary vein', at: [139.7, 198.2], lv: 'X' },
@@ -199,42 +199,65 @@
     { id: 'arm-vein', text: 'basilic vein', at: [118.9, 294.5], lv: 'X' },
     { id: 'arm-vein', text: 'median cubital vein', at: [94.6, 324.7], lv: 'X' },
     { id: 'arm-artery', text: 'ulnar artery', at: [90.2, 387.1], lv: 'X' },
-    { id: 'arm-artery', text: 'digital artery', at: [37.5, 462.8], lv: 'X', z: 2 },
+    { id: 'arm-artery', text: 'digital artery', at: [38, 460.3], lv: 'X', z: 2 },
     { id: 'arm-vein', text: 'digital vein', at: [53.8, 466.7], lv: 'X', z: 2 },
-    { id: 'head-arm-vein', text: 'brachiocephalic vein', at: [200.6, 186.8], lv: 'X' },
+    { id: 'head-arm-vein', text: 'brachiocephalic vein', at: [200, 183.5], lv: 'X' },
     { id: 'jugular', text: 'internal jugular vein', at: [229.5, 135.4], lv: 'X' },
     { id: 'jugular', text: 'external jugular vein', at: [232.9, 120.1], lv: 'X' },
     { id: 'head-artery', text: 'vertebral artery', at: [218.4, 143.4], lv: 'X' },
     { id: 'head-artery', text: 'internal carotid artery', at: [224.3, 88.5], lv: 'X', z: 1.6 },
-    { id: 'head-artery', text: 'external carotid artery', at: [233.5, 99.3], lv: 'X', z: 1.6 },
+    { id: 'head-artery', text: 'external carotid artery', at: [233.3, 98.1], lv: 'X', z: 1.6 },
     { id: 'head-artery', text: 'basilar artery', at: [212.5, 72.3], lv: 'X', z: 1.8 },
     { id: 'head-vein', text: 'venous sinus', at: [239.5, 64.4], lv: 'X', z: 1.6 },
-    { id: 'coeliac-artery', text: 'coeliac artery', at: [222.1, 281.4], lv: 'X', z: 1.6 },
+    { id: 'coeliac-artery', text: 'coeliac artery', at: [222.5, 281.2], lv: 'X', z: 1.6 },
     { id: 'gastric-artery', text: 'gastric artery', at: [225.2, 275.4], lv: 'X', z: 1.8 },
     { id: 'splenic-artery', text: 'splenic artery', at: [240.4, 293.3], lv: 'X', z: 1.6 },
     { id: 'mesenteric-artery', text: 'mesenteric artery', at: [221.1, 326.2], lv: 'X', z: 1.6 },
-    { id: 'artery', text: 'gonadal artery', at: [234, 372.5], lv: 'X' },
+    { id: 'artery', text: 'gonadal artery', at: [231.7, 355.4], lv: 'X' },
     { id: 'vein', text: 'gonadal vein', at: [236, 372.5], lv: 'X' },
     { id: 'leg-artery', text: 'common iliac artery', at: [226.8, 386.2], lv: 'X' },
-    { id: 'leg-vein', text: 'common iliac vein', at: [204.6, 381.5], lv: 'X' },
-    { id: 'leg-artery', text: 'internal iliac artery', at: [208.6, 399.8], lv: 'X', z: 1.6 },
+    { id: 'leg-vein', text: 'common iliac vein', at: [209.8, 387.6], lv: 'X' },
     { id: 'leg-artery', text: 'external iliac artery', at: [234.3, 407.5], lv: 'X', z: 1.6 },
     { id: 'leg-vein', text: 'external iliac vein', at: [232.3, 409.5], lv: 'X', z: 1.6 },
     { id: 'leg-artery', text: 'femoral artery', at: [243.9, 499.7], lv: 'X' },
     { id: 'leg-vein', text: 'femoral vein', at: [240.6, 505], lv: 'X' },
     { id: 'leg-artery', text: 'deep femoral artery', at: [249.7, 482.8], lv: 'X', z: 1.6 },
     { id: 'leg-vein', text: 'great saphenous vein', at: [219.7, 621.2], lv: 'X' },
-    { id: 'leg-artery', text: 'popliteal artery', at: [240, 578.3], lv: 'X' },
+    { id: 'leg-artery', text: 'popliteal artery', at: [235.6, 583.6], lv: 'X' },
     { id: 'leg-vein', text: 'popliteal vein', at: [238, 581], lv: 'X' },
     { id: 'leg-vein', text: 'small saphenous vein', at: [236.1, 642.5], lv: 'X' },
     { id: 'leg-artery', text: 'anterior tibial artery', at: [239.6, 662.9], lv: 'X' },
-    { id: 'leg-artery', text: 'posterior tibial artery', at: [228.6, 677.8], lv: 'X' },
-    { id: 'leg-artery', text: 'peroneal artery', at: [240.5, 696.5], lv: 'X', z: 1.6 },
+    { id: 'leg-artery', text: 'posterior tibial artery', at: [227, 664.3], lv: 'X' },
     { id: 'leg-vein', text: 'dorsal venous arch', at: [264.4, 769.1], lv: 'X', z: 1.6 },
     { id: 'leg-artery', text: 'arcuate artery', at: [169.3, 777.4], lv: 'X', z: 1.8 }
   ];
   var LV_RANK = { A: 0, B: 1, G: 2, X: 3 };
   var LV_ZOOM = { A: 0, B: 1.15, G: 1.2, X: 1.3 };
+  /* the points found in the drawing for every part (plate-build/label-points.js → js/circ-labelpts.js) */
+  var AUTO = global.CIRC_LABELPTS || {};
+  /* one name per word: the entries that say the same thing are one name, with all their points, then
+     the points found in the drawing, nearest to its first point first. A beyond-syllabus name stays at
+     the tip of the artist's own arrow: its words name one stretch of a vessel, not all of it. */
+  var NAMES = null;
+  function names() {
+    if (NAMES) return NAMES;
+    var by = {}; NAMES = [];
+    LABELS.forEach(function (L, idx) {
+      var key = L.lv === 'X' ? 'X' + idx : L.text, z = L.z != null ? L.z : LV_ZOOM[L.lv];
+      var N = by[key];
+      if (!N) { N = by[key] = { key: key, id: L.id, text: L.text, lv: L.lv, z: z, needs: L.needs, i: idx, own: [] }; NAMES.push(N); }
+      else { if (LV_RANK[L.lv] < LV_RANK[N.lv]) N.lv = L.lv; N.z = Math.min(N.z, z); }
+      N.own = N.own.concat([L.at], L.alt || []);
+    });
+    NAMES.forEach(function (N) {
+      var auto = N.lv !== 'X' && AUTO[N.id] ? nearFirstOf(AUTO[N.id], N.own[0]) : [];
+      N.pts = N.own.concat(auto);
+    });
+    return NAMES;
+  }
+  function nearFirstOf(list, from) {
+    return list.slice().sort(function (a, b) { return Math.hypot(a[0] - from[0], a[1] - from[1]) - Math.hypot(b[0] - from[0], b[1] - from[1]); });
+  }
 
   /* every vessel's name touches its OWN vessel: the point is moved onto the nearest centre line of
      that part (an artery and its vein often run side by side) */
@@ -718,10 +741,17 @@
     }
 
     /* ----- the names at the sides -----
-       Each side is a column of names, set level with their parts; where two would touch they are
-       spread apart evenly, centred on their parts, never re-ordered — so the leaders cannot cross.
-       Lit parts are named first; parts outside a station's light keep their names, dimmed, while
-       there is room; a column that is full drops the least needed. */
+       Each side is a column of names. Every leader is ONE level line, from a dot on its own part to
+       its name, and each name is a full row from the next on its side, so no two leaders run close
+       together and none bends (Daniel, 25 Sep, zoomed in: "it's very hard to differentiate all of the
+       different kind of labels … they gather too closely … some are not exactly pointing where they
+       should"). A name tries its hand-placed points first, then the points found in the drawing
+       (js/circ-labelpts.js, plate-build/label-points.js: on an organ, clear of every vessel and of any
+       organ lying over it; on a vessel, where nothing drawn in front covers it), nearest first, and
+       keeps the point it had while that stays free, so names do not hop about as the camera moves.
+       Lit parts are named first; parts outside a station's light keep their names, dimmed, while there
+       is room. A name that finds no free row is left out: the line under the plate names what is lit.
+       One name per word: "carotid artery" twice was clutter. */
     var labOn = true, labBeyond = false, labSvg = null;
     if (opts.map && opts.labels !== false) {
       labSvg = document.createElementNS(NS, 'svg');
@@ -740,28 +770,10 @@
       if (labRaf) cancelAnimationFrame(labRaf);
       labRaf = requestAnimationFrame(function () { labRaf = null; drawLabels(); });
     }
-    function spread(ys, pitch, lo, hi) {
-      /* ys ascending; returns rows at least `pitch` apart, each cluster centred on its own parts */
-      var cl = ys.map(function (y) { return { n: 1, sum: y, top: 0 }; });
-      function fix(c) {
-        c.top = c.sum / c.n - c.n * pitch / 2;
-        if (c.top + c.n * pitch > hi) c.top = hi - c.n * pitch;
-        if (c.top < lo) c.top = lo;
-      }
-      cl.forEach(fix);
-      for (var guard = 0; guard < 400; guard++) {
-        var merged = false;
-        for (var k = 0; k + 1 < cl.length; k++) {
-          var a = cl[k], b = cl[k + 1];
-          if (a.top + a.n * pitch > b.top + .01) { a.n += b.n; a.sum += b.sum; cl.splice(k + 1, 1); fix(a); merged = true; break; }
-        }
-        if (!merged) break;
-      }
-      var out = [];
-      cl.forEach(function (c) { for (var j = 0; j < c.n; j++) out.push(c.top + pitch * (j + .5)); });
-      return out;
-    }
-    function autoAt(part) {                   /* a lit part with no name of its own in view: name its longest vessel */
+    var picked = {};                           /* name -> the point it used last time */
+    function extra(id) { return !G[id] || G[id].note.indexOf(NOT) >= 0; }     /* not a name 0610 asks for */
+    function autoPts(part) {                  /* a lit part with no name of its own: the points found in the drawing, or its longest vessel */
+      if (AUTO[part] && AUTO[part].length) return AUTO[part];
       var P = FLOW[part]; if (!P) return null;
       var best = null;
       P.e.forEach(function (e) {
@@ -776,105 +788,135 @@
       var m = opts.map.getBoundingClientRect(), W = m.width, H = m.height;
       labSvg.setAttribute('width', W); labSvg.setAttribute('height', H); labSvg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
       if (!labOn || W < 10) { labSvg.innerHTML = ''; return; }
-      var small = W < 460, fs = small ? 11 : 12.5, pill = fs + 8, pad = 10, scale = toArt(0, 0).s;
-      var minPitch = pill + (small ? 7 : 11), maxPitch = pill + (small ? 12 : 17), gap = small ? 5 : 6.5;
+      var small = W < 460, fs = small ? 11 : 12.5, pill = fs + 8, pad = 10;
+      var ROW = pill + (small ? 8 : 10);       /* the least room between two leaders on one side */
+      /* the drawing's units to px in the map, measured once for the whole layout */
+      var r = svg.getBoundingClientRect(), a = r.width / r.height, va = cam.w / cam.h, sx, ox = r.left - m.left, oy = r.top - m.top;
+      if (a > va) { sx = r.height / cam.h; ox += (r.width - cam.w * sx) / 2; } else { sx = r.width / cam.w; oy += (r.height - cam.h * sx) / 2; }
+      function scr(q) { return { x: ox + (q[0] - cam.x) * sx, y: oy + (q[1] - cam.y) * sx }; }
+      var scale = sx;
       var lensBox = null;
-      if (lensMode) { var l0 = toScreen(LENS.x, LENS.y), l1 = toScreen(LENS.x + LENS.w, LENS.y + LENS.h); lensBox = [l0.x - 6, l0.y - 6, l1.x + 6, l1.y + 6]; }
-      function inView(p) {
-        if (p.x < 18 || p.x > W - 18 || p.y < 16 || p.y > H - 14) return false;
-        return !(lensBox && p.x > lensBox[0] && p.x < lensBox[2] && p.y > lensBox[1] && p.y < lensBox[3]);
+      if (lensMode) { var l0 = scr([LENS.x, LENS.y]), l1 = scr([LENS.x + LENS.w, LENS.y + LENS.h]); lensBox = [l0.x - 6, l0.y - 6, l1.x + 6, l1.y + 6]; }
+      function inView(q) {
+        if (q.x < 18 || q.x > W - 18 || q.y < pill / 2 + 6 || q.y > H - pill / 2 - 4) return false;
+        return !(lensBox && q.x > lensBox[0] && q.x < lensBox[2] && q.y > lensBox[1] && q.y < lensBox[3]);
       }
       function isOn(id) { return !lit || !!lit[id] || (id === 'heart' && (lit.heart || anyChamber())); }
       /* the body's midline decides the side while it is in view; the middle of the picture when it is
          not; with the heart magnified on the right, every name goes to the left */
-      var midX = toScreen(211.4, 0).x;
+      var midX = scr([211.4, 0]).x;
       var mid = lensMode ? W + 1 : (midX > W * .22 && midX < W * .78 ? midX : W / 2);
-      /* the most needed names choose first. Each takes the first of its points (on its own part) that is
-         in view and not on the same line as a name already on that side: two leaders a few pixels apart
-         cannot be told apart */
-      var kept = [], named = {};
-      function take(o) {
-        for (var k = 0; k < o.pts.length; k++) {
-          var p = toScreen(o.pts[k][0], o.pts[k][1]);
-          if (!inView(p)) continue;
-          var side = p.x < mid ? 'L' : 'R', w = o.L.text.length * fs * .56 + 16;
-          if (kept.some(function (q) { return q.side === side && Math.abs(q.y - p.y) < gap; })) continue;
-          o.x = p.x; o.y = p.y; o.side = side; o.w = w;
-          kept.push(o); if (o.on) named[o.L.id] = 1;
-          return;
+      var cols, kept, named;
+      function reset() { cols = { L: { w: 0, rows: [] }, R: { w: 0, rows: [] } }; kept = []; named = {}; }
+      /* a name fits at a point if its dot is clear of the column (as wide as its longest name, this one
+         included, which must not bring the column over a dot already placed) and a full row from every
+         other name on that side */
+      function fits(side, q, w) {
+        var c = Math.max(cols[side].w, w);
+        function clear(x) { return side === 'L' ? x >= pad + c + 16 : x <= W - pad - c - 16; }
+        if (!clear(q.x)) return false;
+        for (var i = 0; i < cols[side].rows.length; i++) {
+          var o = cols[side].rows[i];
+          if (Math.abs(o.y - q.y) < ROW) return false;
+          if (w > cols[side].w && !clear(o.x)) return false;
         }
+        return true;
+      }
+      function put(o, q, side, k) {
+        o.x = q.x; o.y = q.y; o.side = side; o.k = k;
+        cols[side].rows.push(o); cols[side].w = Math.max(cols[side].w, o.w);
+        kept.push(o); if (o.on) named[o.id] = 1; picked[o.key] = k;
+      }
+      function lift(o) {                        /* take a placed name off again */
+        var rows = cols[o.side].rows; rows.splice(rows.indexOf(o), 1); kept.splice(kept.indexOf(o), 1);
+        cols[o.side].w = Math.max.apply(null, rows.map(function (x) { return x.w; }).concat([0]));
+        if (o.on && !kept.some(function (x) { return x.on && x.id === o.id; })) delete named[o.id];
+      }
+      function tryAt(o, k) {
+        var q = scr(o.pts[k]);
+        if (!inView(q)) return false;
+        var side = q.x < mid ? 'L' : 'R';
+        if (!fits(side, q, o.w)) return false;
+        put(o, q, side, k);
+        return true;
+      }
+      function place(o) {
+        var last = picked[o.key];
+        if (last != null && last < o.pts.length && tryAt(o, last)) return true;
+        for (var k = 0; k < o.pts.length; k++) if (k !== last && tryAt(o, k)) return true;
+        return false;
+      }
+      /* a lit name with no free row makes room: the names in its way move to another of their own points;
+         one that cannot move is dropped only if it is dimmed, or a lit organ or extra in the way of a
+         syllabus vessel (an organ is known by its shape; a vessel only by its name) */
+      function makeRoom(o) {
+        for (var k = 0; k < o.pts.length; k++) {
+          var q = scr(o.pts[k]); if (!inView(q)) continue;
+          var side = q.x < mid ? 'L' : 'R';
+          var near = cols[side].rows.filter(function (x) { return Math.abs(x.y - q.y) < ROW; });
+          if (near.length > 3) continue;
+          var was = near.map(function (x) { return { o: x, q: { x: x.x, y: x.y }, side: x.side, k: x.k }; });
+          near.forEach(lift);
+          if (!fits(side, q, o.w)) { was.forEach(function (w) { put(w.o, w.q, w.side, w.k); }); continue; }
+          put(o, q, side, k);
+          var moved = [], ok = true;
+          near.slice().sort(function (a, b) { return a.dim - b.dim; }).forEach(function (b) {
+            if (!ok) return;
+            for (var j = 0; j < b.pts.length; j++) if (j !== b.k && tryAt(b, j)) { moved.push(b); return; }
+            if (!(b.dim || (!extra(o.id) && !ORGANS[o.id] && (ORGANS[b.id] || extra(b.id))))) ok = false;
+          });
+          if (ok) return true;
+          moved.forEach(lift); lift(o);
+          was.forEach(function (w) { put(w.o, w.q, w.side, w.k); });
+        }
+        return false;
       }
       function gather(all) {
         var cand = [];
-        LABELS.forEach(function (L, idx) {
-          if (L.lv === 'X' && !labBeyond) return;
-          if (L.lv === 'G' && labBeyond) return;
-          if (L.needs && !organs[L.needs]) return;
-          var on = isOn(L.id);
-          if (lit && !on && L.lv !== 'A' && !all) return;               /* while a station lights its parts, only the syllabus names stay, dimmed, for finding your way */
-          var zmin = L.z != null ? L.z : LV_ZOOM[L.lv];
-          if (scale < zmin && !(lit && on && L.lv !== 'X')) return;     /* a lit part is named at any zoom */
-          cand.push({ L: L, on: on, dim: !!lit && !on, rank: (on ? 0 : 10) + LV_RANK[L.lv], i: idx, pts: [L.at].concat(L.alt || []) });
+        names().forEach(function (N) {
+          if (N.lv === 'X' && !labBeyond) return;
+          if (N.lv === 'G' && labBeyond) return;
+          if (N.needs && !organs[N.needs]) return;
+          var on = isOn(N.id);
+          if (lit && !on && N.lv !== 'A' && !all) return;               /* while a station lights its parts, only the syllabus names stay, dimmed, for finding your way */
+          if (scale < N.z && !(lit && on && N.lv !== 'X')) return;       /* a lit part is named at any zoom */
+          /* a station's lit names all come first — the syllabus names, then the extras (the gut's veins, the
+             artery in the arm), then the artist's own names — each group the ones with fewest points in view
+             first: a vessel has a few places to be named, an organ dozens */
+          var room = 0; for (var k = 0; k < N.pts.length; k++) if (inView(scr(N.pts[k]))) room++;
+          if (!room) return;
+          cand.push({ key: N.key, id: N.id, text: N.text, lv: N.lv, on: on, dim: !!lit && !on, room: room,
+                      rank: lit && on ? (N.lv === 'X' ? 3 : extra(N.id) ? 1 : 0) : (on ? 0 : 10) + LV_RANK[N.lv], i: N.i, pts: N.pts, w: N.text.length * fs * .56 + 16 });
         });
-        cand.sort(function (a, b) { return a.rank - b.rank || a.i - b.i; });
-        cand.forEach(take);
-        /* a lit part that no name reaches, in view: name it at its longest vessel */
+        cand.sort(function (x, y) { return x.rank - y.rank || (x.rank < 10 && lit ? x.room - y.room : 0) || x.i - y.i; });
+        var litC = cand.filter(function (c) { return c.rank < 10; }), dimC = cand.filter(function (c) { return c.rank >= 10; });
+        var missed = litC.filter(function (c) { return !place(c); });
+        /* a lit part that no name reaches, in view: name it at a point found in the drawing */
         if (lit) Object.keys(lit).forEach(function (part) {
           if (named[part] || !G[part] || ALIAS[part] || CHAMBERS[part] || ORGANS[part] || part === 'heart') return;
-          var at = autoAt(part); if (!at) return;
-          var own = LABELS.filter(function (L) { return L.id === part && L.lv !== 'X'; })[0];     /* the same words as its own name elsewhere */
-          take({ L: { id: part, text: own ? own.text : G[part].label.toLowerCase(), lv: 'B' }, on: true, dim: false, rank: 1, i: 999, pts: at });
+          var at = autoPts(part); if (!at) return;
+          var own = names().filter(function (N) { return N.id === part && N.lv !== 'X'; })[0];     /* the same words as its own name elsewhere */
+          var text = own ? own.text : G[part].label.toLowerCase();
+          var o = { key: 'auto:' + part, id: part, text: text, lv: 'B', on: true, dim: false, rank: 1, i: 999, pts: at, w: text.length * fs * .56 + 16 };
+          if (!place(o)) missed.push(o);
         });
+        dimC.forEach(place);
+        missed.forEach(function (o) { if (!named[o.id] && !kept.some(function (x) { return x.key === o.key; })) makeRoom(o); });
       }
-      gather(false);
+      reset(); gather(false);
       /* zoomed in where nothing lit is in view: the names of what is there, dimmed, rather than none */
-      if (lit && !kept.some(function (q) { return q.on; })) { kept = []; named = {}; gather(true); }
-      /* a column is as wide as its longest name. A name whose point ends up under it tries its other
-         points, then the column on the other side, where its leader is longer but still level */
-      function colW(side) { return Math.max.apply(null, kept.filter(function (q) { return q.side === side; }).map(function (q) { return q.w; }).concat([0])); }
-      function under(side, x, o) { var c = Math.max(colW(side), o.w); return side === 'L' ? x < pad + c + 16 : x > W - pad - c - 16; }
-      function free(side, y, o) { return !kept.some(function (q) { return q !== o && q.side === side && Math.abs(q.y - y) < gap; }); }
-      for (var pass = 0; pass < 2; pass++) {
-        kept.slice().sort(function (a, b) { return a.rank - b.rank || a.i - b.i; }).forEach(function (o) {
-          if (!under(o.side, o.x, o)) return;
-          kept.splice(kept.indexOf(o), 1);
-          var first = null;
-          for (var k = 0; k < o.pts.length; k++) {
-            var p = toScreen(o.pts[k][0], o.pts[k][1]);
-            if (!inView(p)) continue;
-            if (!first) first = p;
-            var side = p.x < mid ? 'L' : 'R';
-            if (!under(side, p.x, o) && free(side, p.y, o)) { o.x = p.x; o.y = p.y; o.side = side; kept.push(o); return; }
-          }
-          /* only a lit part with no other name in view is worth a leader across the body */
-          if (!first || !(lit && o.on) || kept.some(function (q) { return q.L.id === o.L.id; })) return;
-          var other = (first.x < mid ? 'L' : 'R') === 'L' ? 'R' : 'L';
-          if (!under(other, first.x, o) && free(other, first.y, o)) { o.x = first.x; o.y = first.y; o.side = other; kept.push(o); }
-        });
-      }
+      if (lit && !kept.some(function (q) { return q.on; })) { reset(); gather(true); }
       var out = '';
       ['L', 'R'].forEach(function (side) {
-        var it = kept.filter(function (o) { return o.side === side; });
-        it.sort(function (a, b) { return a.rank - b.rank || a.i - b.i; });
-        it = it.slice(0, Math.max(1, Math.floor((H - 24) / minPitch)));
-        var colW = Math.max.apply(null, it.map(function (o) { return o.w; }).concat([0]));
-        var edge = side === 'L' ? pad + colW : W - pad - colW, dir = side === 'L' ? -1 : 1;
-        it = it.filter(function (o) { return side === 'L' ? o.x > edge + 16 : o.x < edge - 16; });   /* a part under its own column is not named */
-        if (!it.length) return;
-        it.sort(function (a, b) { return a.y - b.y; });
-        /* as much room between the names as the column allows, up to a comfortable gap */
-        var pitch = Math.max(minPitch, Math.min(maxPitch, (H - 24) / it.length));
-        var rows = spread(it.map(function (o) { return o.y; }), pitch, 14, H - 10);
-        it.forEach(function (o, k) {
-          var ly = rows[k];
-          /* level from the part to just outside the column, a short step to its own row, level in */
-          var x1 = edge - dir * 16, x2 = edge - dir * 5;
-          var d = 'M' + f2(o.x) + ' ' + f2(o.y) + 'L' + f2(x1) + ' ' + f2(o.y) + 'L' + f2(x2) + ' ' + f2(ly) + 'L' + f2(edge) + ' ' + f2(ly);
+        var it = cols[side].rows; if (!it.length) return;
+        var edge = side === 'L' ? pad + cols[side].w : W - pad - cols[side].w;
+        it.forEach(function (o) {
+          var d = 'M' + f2(o.x) + ' ' + f2(o.y) + 'L' + f2(edge) + ' ' + f2(o.y);
           var tx = side === 'L' ? edge - o.w : edge;
-          var cls = 'cp-lab' + (o.L.lv === 'X' ? ' is-beyond' : '') + (o.dim ? ' is-dim' : '');
-          out += '<g class="' + cls + '" data-part="' + o.L.id + '"><path class="cp-lab__halo" d="' + d + '"/><path class="cp-lab__lead" d="' + d + '"/><circle class="cp-lab__dot" cx="' + f2(o.x) + '" cy="' + f2(o.y) + '" r="2.2"/>' +
-            '<rect class="cp-lab__pill" x="' + f2(tx) + '" y="' + f2(ly - pill / 2) + '" width="' + f2(o.w) + '" height="' + f2(pill) + '" rx="' + f2(pill / 2) + '"/>' +
-            '<text class="cp-lab__txt" x="' + f2(tx + o.w / 2) + '" y="' + f2(ly + fs * .36) + '" text-anchor="middle" style="font-size:' + fs + 'px">' + o.L.text + '</text></g>';
+          var cls = 'cp-lab' + (o.lv === 'X' ? ' is-beyond' : '') + (o.dim ? ' is-dim' : '');
+          out += '<g class="' + cls + '" data-part="' + o.id + '"><path class="cp-lab__halo" d="' + d + '"/><path class="cp-lab__lead" d="' + d + '"/><circle class="cp-lab__dot" cx="' + f2(o.x) + '" cy="' + f2(o.y) + '" r="2.2"/>' +
+            '<rect class="cp-lab__pill" x="' + f2(tx) + '" y="' + f2(o.y - pill / 2) + '" width="' + f2(o.w) + '" height="' + f2(pill) + '" rx="' + f2(pill / 2) + '"/>' +
+            '<text class="cp-lab__txt" x="' + f2(tx + o.w / 2) + '" y="' + f2(o.y + fs * .36) + '" text-anchor="middle" style="font-size:' + fs + 'px">' + o.text + '</text></g>';
         });
       });
       labSvg.innerHTML = out;
@@ -918,5 +960,6 @@
 
   global.CircDraw = CircDraw;
   global.CircDraw.G = G;
+  global.CircDraw.LABELS = LABELS;          /* for plate-build/label-points.js, which checks the hand-placed points */
   global.CircDraw.beatState = beatState;
 })(window);
