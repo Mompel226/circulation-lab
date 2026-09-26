@@ -406,6 +406,12 @@
       if (window.Terms && Terms.teach) Terms.teach(teachHere);
       li.innerHTML = badge + M(txt);
       if (window.Terms && Terms.teach) Terms.teach(false);
+      /* a rule a student must not miss, in the lab's red and yellow (Daniel, 26 Sep: the academic
+         honesty rule for the gym report "in red and yellow ... very visible") */
+      if (typeof b === 'object' && b.alert) {
+        li.className = 'exam-alert';
+        li.insertAdjacentHTML('afterbegin', '<span class="exam-alert__h"><span aria-hidden="true">⚠</span> ' + esc(b.alert === true ? 'Warning' : b.alert) + '</span>');
+      }
       /* the parts of the body this sentence answers. Pressing one on the drawing lands here
          (openGroup looks for exactly this attribute); a list item can name its own */
       if (typeof b === 'object' && b.group) li.setAttribute('data-group', [].concat(b.group).join(' '));
