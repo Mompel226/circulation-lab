@@ -118,6 +118,9 @@
       var row = h('div', 'curio__pics');
       spec.pics.forEach(function (pc) {
         var Q = W.picture({ img: pc.img, alt: pc.alt || '' });
+        if (spec.pics.length === 1) {          /* alone, it fills the card (about 690 px at 1440): say so, so a sharp screen gets the -1400 file */
+          var so = Q.pic.querySelector('source'); Q.img.sizes = '(max-width: 620px) 92vw, 720px'; if (so) so.sizes = Q.img.sizes;
+        }
         var f2 = h('figure', 'curio__pic');
         f2.appendChild(Q.pic);
         f2.appendChild(h('figcaption', 'curio__pcap', ital(W.mk(pc.cap || '')) + (pc.credit ? ' <span class="curio__credit">' + ital(esc(pc.credit)) + '</span>' : '')));
