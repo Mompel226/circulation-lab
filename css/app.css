@@ -932,6 +932,13 @@ picture{display:block;line-height:0}
 .curio__title{margin:0 0 6px;font-size:16.5px;line-height:1.3;color:var(--ink)}
 .curio__p{margin:0 0 8px;font-size:14.5px;line-height:1.55}
 .curio__src{margin:2px 0 0;font-size:11.5px;color:var(--muted)}
+/* pictures under the words, side by side, each as tall as the others */
+.curio__pics{display:flex;flex-wrap:wrap;justify-content:center;gap:14px 18px;margin-top:12px}
+.curio__pic{margin:0;flex:0 1 auto;max-width:100%;display:flex;flex-direction:column;align-items:center}
+.curio__pic picture{display:block}
+.curio__pic img{display:block;height:clamp(230px,30vw,340px);width:auto;max-width:100%;object-fit:contain;border-radius:var(--r-md);border:1px solid #E0D3BB;background:#EFE7D8}
+.curio__pcap{margin-top:6px;max-width:300px;font-size:12px;line-height:1.4;color:#4A4A4A;text-align:center}
+.curio__pcap .curio__credit{display:block;margin-top:2px}
 @media (max-width:620px){
   .curio__body,.curio--tall .curio__body{grid-template-columns:1fr}
   .curio__fig img{max-height:300px;object-fit:cover}

@@ -87,7 +87,7 @@
     function ital(html) { return html.replace(/~([^~]+)~/g, '<i>$1</i>'); }
     /* a card with no picture is one column: its words used to sit in the picture's 300 px column with the
        rest of the card empty (Daniel, 25 Sep: "all of the text on the left and not expanding the whole space") */
-    var box = h('section', 'curio' + (spec.shape === 'tall' ? ' curio--tall' : '') + (spec.img ? '' : ' curio--text'));
+    var box = h('section', 'curio' + (spec.shape === 'tall' ? ' curio--tall' : '') + (spec.img ? '' : ' curio--text') + (spec.pics ? ' curio--pics' : ''));
     box.appendChild(h('div', 'curio__head',
       '<span class="curio__pill">Did you know?</span>' +
       '<span class="curio__fence">Not in 0610 or the IB guide. Nothing here is examined.</span>'));
@@ -105,6 +105,19 @@
     if (spec.source) txt.appendChild(h('p', 'curio__src', ital(esc(spec.source))));
     body.appendChild(txt);
     box.appendChild(body);
+    /* two or more pictures: under the words, side by side, each with its own caption (the Laennec card:
+       the 1816 scene, then the wooden stethoscope he made) */
+    if (spec.pics) {
+      var row = h('div', 'curio__pics');
+      spec.pics.forEach(function (pc) {
+        var Q = W.picture({ img: pc.img, alt: pc.alt || '' });
+        var f2 = h('figure', 'curio__pic');
+        f2.appendChild(Q.pic);
+        f2.appendChild(h('figcaption', 'curio__pcap', ital(W.mk(pc.cap || '')) + (pc.credit ? ' <span class="curio__credit">' + ital(esc(pc.credit)) + '</span>' : '')));
+        row.appendChild(f2);
+      });
+      box.appendChild(row);
+    }
     return box;
   }
 
