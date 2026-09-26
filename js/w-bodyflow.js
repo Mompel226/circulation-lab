@@ -649,8 +649,7 @@
     var R = {};
     Array.prototype.forEach.call(svg.querySelectorAll('[data-r]'), function (el) { R[el.getAttribute('data-r')] = el; });
     var heartG = svg.querySelector('.bf__heart');
-    var HN = heartG ? { outer: heartG.querySelector('.ha__outer'), ra: heartG.querySelector('.ha__ra'), la: heartG.querySelector('.ha__la'), rv: heartG.querySelector('.ha__rv'), lv: heartG.querySelector('.ha__lv'),
-                        av: heartG.querySelector('.ha__av'), sl: heartG.querySelector('.ha__sl'), cords: heartG.querySelectorAll('.ha__cords line') } : {};
+    var HN = heartG && HA ? HA.nodes(heartG) : {};
 
     function mk(tag, attrs, parent) { var e = document.createElementNS(NS, tag); for (var k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
     function use(sym, parent) { var e = mk('use', { href: '#' + id(sym) }, parent); e.style.display = 'none'; return e; }
@@ -1008,11 +1007,7 @@
       /* the heart beats, about once a second on this clock */
       if (HA && HN.outer) {
         var bs = beat ? beat(fract(t), 60) : { atria: 0, vent: .5 + .5 * Math.sin(t * 6.283), av: 1, sl: 0 };
-        var p = HA.paths(bs);
-        HN.outer.setAttribute('d', p.outer); HN.ra.setAttribute('d', p.ra); HN.la.setAttribute('d', p.la); HN.rv.setAttribute('d', p.rv); HN.lv.setAttribute('d', p.lv);
-        if (HN.av) HN.av.setAttribute('d', p.tri + ' ' + p.mit);
-        if (HN.sl) HN.sl.setAttribute('d', p.pulv + ' ' + p.aov);
-        for (var ci = 0; ci < HN.cords.length; ci++) { HN.cords[ci].setAttribute('x1', n2(p.cords[ci][0][0])); HN.cords[ci].setAttribute('y1', n2(p.cords[ci][0][1])); }
+        HA.update(HN, HA.paths(bs));
       }
       /* the glows */
       GLOWS.forEach(function (gw) {

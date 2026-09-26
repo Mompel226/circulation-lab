@@ -12,7 +12,13 @@
         state.sl    0 closed … 1 open        the semilunar valves
         state.atria 0 relaxed … 1 contracted
         state.vent  0 relaxed … 1 contracted
+     HeartArt.paths(state, { k })  k scales the whole contraction (the ECG simulation uses 0.4, so the
+                                   muscle cells it lays over the walls stay on them)
      HeartArt.svg(state, opts)   the markup, ready to put in a <g>
+     HeartArt.nodes(g), HeartArt.update(nodes, paths)   find the parts a widget redraws each frame, and
+                                   redraw them: every widget that beats uses these two
+     HeartArt.warpPoint(x, y, state)   where a point inside a chamber is carried by the beat (for blood
+                                   cells and label dots drawn over the heart)
         opts.mode   'section' (the chambers) or 'exterior' (the outside, with the coronary arteries)
         opts.ids    prefix for the ids the plate lights and clicks (default none)
         opts.plain  no red and blue: pale chambers and vessels, for questions about which blood is where
@@ -60,7 +66,7 @@
   };
   /* ---- the vessels in front ---- */
   var FRONT = {
-    svc:   'M84 -60 L124 -60 L124 176 L84 176 Z',
+    svc:   'M84 -60 L124 -60 L124 186 L84 186 Z',
     paTrunk: 'M150 200 L150 120 C150 104 156 96 164 94 L184 94 C192 96 194 104 194 120 L194 200 Z',
     aorta: 'M206 214 L206 110 C206 58 232 24 270 24 C300 24 314 46 314 84 L314 110 L290 110 L290 88 C290 62 282 50 270 50 C248 50 252 80 252 110 L252 214 Z',
     br1: 'M214 62 L186 -60 L200 -60 L226 52 Z',
@@ -87,8 +93,8 @@
      between the two outflows */
   var SEPTUM = 'M194 196 L206 196 L206 240 C207 270 208 290 209 302 C213 340 221 376 230 404 ' +
                'C234 414 238 420 244 426 C232 432 220 424 212 410 C203 374 197 334 195 292 Z';
-  var PAP = 'M96 374 C100 358 110 354 116 366 C118 376 110 386 102 384 Z M160 392 C164 374 176 372 180 386 C180 398 170 404 164 400 Z ' +
-            'M282 394 C284 376 298 372 302 388 C302 400 292 406 286 402 Z M320 374 C318 354 334 352 336 368 C336 382 326 388 322 384 Z';
+  var PAP_R = 'M96 374 C100 358 110 354 116 366 C118 376 110 386 102 384 Z M160 392 C164 374 176 372 180 386 C180 398 170 404 164 400 Z';
+  var PAP_L = 'M282 394 C284 376 298 372 302 388 C302 400 292 406 286 402 Z M320 374 C318 354 334 352 336 368 C336 382 326 388 322 384 Z';
   var PAPS = [[106, 362], [170, 378], [292, 378], [328, 358]];
 
   /* the outside: the two auricles, the grooves where the coronary arteries run in fat */
@@ -129,24 +135,126 @@
     return cusp(x0, 1) + ' ' + cusp(x1, -1);
   }
 
-  function paths(st) {
+  /* ---- the beat, as a smooth warp of the drawing ----
+     Daniel, 26 Sep: the outline of the heart stayed the same size while only the walls inside moved,
+     which "might lead to misconceptions". Contracting muscle shortens and thickens, so the whole
+     heart changes shape: when the atria contract, each atrium draws in towards the valve below it and
+     the top of the heart shrinks; when the ventricles contract, they narrow and their tip rises
+     towards the valves, and the lower part of the heart shrinks. Each cavity shrinks more than the
+     outline round it, so the walls thicken. What stays still: the rings of the atrioventricular valves,
+     the outflows into the two arteries, and the great vessels. */
+  function sm(a, b, x) { var t = (x - a) / (b - a); t = t < 0 ? 0 : t > 1 ? 1 : t; return t * t * (3 - 2 * t); }
+  function warpPath(d, f) {
+    var nums = d.match(/-?\d+(?:\.\d+)?/g) || [], out = [], k = 0;
+    for (var i = 0; i + 1 < nums.length; i += 2) { var q = f(+nums[i], +nums[i + 1]); out.push(n(q[0]), n(q[1])); }
+    return d.replace(/-?\d+(?:\.\d+)?/g, function () { return String(out[k++]); });
+  }
+  /* the outside of the heart: its outline, the auricles, the grooves, the coronary arteries */
+  function outerAt(a, v) {
+    return function (x, y) {
+      var X = x, Y = y;
+      if (v && y > 262) { var t = sm(262, 332, y); X = 205 + (X - 205) * (1 - .085 * v * t); Y = 262 + (Y - 262) * (1 - .1 * v); }
+      if (a && y < 296) {
+        var left = x < 205, cx = left ? 96 : 312, wx = left ? 1 - sm(112, 150, x) : sm(260, 298, x), k = .13 * a * (1 - sm(248, 294, y)) * wx;
+        if (k) { X = cx + (X - cx) * (1 - k); Y = 262 + (Y - 262) * (1 - k); }
+      }
+      return [X, Y];
+    };
+  }
+  /* a ventricle's cavity: narrows towards a line near the septum, shortens towards its valve ring;
+     above the ring (the outflow to its artery) it stays put */
+  function ventAt(right, v) {
+    var base = right ? 270 : 266, cx = right ? 172 : 248, kx = right ? .2 : .22;
+    return function (x, y) {
+      if (!v || y <= base) return [x, y];
+      var t = sm(base, base + 70, y);
+      return [cx + (x - cx) * (1 - kx * v * t), base + (y - base) * (1 - .16 * v)];
+    };
+  }
+  /* an atrium's cavity: draws in towards its valve; its floor, the valve ring, stays put */
+  function atrAt(right, a) {
+    var cx = right ? 96 : 312;
+    return function (x, y) {
+      if (!a) return [x, y];
+      var k = .24 * a * (1 - sm(236, 266, y));
+      return [cx + (x - cx) * (1 - k), 264 + (y - 264) * (1 - k * .8)];
+    };
+  }
+  function strength(st, opts) { var K = opts && opts.k != null ? opts.k : 1; return { a: (st.atria || 0) * K, v: (st.vent || 0) * K }; }
+
+  function paths(st, opts) {
     st = st || {};
     var av = st.av == null ? 1 : st.av, sl = st.sl == null ? 0 : st.sl;
-    var a = st.atria || 0, v = st.vent || 0;
+    var S = strength(st, opts), a = S.a, v = S.v;
     var tri = avValve(60, 136, 270, av, 50), mit = avValve(268, 350, 266, av, 54);
-    /* contraction: the cavity shrinks and the wall round it thickens. Atria squeeze towards
-       their valves; the ventricles squeeze towards the middle of their cavity and up towards
-       the base, which is how a real ventricle shortens as well as narrows. */
-    var ra = squeeze(RA, 98, 262, 1 - .16 * a, 1 - .2 * a), la = squeeze(LA, 310, 258, 1 - .16 * a, 1 - .2 * a);
-    var rv = squeeze(RV, 150, 300, 1 - .2 * v, 1 - .14 * v), lv = squeeze(LV, 268, 300, 1 - .22 * v, 1 - .14 * v);
-    var outer = squeeze(OUTER, 205, 250, 1 - .035 * v, 1 - .03 * v);
+    var fo = outerAt(a, v), fRV = ventAt(true, v), fLV = ventAt(false, v), fRA = atrAt(true, a), fLA = atrAt(false, a);
+    var paps = [fRV(PAPS[0][0], PAPS[0][1]), fRV(PAPS[1][0], PAPS[1][1]), fLV(PAPS[2][0], PAPS[2][1]), fLV(PAPS[3][0], PAPS[3][1])];
+    var ext = {}; Object.keys(EXT).forEach(function (k) { ext[k] = warpPath(EXT[k], fo); });
     return {
-      outer: outer, ra: ra, la: la, rv: rv, lv: lv, septum: SEPTUM, pap: PAP,
+      outer: warpPath(OUTER, fo), ra: warpPath(RA, fRA), la: warpPath(LA, fLA), rv: warpPath(RV, fRV), lv: warpPath(LV, fLV),
+      septum: warpPath(SEPTUM, function (x, y) { return x < 206 ? fRV(x, y) : fLV(x, y); }),
+      pap: warpPath(PAP_R, fRV) + ' ' + warpPath(PAP_L, fLV),
       tri: tri.d, mit: mit.d,
-      cords: [[tri.tl, PAPS[0]], [tri.tr, PAPS[1]], [mit.tl, PAPS[2]], [mit.tr, PAPS[3]]],
+      cords: [[tri.tl, paps[0]], [tri.tr, paps[1]], [mit.tl, paps[2]], [mit.tr, paps[3]]],
       pulv: slValve(150, 194, 206, sl), aov: slValve(206, 252, 222, sl),
-      back: BACK, front: FRONT, ext: EXT
+      back: BACK, front: FRONT, ext: ext
     };
+  }
+
+  /* where the beat carries a point inside a chamber (blood cells and label dots drawn over the heart).
+     Points outside the heart's outline, and in the outflows and great vessels, stay where they are. */
+  var OUTLINE = null;
+  function outline() {           /* the relaxed outline as a polygon, sampled once */
+    if (OUTLINE) return OUTLINE;
+    var nums = OUTER.match(/-?\d+(?:\.\d+)?/g).map(Number), cmds = OUTER.match(/[MLCZ]/g), pts = [], i = 0, cur = [0, 0];
+    cmds.forEach(function (c) {
+      if (c === 'M' || c === 'L') { cur = [nums[i], nums[i + 1]]; i += 2; pts.push(cur); }
+      else if (c === 'C') {
+        var p0 = cur, p1 = [nums[i], nums[i + 1]], p2 = [nums[i + 2], nums[i + 3]], p3 = [nums[i + 4], nums[i + 5]]; i += 6;
+        for (var k = 1; k <= 12; k++) { var t = k / 12, u = 1 - t;
+          pts.push([u * u * u * p0[0] + 3 * u * u * t * p1[0] + 3 * u * t * t * p2[0] + t * t * t * p3[0], u * u * u * p0[1] + 3 * u * u * t * p1[1] + 3 * u * t * t * p2[1] + t * t * t * p3[1]]); }
+        cur = p3;
+      }
+    });
+    return (OUTLINE = pts);
+  }
+  function inOutline(x, y) {
+    var P = outline(), inside = false;
+    for (var i = 0, j = P.length - 1; i < P.length; j = i++) {
+      if ((P[i][1] > y) !== (P[j][1] > y) && x < (P[j][0] - P[i][0]) * (y - P[i][1]) / (P[j][1] - P[i][1]) + P[i][0]) inside = !inside;
+    }
+    return inside;
+  }
+  function warpPoint(x, y, st, opts) {
+    st = st || {};
+    var S = strength(st, opts);
+    if (!S.a && !S.v) return [x, y];
+    if (!inOutline(x, y)) return [x, y];
+    if (y > 266) return (x < 206 + (y - 266) * .1 ? ventAt(true, S.v) : ventAt(false, S.v))(x, y);
+    if (x < 146) return atrAt(true, S.a)(x, y);
+    if (x > 262) return atrAt(false, S.a)(x, y);
+    return [x, y];
+  }
+
+  /* the parts a beating widget redraws, and redrawing them */
+  function corD(E) { return E.rca + ' ' + E.marg + ' ' + E.lca + ' ' + E.lad + ' ' + E.lcx + ' ' + E.diag; }
+  function nodes(g) {
+    function q(sel) { return g.querySelector(sel); }
+    return { outer: q('.ha__outer'), ra: q('.ha__ra'), la: q('.ha__la'), rv: q('.ha__rv'), lv: q('.ha__lv'), sep: q('.ha__sep'), pap: q('.ha__pap'),
+             av: q('.ha__av'), sl: q('.ha__sl'), cords: g.querySelectorAll('.ha__cords line'),
+             aurR: q('.ha__aurR'), aurL: q('.ha__aurL'), grooves: q('.ha__grooves'), corw: q('.ha__corw'), corl: q('.ha__corl') };
+  }
+  function update(N, p) {
+    function set(el, d) { if (el) el.setAttribute('d', d); }
+    set(N.outer, p.outer); set(N.ra, p.ra); set(N.la, p.la); set(N.rv, p.rv); set(N.lv, p.lv); set(N.sep, p.septum); set(N.pap, p.pap);
+    set(N.av, p.tri + ' ' + p.mit); set(N.sl, p.pulv + ' ' + p.aov);
+    if (N.cords) for (var i = 0; i < N.cords.length; i++) {
+      var c = p.cords[i]; if (!c) continue;
+      N.cords[i].setAttribute('x1', n(c[0][0])); N.cords[i].setAttribute('y1', n(c[0][1]));
+      N.cords[i].setAttribute('x2', n(c[1][0])); N.cords[i].setAttribute('y2', n(c[1][1]));
+    }
+    var E = p.ext; set(N.aurR, E.auricleR); set(N.aurL, E.auricleL); set(N.grooves, E.grooves);
+    if (N.corw || N.corl) { var cd = corD(E); set(N.corw, cd); set(N.corl, cd); }
   }
 
   var UID = 0;
@@ -184,12 +292,12 @@
     if (ext) {
       out += '<g class="ha__ext"' + id('ext') + '>' +
         '<path class="ha__outer" d="' + p.outer + '" fill="url(#' + u + 'x)" stroke="' + COL.wall + '" stroke-width="2.2"' + dataP('heart') + '/>' +
-        '<path d="' + E.auricleR + '" fill="#B7473F" stroke="' + COL.wall + '" stroke-width="1.6"' + dataP('ra') + '/>' +
-        '<path d="' + E.auricleL + '" fill="#B7473F" stroke="' + COL.wall + '" stroke-width="1.6"' + dataP('la') + '/>' +
-        '<path d="' + E.grooves + '" fill="none" stroke="' + COL.fat + '" stroke-width="16" stroke-linecap="round" opacity=".55"/>' +
+        '<path class="ha__aurR" d="' + E.auricleR + '" fill="#B7473F" stroke="' + COL.wall + '" stroke-width="1.6"' + dataP('ra') + '/>' +
+        '<path class="ha__aurL" d="' + E.auricleL + '" fill="#B7473F" stroke="' + COL.wall + '" stroke-width="1.6"' + dataP('la') + '/>' +
+        '<path class="ha__grooves" d="' + E.grooves + '" fill="none" stroke="' + COL.fat + '" stroke-width="16" stroke-linecap="round" opacity=".55"/>' +
         '<g class="ha__cor"' + id('coronary') + dataP('coronary') + ' fill="none" stroke-linecap="round" stroke-linejoin="round">' +
-          '<path class="ha__corw" d="' + E.rca + ' ' + E.marg + ' ' + E.lca + ' ' + E.lad + ' ' + E.lcx + ' ' + E.diag + '" stroke="#6E1717" stroke-width="9"/>' +
-          '<path class="ha__corl" d="' + E.rca + ' ' + E.marg + ' ' + E.lca + ' ' + E.lad + ' ' + E.lcx + ' ' + E.diag + '" stroke="#FF6B5B" stroke-width="5.5"/>' +
+          '<path class="ha__corw" d="' + corD(E) + '" stroke="#6E1717" stroke-width="9"/>' +
+          '<path class="ha__corl" d="' + corD(E) + '" stroke="#FF6B5B" stroke-width="5.5"/>' +
         '</g></g>';
     } else {
       out += '<g class="ha__sec"' + id('sec') + '>' +
@@ -199,9 +307,9 @@
         '<path class="ha__la" d="' + p.la + '" fill="url(#' + u + 'o)" stroke="' + (opts.plain ? '#9C8C84' : COL.oxyLo) + '" stroke-width="1"' + dataP('la') + '/>' +
         '<path class="ha__rv" d="' + p.rv + '" fill="url(#' + u + 'd)" stroke="' + (opts.plain ? '#9C8C84' : COL.deoLo) + '" stroke-width="1"' + dataP('rv') + '/>' +
         '<path class="ha__lv" d="' + p.lv + '" fill="url(#' + u + 'o)" stroke="' + (opts.plain ? '#9C8C84' : COL.oxyLo) + '" stroke-width="1"' + dataP('lv') + '/>' +
-        '<path d="' + p.pap + '" fill="#8A2A2A"/>' +
+        '<path class="ha__pap" d="' + p.pap + '" fill="#8A2A2A"/>' +
         '<g class="ha__cords" stroke="' + COL.cord + '" stroke-width="1.2" opacity=".8">' + p.cords.map(function (c) {
-          return '<line x1="' + n(c[0][0]) + '" y1="' + n(c[0][1]) + '" x2="' + c[1][0] + '" y2="' + c[1][1] + '"/>'; }).join('') + '</g>' +
+          return '<line x1="' + n(c[0][0]) + '" y1="' + n(c[0][1]) + '" x2="' + n(c[1][0]) + '" y2="' + n(c[1][1]) + '"/>'; }).join('') + '</g>' +
         '<path class="ha__av" d="' + p.tri + ' ' + p.mit + '" fill="' + COL.valve + '" stroke="' + COL.valveEdge + '" stroke-width="1"' + dataP('av-valves') + '/>' +
         '</g>';
     }
@@ -222,5 +330,5 @@
     wallLV: [356, 330], wallRV: [52, 330], coronary: [236, 330]
   };
 
-  global.HeartArt = { paths: paths, svg: svg, squeeze: squeeze, ANCHOR: ANCHOR, COL: COL };
+  global.HeartArt = { paths: paths, svg: svg, nodes: nodes, update: update, warpPoint: warpPoint, squeeze: squeeze, ANCHOR: ANCHOR, COL: COL };
 })(window);

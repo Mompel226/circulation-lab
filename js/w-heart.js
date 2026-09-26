@@ -113,7 +113,7 @@
     { id: 'slp', text: 'semilunar valve', x: 158, y: 200, side: 'L', cls: 'is-valve sl' },
     { id: 'ra', text: 'right atrium', x: 82, y: 232, side: 'L' },
     { id: 'avr', text: 'atrioventricular valve', x: 74, y: 290, side: 'L', cls: 'is-valve av' },
-    { id: 'rv', text: 'right ventricle', x: 104, y: 362, side: 'L' },
+    { id: 'rv', text: 'right ventricle', x: 146, y: 324, side: 'L' },        /* inside the cavity however far it squeezes */
     { id: 'ao', text: 'aorta', x: 290, y: 36, side: 'R' },
     { id: 'pv', text: 'pulmonary vein', x: 402, y: 190, side: 'R' },
     { id: 'sla', text: 'semilunar valve', x: 244, y: 216, side: 'R', cls: 'is-valve sl' },
@@ -136,8 +136,7 @@
     fig.appendChild(svg);
     var gHeart = svg.querySelector('.cy__heart'), gCells = svg.querySelector('.cy__cells'), gMarks = svg.querySelector('.cy__marks'), gLab = svg.querySelector('.cy__labels');
     gHeart.innerHTML = HA.svg({ av: 1, sl: 0 }, { mode: 'section', rightPV: false });
-    var node = { outer: gHeart.querySelector('.ha__outer'), ra: gHeart.querySelector('.ha__ra'), la: gHeart.querySelector('.ha__la'), rv: gHeart.querySelector('.ha__rv'), lv: gHeart.querySelector('.ha__lv'),
-                 av: gHeart.querySelector('.ha__av'), sl: gHeart.querySelector('.ha__sl'), cords: gHeart.querySelectorAll('.ha__cords line') };
+    var node = HA.nodes(gHeart);
 
     /* the valves' state, read out in words: a reader should never have to guess from the drawing */
     var read = h('div', 'cy__read', '<span class="cy__pill" data-v="av"><b>Atrioventricular valves</b> <i>open</i></span><span class="cy__pill" data-v="sl"><b>Semilunar valves</b> <i>shut</i></span>');
@@ -159,15 +158,14 @@
     var lastSound = -1, lastT = 0;
     function render(t) {
       var st = stateAt(t), p = HA.paths(st);
-      node.outer.setAttribute('d', p.outer);
-      node.ra.setAttribute('d', p.ra); node.la.setAttribute('d', p.la); node.rv.setAttribute('d', p.rv); node.lv.setAttribute('d', p.lv);
-      node.av.setAttribute('d', p.tri + ' ' + p.mit); node.sl.setAttribute('d', p.pulv + ' ' + p.aov);
-      for (var i = 0; i < node.cords.length; i++) { node.cords[i].setAttribute('x1', n2(p.cords[i][0][0])); node.cords[i].setAttribute('y1', n2(p.cords[i][0][1])); }
+      HA.update(node, p);
       /* the cells: each path moves only while blood is flowing along it */
       var memo = {};
       CELLS.forEach(function (c) {
         var P = PATHS[c.key], d = memo[c.key] != null ? memo[c.key] : (memo[c.key] = travelled(c.key, t));
         var s = (c.off + d) % P.s.total, q = at(P.s, s), q2 = at(P.s, Math.min(P.s.total, s + 3));
+        /* a cell in a chamber moves with its walls as they squeeze */
+        q = HA.warpPoint(q[0], q[1], st); q2 = HA.warpPoint(q2[0], q2[1], st);
         var ang = Math.atan2(q2[1] - q[1], q2[0] - q[0]) * 180 / Math.PI;
         /* fade in at the start of the path and out at its end, so cells never pop */
         var edge = Math.min(s / 18, (P.s.total - s) / 18, 1);
