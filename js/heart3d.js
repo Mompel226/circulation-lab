@@ -878,6 +878,19 @@ void main() {
     return pt.xmat;
   }
 
+  /* ---------------- a red ring round a valve set wrongly ----------------
+     After Run this stage in the valves tab, a valve set wrongly flashes red: the valve itself, and a ring
+     round it drawn over the blood and the walls, so it can be found at once. */
+  const flagRings = {};
+  Object.keys(VALVES).forEach((k) => {
+    const f = VALVES[k].f, rr = f.r * (VALVES[k].kind === 'av' ? 1.12 : 1.2);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(rr, 0.007, 8, 72),
+      new THREE.MeshBasicMaterial({ color: 0xff3b3b, transparent: true, opacity: 0.9, depthTest: false, depthWrite: false, toneMapped: false }));
+    ring.position.copy(f.c); ring.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), f.n);
+    ring.renderOrder = 30; ring.visible = false; ring.frustumCulled = false;
+    vgroup.add(ring); flagRings[k] = ring;
+  });
+
   /* ---------------- the tendons, for the scanned valves ----------------
      The scan has no tendons (chordae tendineae). With the moving valves (Blood flow, The valves) they
      are drawn as lines; for the scanned valves shown in Explore they are drawn here as white cords,
@@ -923,6 +936,20 @@ void main() {
 
   /* ---------------- modes: what is shown ---------------- */
   let mode = 'explore', xray = false, cutK = 0, selected = null;
+  /* the valves tab: the blood shows only while a stage runs (Daniel, 26 Sep: set the valves with no
+     blood in the way, then run the stage to see what they do), and a valve set wrongly flashes red */
+  let bloodShown = false;
+  const flagged = new Set();
+  function paintFlags(now) {
+    const pulse = reduced ? 1 : 0.5 + 0.5 * Math.sin(now / 1000 * Math.PI * 2 * 1.1);
+    Object.keys(VALVES).forEach((k) => {
+      const m = VALVES[k].mesh.material, on = flagged.has(k), ring = flagRings[k];
+      if (ring) { ring.visible = on; ring.material.opacity = 0.35 + 0.6 * pulse; }
+      if (on) { m.color.setHex(0xf06a6a); m.emissive.setHex(0xff2424); m.emissiveIntensity = 0.2 + 0.5 * pulse; }
+      else if (m.userData.flagged) m.color.setHex(0xeee0c8);
+      m.userData.flagged = on;
+    });
+  }
   function applyLook() {
     const live = mode !== 'explore';
     const lit = (id) => selected && (selected === id || (selected === 'vena_cava' && /^vena_cava/.test(id)) || (selected === 'papillary' && /^pap_/.test(id)));
@@ -944,10 +971,11 @@ void main() {
       m.transparent = thin; m.opacity = thin ? 0.5 : 1; m.depthWrite = !thin; m.needsUpdate = true;
       m.emissive.setHex(on ? 0xffb04a : 0x000000); m.emissiveIntensity = on ? 0.5 : 0;
     });
-    /* The valves tab shows the valves alone: with the blood moving through them they were "very very
-       hard to see" (Daniel, 26 Sep). The blood is the Blood flow tab's. */
-    Object.keys(blood).forEach((k) => { blood[k].im.visible = mode === 'flow' && !(sideOnly && sideOnly !== k); });
+    /* The valves tab shows the valves alone while you set them: with the blood moving through them they
+       were "very very hard to see" (Daniel, 26 Sep). It shows the blood when a stage runs. */
+    Object.keys(blood).forEach((k) => { blood[k].im.visible = (mode === 'flow' || (mode === 'valves' && bloodShown)) && !(sideOnly && sideOnly !== k); });
     Object.keys(VALVES).forEach((k) => { const on = !(sideOnly && VALVE_SIDE[k] !== sideOnly); VALVES[k].mesh.visible = on; if (VALVES[k].cords) VALVES[k].cords.visible = on; });
+    paintFlags(performance.now());
     idStale = true; kick();
   }
 
@@ -1243,6 +1271,7 @@ void main() {
     }
     const swapped = [];
     capObjs.forEach((o) => { if (o.visible) { swapped.push([o, null, true]); o.visible = false; } });
+    Object.values(flagRings).forEach((o) => { if (o.visible) { swapped.push([o, null, true]); o.visible = false; } });
     scene.traverse((o) => {
       if (!o.isMesh && !o.isInstancedMesh && !o.isLineSegments) return;
       if (capObjs.indexOf(o) >= 0) return;
@@ -1370,7 +1399,8 @@ void main() {
     let svg = '';
     placed.forEach((q) => {
       const lab = document.createElement('div');
-      lab.className = 'h3__lab h3__lab--' + q.side + (first(q.id) ? ' is-sel' : '');
+      const wrong = q.id.indexOf('valve_') === 0 && flagged.has(q.id.slice(6));
+      lab.className = 'h3__lab h3__lab--' + q.side + (first(q.id) ? ' is-sel' : '') + (wrong ? ' is-wrong' : '');
       lab.innerHTML = '<span class="h3__labn">' + esc(q.nm.name) + '</span>' + (q.nm.sub ? '<span class="h3__labs">' + esc(q.nm.sub) + '</span>' : '');
       lab.style.top = Math.round(q.y) + 'px';
       if (q.side === 'L') lab.style.right = Math.round(w - colL + 6) + 'px'; else lab.style.left = Math.round(colR + 6) + 'px';
@@ -1378,8 +1408,8 @@ void main() {
       const x2 = q.side === 'L' ? colL : colR;
       const y = Math.round(q.y) + 0.5;
       svg += '<line class="h3__leadhalo" x1="' + q.x.toFixed(1) + '" y1="' + y + '" x2="' + x2.toFixed(1) + '" y2="' + y + '"/>' +
-             '<line class="h3__lead" x1="' + q.x.toFixed(1) + '" y1="' + y + '" x2="' + x2.toFixed(1) + '" y2="' + y + '"/>' +
-             '<circle class="h3__dot" cx="' + q.x.toFixed(1) + '" cy="' + y + '" r="3"/>';
+             '<line class="h3__lead' + (wrong ? ' is-wrong' : '') + '" x1="' + q.x.toFixed(1) + '" y1="' + y + '" x2="' + x2.toFixed(1) + '" y2="' + y + '"/>' +
+             '<circle class="h3__dot' + (wrong ? ' is-wrong' : '') + '" cx="' + q.x.toFixed(1) + '" cy="' + y + '" r="3"/>';
       lastLayout.push({ id: q.id, x: q.x, y: q.y, side: q.side, x2 });
     });
     lsvg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
@@ -1445,6 +1475,7 @@ void main() {
     if (stepTween(dt)) busy = true;
     if (stepSpin(dt)) busy = true;
     if (stepAnim(dt)) busy = true;
+    if (flagged.size) { paintFlags(now); if (!reduced) busy = true; }
     const moved = controls.update();
     if (moved) busy = true;
     Object.keys(VALVES).forEach((k) => { if (VALVES[k].dirty && vgroup.visible) buildValve(k); });
@@ -1498,6 +1529,8 @@ void main() {
     },
     cutAt4ch: 0.5,
     setXray(on) { xray = !!on; applyLook(); },
+    showBlood(on) { bloodShown = !!on; applyLook(); },
+    flagValves(keys) { flagged.clear(); (keys || []).forEach((k) => flagged.add(k)); applyLook(); relabelSoon(60); },
     view(name) { setView(name); },
     turn(az, pol) { turn(az, pol); },
     spin(az, pol) { spin(az, pol); },
