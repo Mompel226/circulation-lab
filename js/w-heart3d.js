@@ -62,7 +62,8 @@
     vena_cava_sup: { name: 'vena cava', sub: 'superior', cap: 'Brings deoxygenated blood from the head, neck and arms to the right atrium.' },
     vena_cava_inf: { name: 'vena cava', sub: 'inferior', cap: 'Brings deoxygenated blood from the lower body to the right atrium.' },
     coronary: { name: 'coronary artery', cap: 'Coronary arteries branch from the aorta just above the aortic valve. They supply the heart muscle with oxygen and glucose.' },
-    papillary: { name: 'papillary muscle', beyond: true, cap: 'A small muscle in the ventricle wall. Tendons, the chordae tendineae, join it to the cusps and prevent them being pushed into the atrium.' }
+    papillary: { name: 'papillary muscle', beyond: true, cap: 'A small muscle in the ventricle wall. Tendons, the chordae tendineae, join it to the cusps and prevent them being pushed into the atrium.' },
+    chordae: { name: 'tendons', sub: 'chordae tendineae', beyond: true, cap: 'Tough cords that join the edges of the atrioventricular valve cusps to the papillary muscles. When the ventricles contract, they prevent the cusps being pushed up into the atria.' }
   };
   /* the cut surface of a wall: the muscular wall itself (0610 9.2.1, and S 9.2.8) */
   var WALLCAP = {
@@ -74,13 +75,13 @@
   };
   function partKey(id) { return /^pap_/.test(id) ? 'papillary' : id; }
   var NAME_ALL = ['ra', 'la', 'rv', 'lv', 'septum', 'aorta', 'pulmonary_artery', 'vena_cava', 'pulmonary_veins', 'coronary',
-                  'valve_tri', 'valve_mit', 'valve_pul', 'valve_aor', 'papillary'];
+                  'valve_tri', 'valve_mit', 'valve_pul', 'valve_aor', 'papillary', 'chordae'];
   var LIST = [['ra', 'right atrium'], ['la', 'left atrium'], ['rv', 'right ventricle'], ['lv', 'left ventricle'], ['septum', 'septum'],
               ['valve_tri', 'atrioventricular valve (tricuspid)'], ['valve_mit', 'atrioventricular valve (mitral)'],
               ['valve_pul', 'semilunar valve (pulmonary)'], ['valve_aor', 'semilunar valve (aortic)'],
               ['aorta', 'aorta'], ['pulmonary_artery', 'pulmonary artery'], ['pulmonary_veins', 'pulmonary veins'],
               ['vena_cava_sup', 'vena cava (superior)'], ['vena_cava_inf', 'vena cava (inferior)'], ['coronary', 'coronary arteries'],
-              ['papillary', 'papillary muscles']];
+              ['papillary', 'papillary muscles'], ['chordae', 'tendons (chordae tendineae)']];
 
   /* ---------- one beat ----------
      The correct valve settings of each stage, which chambers squeeze, and the step captions. */
@@ -375,7 +376,7 @@
     more.querySelector('.h3__goecg').addEventListener('click', function () {
       if (!(CL.goToWidget && CL.goToWidget('monitor', '.es', 'the ECG simulation'))) location.hash = 'monitor';
     });
-    box.appendChild(h('p', 'h3__credit', 'The heart is a real one: HuBMAP Human Reference Atlas (Browne and Schlehlein 2024), from the Visible Human Male, US National Library of Medicine. CC BY 4.0. The moving valve cusps, the tendons and the blood paths are added for this lab.'));
+    box.appendChild(h('p', 'h3__credit', 'The heart is a real one: HuBMAP Human Reference Atlas (Browne and Schlehlein 2024), from the Visible Human Male, US National Library of Medicine. CC BY 4.0. The moving valve cusps, the tendons, the left ventricle\u2019s papillary muscles and the blood paths are added for this lab.'));
 
     /* =====================================================================
        state
@@ -417,8 +418,8 @@
       /* while the blood flows, the chambers and the vessels are named, so you can say where it is */
       if (mode === 'flow') return sideNow === 'R' ? ['ra', 'rv', 'vena_cava', 'pulmonary_artery'] : sideNow === 'L' ? ['la', 'lv', 'pulmonary_veins', 'aorta']
         : ['ra', 'la', 'rv', 'lv', 'vena_cava', 'pulmonary_artery', 'pulmonary_veins', 'aorta'];
-      /* the valves are inside: from outside a whole heart only the wall of the aorta round them shows */
-      var l = allNames ? NAME_ALL.filter(function (x) { return +cut.value > 0 || !/^valve_/.test(x); }) : [];
+      /* the valves and tendons are inside: from outside a whole heart only the wall of the aorta round them shows */
+      var l = allNames ? NAME_ALL.filter(function (x) { return +cut.value > 0 || !/^(valve_|chordae)/.test(x); }) : [];
       if (selected) { var s = partKey(selected) === 'papillary' ? 'papillary' : selected; l = l.filter(function (x) { return x !== s && !(s.indexOf('vena_cava') === 0 && x === 'vena_cava'); }); l.unshift(selWall ? s + '#wall' : s); }
       return l;
     }
@@ -443,7 +444,7 @@
     });
     sel.addEventListener('change', function () {
       if (!sel.value) return;
-      var id = sel.value; pick(id === 'papillary' ? 'pap_rv_ant' : id, false, true);      /* the left ones are not in Explore */
+      var id = sel.value; pick(id === 'papillary' ? 'pap_lv_al' : id, false, true);
     });
     function cutText(k) { return k <= 0 ? 'whole heart' : Math.abs(k - 0.5) < 0.04 ? 'four chambers' : k < 0.5 ? 'the front taken off' : 'towards the back'; }
     cut.addEventListener('input', function () {
