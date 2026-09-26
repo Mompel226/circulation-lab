@@ -939,10 +939,17 @@ picture{display:block;line-height:0}
 .curio__pic img{display:block;height:clamp(230px,30vw,340px);width:auto;max-width:100%;object-fit:contain;border-radius:var(--r-md);border:1px solid #E0D3BB;background:#EFE7D8}
 .curio__pcap{margin-top:6px;max-width:300px;font-size:12px;line-height:1.4;color:#4A4A4A;text-align:center}
 .curio__pcap .curio__credit{display:block;margin-top:2px}
+/* a picture on the right, the words round it (side: 'right') */
+.curio__fig--right{float:right;width:min(44%,330px);margin:2px 0 10px 18px}
+.curio__fig--right.curio__fig--upright{width:min(34%,250px)}
+.curio__fig--right .curio__pcap{max-width:none;text-align:left}
+.curio--text .curio__text::after{content:'';display:table;clear:both}
 @media (max-width:620px){
   .curio__body,.curio--tall .curio__body{grid-template-columns:1fr}
+  .curio__fig--right,.curio__fig--right.curio__fig--upright{float:none;width:auto;max-width:360px;margin:0 auto 12px}
   .curio__fig img{max-height:300px;object-fit:cover}
   .curio--tall .curio__fig img{max-height:360px;object-fit:contain;background:#FBF6EC}
+  .curio__fig--upright img{max-height:380px;object-fit:contain;background:#FBF6EC}
 }
 .ad__slot:empty{display:none}
 .ad__slot{margin-top:10px;padding-top:10px;border-top:1px solid var(--edge)}
