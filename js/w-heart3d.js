@@ -312,7 +312,9 @@
 
     /* ---------- Valves panel ---------- */
     var pVa = h('div', 'h3__panel'); pVa.setAttribute('data-for', 'valves'); pVa.hidden = true;
-    pVa.appendChild(h('p', 'h3__intro', 'In a real heart, only the pressure of the blood opens and closes the valves. Here you set them yourself, to see what each one does.'));
+    /* Daniel, 26 Sep: the top is for testing yourself; Play the beat below is the answer */
+    pVa.appendChild(h('div', 'h3__beath', 'Test yourself <small>Set the valves for one stage, then run it</small>'));
+    pVa.appendChild(h('p', 'h3__intro', 'In a real heart, only the pressure of the blood opens and closes the valves. Here you set them yourself. Run the stage to see where the blood goes: a valve that is set wrongly flashes red.'));
     var stPick = h('div', 'h3__seg h3__seg--stages'); stPick.setAttribute('role', 'group'); stPick.setAttribute('aria-label', 'Stage of the beat');
     var stBtns = STAGES.map(function (st, i) {
       var b = h('button', 'h3__segb' + (i ? '' : ' is-on'), '<span class="h3__num">' + (i + 1) + '</span>' + esc(st.name)); b.type = 'button';
@@ -338,7 +340,7 @@
     pVa.appendChild(result);
     /* Play the beat: the right settings, one stage at a time, each holding until Next step */
     var beat = h('div', 'h3__beat');
-    beat.appendChild(h('div', 'h3__beath', 'Play the beat <small>The correct valves, one stage at a time</small>'));
+    beat.appendChild(h('div', 'h3__beath', 'The answer: play the beat <small>Not sure? Watch the correct valves, one stage at a time.</small>'));
     var bBar = h('div', 'h3__row');
     var bPlay = h('button', 'h3__bplay'); bPlay.type = 'button';
     var bAll = h('button', 'h3__ball', '<span aria-hidden="true">▶▶</span> Play all'); bAll.type = 'button';
@@ -465,7 +467,8 @@
       stopSteps(); mode = m;
       Object.keys(tabBtn).forEach(function (k) { var on = k === m; tabBtn[k].classList.toggle('is-on', on); tabBtn[k].setAttribute('aria-selected', on ? 'true' : 'false'); });
       [pEx, pFl, pVa].forEach(function (p) { p.hidden = p.getAttribute('data-for') !== m; });
-      legend.hidden = m !== 'flow';                      /* the valves tab shows no blood */
+      if (view) view.flagValves([]);
+      bloodOn = false; legend.hidden = m !== 'flow';      /* the valves tab shows blood only while a stage runs */
       if (m !== 'flow' && sideNow) setSide(null);
       capStage(-1);
       box.classList.toggle('h3--live', m !== 'explore');
@@ -523,6 +526,17 @@
     });
 
     /* ---------- The valves ---------- */
+    /* no blood while you set the valves; it flows when a stage runs, and a valve set wrongly flashes red
+       on the heart and on its button until you change something */
+    var bloodOn = false;
+    function setBlood(on) {
+      bloodOn = !!on; if (view) view.showBlood(bloodOn);
+      legend.hidden = !(mode === 'flow' || (mode === 'valves' && bloodOn));
+    }
+    function flag(wrong) {
+      if (view) view.flagValves(wrong);
+      VK.forEach(function (v) { vBtns[v].classList.toggle('is-wrong', wrong.indexOf(v) >= 0); });
+    }
     function paintValves() {
       var s = settings[stageIdx];
       VK.forEach(function (v) {
@@ -547,6 +561,7 @@
     }
     function chooseStage(i) {
       stopSteps(); stageIdx = i; result.innerHTML = ''; result.className = 'h3__result';
+      setBlood(false); flag([]);
       paintValves(); capStage(i);
       result.innerHTML = '<p class="h3__ask2">Stage ' + (i + 1) + ' of 3: <b>' + esc(STAGES[i].name.toLowerCase()) + '</b>. Set each valve open or closed, then press Run.</p>';
       var vs = settings[i]; shown = Object.assign({}, vs);
@@ -555,6 +570,7 @@
     }
     function setValve(v, open) {
       settings[stageIdx][v] = open; solved[stageIdx] = false;
+      setBlood(false); flag([]);
       paintValves();
       var vs = settings[stageIdx]; shown = Object.assign({}, vs);
       if (view) { view.stop(); view.setValves(vs); valveWords(vs); view.labels(labelList()); }
@@ -570,6 +586,7 @@
       var nb = result.querySelector('.h3__nextb'); if (nb) nb.addEventListener('click', function () { chooseStage(stageIdx + 1); });
       if (o.ok) solved[stageIdx] = true;
       paintValves();
+      setBlood(true); flag(VK.filter(function (v) { return !!vs[v] !== STAGES[stageIdx].correct[v]; }));
       if (view) {
         view.reseed(STAGES[stageIdx].key);
         var from = stageIdx === 0 ? STAGES[2].correct : STAGES[stageIdx - 1].correct;
@@ -599,7 +616,7 @@
       bNow.textContent = 'Step ' + (i + 1) + ': ' + STAGES[i].step;
       capStage(i);
       var vs = STAGES[i].correct; shown = Object.assign({}, vs);
-      valveWords(vs);
+      valveWords(vs); setBlood(true); flag([]);
       if (view) {
         if (i === 0) view.reseed('A');
         view.play(stagePlan(i, vs), { from: STAGES[(i + 2) % 3].correct, still: still(), onDone: function () {
