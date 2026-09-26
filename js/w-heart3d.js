@@ -453,7 +453,8 @@
       cut.setAttribute('aria-valuetext', cutText(k));
       viewBtn.section.hidden = k <= 0;
       if (k > 0 && cutNote.hidden) cutNote.hidden = false;
-      if (view) { view.setCut(k); if (k > 0) setWhere('section'); if (allNames) view.labels(labelList()); }
+      /* the caption says what you see: a heart you turned stays turned while you move the cut */
+      if (view) { var vn = view.setCut(k) || 'section'; setWhere(k <= 0 && vn === 'section' ? 'own' : vn); if (allNames) view.labels(labelList()); }
       if (flat) flat.cut(k);
     });
 

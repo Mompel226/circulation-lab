@@ -98,7 +98,7 @@ export async function mount(host, opts) {
 
   /* ---------------- renderer, scene, camera ---------------- */
   const gl = document.createElement('div'); gl.className = 'h3__gl'; host.appendChild(gl);
-  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance', preserveDrawingBuffer: !!opts.test });
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, stencil: true, powerPreference: 'high-performance', preserveDrawingBuffer: !!opts.test });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, coarse ? 1.5 : 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -157,6 +157,7 @@ export async function mount(host, opts) {
   const SIG = { ra: 0.26, la: 0.26, rv: 0.34, lv: 0.36 };
   const beatK = new THREE.Vector4(...CH.map((k) => 1 / (2 * SIG[k] * SIG[k])));
   const U_BEAT_C = { value: beatC }, U_BEAT_K = { value: beatK };
+  const U_CUT_D = { value: 1e3 };      /* the cut's depth along the plane's normal (1e3: no cut) */
   function beatDisp(p, out) {
     out.set(0, 0, 0);
     for (let i = 0; i < 4; i++) {
@@ -187,18 +188,30 @@ vec3 h3beat(vec3 p){ vec3 d = vec3(0.0); for (int i = 0; i < 4; i++) { vec3 q = 
         .replace('#include <begin_vertex>', '#include <begin_vertex>\n{ vec3 hp = (uL2H * vec4(transformed, 1.0)).xyz; hp += h3beat(hp); transformed = (uH2L * vec4(hp, 1.0)).xyz; }');
       if (capHex != null) sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform vec3 uCap; uniform float uCapOn;')
         .replace('#include <dithering_fragment>', '#include <dithering_fragment>\nif (!gl_FrontFacing && uCapOn > 0.5) gl_FragColor = vec4(uCap, 1.0);');
+      if (loose(mesh)) patchLoose(sh);
     };
-    mat.customProgramCacheKey = () => (capHex != null ? 'h3wall-cap' : 'h3wall');
+    mat.customProgramCacheKey = () => (capHex != null ? 'h3wall-cap' : loose(mesh) ? 'h3wall-loose' : 'h3wall');
+  }
+  /* a vessel's pieces cut loose (see "pieces cut loose" below): each point carries the shallowest cut
+     that still leaves it joined to the heart, and is not drawn once the cut is deeper */
+  const loose = (mesh) => !!(mesh && mesh.geometry.getAttribute('aJoin'));      /* the moving valves pass no mesh */
+  function patchLoose(sh) {
+    sh.uniforms.uCutD = U_CUT_D;
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute float aJoin; varying float vJoin;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvJoin = aJoin;');
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform float uCutD; varying float vJoin;')
+      .replace('#include <clipping_planes_fragment>', '#include <clipping_planes_fragment>\nif (vJoin > uCutD) discard;');
   }
   /* the picking pass: one flat colour per part, and back faces (the cut surface) flagged */
-  function idMaterial(index) {
+  function idMaterial(index, mesh) {
     const m = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, clippingPlanes: PLANES });
     m.onBeforeCompile = (sh) => {
+      if (loose(mesh)) patchLoose(sh);
       sh.uniforms.uId = { value: index / 255 };
       sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform float uId;')
         .replace('#include <dithering_fragment>', '#include <dithering_fragment>\ngl_FragColor = vec4(uId, gl_FrontFacing ? 0.0 : 1.0, 0.0, 1.0);');
     };
-    m.customProgramCacheKey = () => 'h3id';
+    m.customProgramCacheKey = () => (loose(mesh) ? 'h3id-loose' : 'h3id');
     return m;
   }
 
@@ -213,7 +226,57 @@ vec3 h3beat(vec3 p){ vec3 d = vec3(0.0); for (int i = 0; i < 4; i++) { vec3 q = 
     patchWall(mat, o, solid ? look.cap : null);
     o.material = mat;
     const index = byIndex.length; byIndex.push(id);
-    parts[id] = { id, mesh: o, mat, idMat: idMaterial(index), index, solid };
+    parts[id] = { id, mesh: o, mat, idMat: idMaterial(index, o), index, solid };
+  });
+  /* ---------------- the cut face ----------------
+     Drawn ON the cut plane, the stencil way (three.js's clipping-stencil example, with the test done by
+     depth), after the heart itself:
+       1. the plane's depth is written;
+       2. for one group of closed solids, every face that lies behind the plane counts into the stencil,
+          +1 for a back face and -1 for a front face, so wherever the plane passes through any of the
+          group's solids the count is not zero;
+       3. a flat face in the group's cut colour is drawn on the plane there, over whatever is drawn
+          (seen from the open side, nothing kept lies between you and the cut), and the count is reset;
+       then the next group (the valves last, over the walls). Seen from the other side the cut face is
+     inside the heart, so none of this is drawn. The depth test in step 2 is made for every sample of a
+     pixel; the clipping plane's own test is made once per pixel, so near a wall standing edge-on to you
+     a few samples of it poke through the cut, and a cut face tested against them showed faint dotted
+     lines where two solids meet. The model's septum overlaps the walls of both ventricles; the old way
+     (each wall's back faces coloured) let its buried faces show through the cut as slivers and streaks
+     from some angles (Daniel, 26 Sep: "some sections look a little bit wonky"). Parts whose mesh is not
+     closed (the right ventricle's papillary muscles, the aortic valve) keep the old way: a count through
+     an open mesh would be wrong. */
+  const CAP_GROUPS = [
+    { ids: ['lv', 'rv', 'septum', 'pap_lv_al', 'pap_lv_pm'], color: 0xc9665b },
+    { ids: ['la', 'ra'], color: 0xd4766a },
+    { ids: ['valve_tri', 'valve_mit', 'valve_pul'], color: 0xf7efe2 }
+  ];
+  const capObjs = [], capQuads = [];
+  const capPlane = new THREE.PlaneGeometry(4, 4);
+  const capDepth = new THREE.Mesh(capPlane, new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: true, depthFunc: THREE.AlwaysDepth, side: THREE.DoubleSide }));
+  capDepth.renderOrder = 19; capDepth.visible = false; capDepth.frustumCulled = false;
+  heart.add(capDepth); capObjs.push(capDepth);
+  function stencilMat(side, op, part) {
+    const m = new THREE.MeshBasicMaterial({ side, colorWrite: false, depthWrite: false, depthFunc: THREE.GreaterDepth,
+      stencilWrite: true, stencilFunc: THREE.AlwaysStencilFunc, stencilRef: 0,
+      stencilFail: THREE.KeepStencilOp, stencilZFail: THREE.KeepStencilOp, stencilZPass: op });
+    patchWall(m, part.mesh, null);           /* the same beat as the wall it counts */
+    return m;
+  }
+  CAP_GROUPS.forEach((g, gi) => {
+    g.ids.forEach((id) => {
+      const pt = parts[id]; if (!pt) return;
+      [[THREE.BackSide, THREE.IncrementWrapStencilOp], [THREE.FrontSide, THREE.DecrementWrapStencilOp]].forEach(([side, op]) => {
+        const c = new THREE.Mesh(pt.mesh.geometry, stencilMat(side, op, pt));
+        c.renderOrder = 20 + gi * 2; c.frustumCulled = false; c.visible = false;
+        pt.mesh.add(c); capObjs.push(c);                 /* a child: it turns, hides and beats with its part */
+      });
+    });
+    const q = new THREE.Mesh(capPlane, new THREE.MeshBasicMaterial({ color: g.color, toneMapped: false, side: THREE.DoubleSide,
+      depthTest: false, depthWrite: false, stencilWrite: true, stencilRef: 0, stencilFunc: THREE.NotEqualStencilFunc,
+      stencilFail: THREE.KeepStencilOp, stencilZFail: THREE.ReplaceStencilOp, stencilZPass: THREE.ReplaceStencilOp }));
+    q.renderOrder = 21 + gi * 2; q.visible = false; q.frustumCulled = false;
+    heart.add(q); capQuads.push(q); capObjs.push(q);
   });
   const box = new THREE.Box3();
   ['lv', 'rv', 'la', 'ra', 'aorta', 'pulmonary_artery', 'vena_cava_sup', 'vena_cava_inf'].forEach((k) => parts[k] && box.expandByObject(parts[k].mesh));
@@ -730,10 +793,89 @@ void main() {
     if (k <= 0) return 1e3;
     return k <= 0.5 ? lerp(PL.max + 0.02, PL.through, k / 0.5) : lerp(PL.through, PL.min + 0.12, (k - 0.5) / 0.5);
   }
+  /* ---------------- pieces cut loose ----------------
+     A vessel cut right across leaves a piece behind the plane that is no longer joined to the heart:
+     the arch and the top of the descending aorta once the ascending aorta is cut (cuts 0.05 to 0.4),
+     the branches of the pulmonary artery (0.05 to 0.35), the ends of the pulmonary veins (0.1 to 0.8).
+     Left in place, such a piece hangs in the air up to 2 cm from the heart, so it goes with the part
+     cut away, as it would in a dissection. For every point of a vessel: the shallowest cut that leaves
+     it joined, through what is left of the vessel, to where the vessel meets its own chamber (JOIN,
+     within 2 mm; each vessel touches its own, the aorta through its valve). That is the least deep of
+     all the paths along the vessel's wall, a path being as deep as its deepest point: a Dijkstra search
+     that keeps the deepest point instead of the sum. Points of one vessel within 0.5 mm of each other
+     count as joined: the model's branches overlap their trunk without sharing points. Only the
+     vessel's OWN chamber counts: a right pulmonary vein passes within 2 mm of the right atrium, and a
+     piece of it cut loose would otherwise stay. */
+  const JOIN = { aorta: ['valve_aor', 'lv'], pulmonary_artery: ['rv', 'valve_pul'], pulmonary_veins: ['la'],
+    vena_cava_sup: ['ra'], vena_cava_inf: ['ra'], coronary: ['lv', 'rv', 'la', 'ra', 'septum'] };
+  let joinMs = 0;
+  (function joinDepths() {
+    const t0 = performance.now(), P = new THREE.Vector3(), toHeart = new THREE.Matrix4().copy(heart.matrixWorld).invert();
+    const key = (i, j, k) => ((i + 1024) * 2048 + j + 1024) * 2048 + k + 1024;
+    const pointsOf = (pt) => {        /* in the heart's own frame */
+      const pos = pt.mesh.geometry.getAttribute('position'), out = new Float32Array(pos.count * 3);
+      for (let i = 0; i < pos.count; i++) { P.fromBufferAttribute(pos, i).applyMatrix4(pt.mesh.matrixWorld).applyMatrix4(toHeart); out[3 * i] = P.x; out[3 * i + 1] = P.y; out[3 * i + 2] = P.z; }
+      return out;
+    };
+    function grid(arrs, r) {        /* points binned in cells of side r */
+      const g = new Map();
+      arrs.forEach((a) => { for (let q = 0; q < a.length; q += 3) { const k = key(Math.floor(a[q] / r), Math.floor(a[q + 1] / r), Math.floor(a[q + 2] / r)); let c = g.get(k); if (!c) g.set(k, c = []); c.push(a[q], a[q + 1], a[q + 2], q / 3); } });
+      return (x, y, z, fn) => {        /* fn(index, distance squared) for every point in the 27 cells round (x, y, z) */
+        const i0 = Math.floor(x / r), j0 = Math.floor(y / r), k0 = Math.floor(z / r);
+        for (let i = i0 - 1; i <= i0 + 1; i++) for (let j = j0 - 1; j <= j0 + 1; j++) for (let k = k0 - 1; k <= k0 + 1; k++) {
+          const c = g.get(key(i, j, k)); if (!c) continue;
+          for (let q = 0; q < c.length; q += 4) { const dx = c[q] - x, dy = c[q + 1] - y, dz = c[q + 2] - z; fn(c[q + 3], dx * dx + dy * dy + dz * dz); }
+        }
+      };
+    }
+    const R = 0.02, RP = 0.005;
+    Object.keys(JOIN).forEach((id) => {
+      const pt = parts[id]; if (!pt) return;
+      const near = grid(JOIN[id].filter((a) => parts[a]).map((a) => pointsOf(parts[a])), R);
+      const g = pt.mesh.geometry, pos = g.getAttribute('position'), n = pos.count, pts = pointsOf(pt);
+      /* one node per position (a vertex may be split for its normals) */
+      const node = new Int32Array(n), at = new Map(), xyz = [], depth = [], start = [];
+      for (let i = 0; i < n; i++) {
+        const x = pts[3 * i], y = pts[3 * i + 1], z = pts[3 * i + 2], k = x.toFixed(5) + ',' + y.toFixed(5) + ',' + z.toFixed(5);
+        let j = at.get(k);
+        if (j === undefined) {
+          j = depth.length; at.set(k, j); xyz.push(x, y, z); depth.push(PN.x * x + PN.y * y + PN.z * z);
+          let meets = false; near(x, y, z, (q, d2) => { if (d2 < R * R) meets = true; }); start.push(meets);
+        }
+        node[i] = j;
+      }
+      const m = depth.length, nb = Array.from({ length: m }, () => []);
+      const idx = g.index ? g.index.array : null, tri = idx ? idx.length : n;
+      for (let t = 0; t < tri; t += 3) {
+        const a = node[idx ? idx[t] : t], b = node[idx ? idx[t + 1] : t + 1], c = node[idx ? idx[t + 2] : t + 2];
+        nb[a].push(b, c); nb[b].push(a, c); nb[c].push(a, b);
+      }
+      const self = grid([new Float32Array(xyz)], RP);
+      for (let j = 0; j < m; j++) self(xyz[3 * j], xyz[3 * j + 1], xyz[3 * j + 2], (q, d2) => { if (q !== j && d2 < RP * RP) nb[j].push(q); });
+      const best = new Float64Array(m).fill(Infinity), heap = [];
+      const push = (v, j) => { heap.push([v, j]); let i = heap.length - 1; while (i > 0) { const p = (i - 1) >> 1; if (heap[p][0] <= heap[i][0]) break; [heap[p], heap[i]] = [heap[i], heap[p]]; i = p; } };
+      const pop = () => { const top = heap[0], last = heap.pop(); if (heap.length) { heap[0] = last; let i = 0; for (;;) { const l = 2 * i + 1, r = l + 1; let s = i; if (l < heap.length && heap[l][0] < heap[s][0]) s = l; if (r < heap.length && heap[r][0] < heap[s][0]) s = r; if (s === i) break; [heap[s], heap[i]] = [heap[i], heap[s]]; i = s; } } return top; };
+      for (let j = 0; j < m; j++) if (start[j]) { best[j] = depth[j]; push(depth[j], j); }
+      while (heap.length) {
+        const [v, j] = pop(); if (v > best[j]) continue;
+        for (const q of nb[j]) { const c = Math.max(v, depth[q]); if (c < best[q]) { best[q] = c; push(c, q); } }
+      }
+      /* a piece never joined to its chamber (none in this model) shows only while nothing is cut */
+      const join = new Float32Array(n); for (let i = 0; i < n; i++) join[i] = Math.min(best[node[i]], 100);
+      g.setAttribute('aJoin', new THREE.BufferAttribute(join, 1));
+    });
+    joinMs = performance.now() - t0;
+  })();
+  const Z_AXIS = new THREE.Vector3(0, 0, 1), CAM_L = new THREE.Vector3();
   function updateClip() {
-    const d = cutDepth(cutK);
+    const d = cutDepth(cutK); U_CUT_D.value = d;
     clipLocal.normal.copy(PN).negate(); clipLocal.constant = d;
     clipWorld.copy(clipLocal).applyMatrix4(heart.matrixWorld);
+    /* the cut faces lie on the plane; they are drawn only while you look at the open side */
+    const on = cutK > 0 && mode === 'explore' && !xray && PN.dot(heart.worldToLocal(CAM_L.copy(camera.position))) > d;
+    capQuads.forEach((q) => { q.position.copy(PN).multiplyScalar(d); q.quaternion.setFromUnitVectors(Z_AXIS, PN); });
+    capDepth.position.copy(PN).multiplyScalar(d); capDepth.quaternion.setFromUnitVectors(Z_AXIS, PN);
+    capObjs.forEach((o) => { o.visible = on; });
   }
 
   /* ---------------- views ----------------
@@ -812,7 +954,7 @@ void main() {
   }
   function turn(azDeg, polDeg) {
     if (tween) stepTween(tween.dur);                      /* a view still arriving: land it first */
-    spinning = null;
+    spinning = null; viewName = 'own';
     const p1 = orbitBy(THREE.MathUtils.degToRad(azDeg), THREE.MathUtils.degToRad(polDeg));
     if (reduced || opts.test) { camera.position.copy(p1); controls.update(); idStale = true; hideLabels(); relabelSoon(); kick(); return; }
     controls.enabled = false;
@@ -823,6 +965,7 @@ void main() {
   function spin(azRate, polRate) {
     if (!azRate && !polRate) { if (spinning) { spinning = null; idStale = true; relabelSoon(); } return; }
     if (tween) stepTween(tween.dur);
+    viewName = 'own';
     spinning = { az: THREE.MathUtils.degToRad(azRate), pol: THREE.MathUtils.degToRad(polRate) };
     hideLabels(); kick();
   }
@@ -920,8 +1063,10 @@ void main() {
       IW = iw; IH = ih; idBuf = new Uint8Array(iw * ih * 4);
     }
     const swapped = [];
+    capObjs.forEach((o) => { if (o.visible) { swapped.push([o, null, true]); o.visible = false; } });
     scene.traverse((o) => {
       if (!o.isMesh && !o.isInstancedMesh && !o.isLineSegments) return;
+      if (capObjs.indexOf(o) >= 0) return;
       if (o.isInstancedMesh || o.isLineSegments) { if (o.visible) { swapped.push([o, null, true]); o.visible = false; } return; }
       const pt = parts[o.name] || null; const vv = o.name && o.name.indexOf('pv_') === 0 ? VALVES[o.name.slice(3)] : null;
       const idm = pt ? pt.idMat : vv ? vv.idMat : null;
@@ -929,20 +1074,25 @@ void main() {
       swapped.push([o, o.material, false]); o.material = idm;
     });
     const bg = scene.background, env = scene.environment; scene.background = null; scene.environment = null;
-    const oldTarget = renderer.getRenderTarget(), oldClear = renderer.getClearAlpha();
-    renderer.setRenderTarget(idRT); renderer.setClearColor(0x000000, 0); renderer.clear();
-    if (xray && vgroup.visible) {
-      /* see-through walls: the walls first, then the moving valves over them, as you see them */
-      vgroup.visible = false; renderer.render(scene, camera); vgroup.visible = true;
-      renderer.clearDepth();
-      const vis = []; heart.children.forEach((c) => { if (c !== vgroup) { vis.push([c, c.visible]); c.visible = false; } });
-      renderer.autoClear = false; renderer.render(scene, camera); renderer.autoClear = true;
-      vis.forEach(([c, v]) => { c.visible = v; });
-    } else renderer.render(scene, camera);
-    renderer.readRenderTargetPixels(idRT, 0, 0, IW, IH, idBuf);
-    renderer.setRenderTarget(oldTarget); renderer.setClearColor(0x000000, oldClear);
-    scene.background = bg; scene.environment = env;
-    swapped.forEach(([o, m, hid]) => { if (hid) o.visible = true; else o.material = m; });
+    const oldTarget = renderer.getRenderTarget(), oldClear = renderer.getClearAlpha(), vis = []; let vgHid = false;
+    try {
+      renderer.setRenderTarget(idRT); renderer.setClearColor(0x000000, 0); renderer.clear();
+      if (xray && vgroup.visible) {
+        /* see-through walls: the walls first, then the moving valves over them, as you see them */
+        vgroup.visible = false; vgHid = true; renderer.render(scene, camera); vgroup.visible = true; vgHid = false;
+        renderer.clearDepth();
+        heart.children.forEach((c) => { if (c !== vgroup) { vis.push([c, c.visible]); c.visible = false; } });
+        renderer.autoClear = false; renderer.render(scene, camera);
+      } else renderer.render(scene, camera);
+      renderer.readRenderTargetPixels(idRT, 0, 0, IW, IH, idBuf);
+    } finally {
+      /* whatever happens in the pass, the heart gets back its own look (a throw here once left the
+         valves wearing their picking colours, and every later change of look failed) */
+      renderer.autoClear = true; if (vgHid) vgroup.visible = true; vis.forEach(([c, v]) => { c.visible = v; });
+      renderer.setRenderTarget(oldTarget); renderer.setClearColor(0x000000, oldClear);
+      scene.background = bg; scene.environment = env;
+      swapped.forEach(([o, m, hid]) => { if (hid) o.visible = true; else o.material = m; });
+    }
     idStale = false;
     return true;
   }
@@ -1090,7 +1240,7 @@ void main() {
     const hit = idAt(e.clientX - b.left, e.clientY - b.top);
     el.style.cursor = hit ? 'pointer' : 'grab';
   });
-  controls.addEventListener('start', () => { moving = true; hideLabels(); if (opts.onInteract) opts.onInteract(); });
+  controls.addEventListener('start', () => { moving = true; viewName = 'own'; hideLabels(); if (opts.onInteract) opts.onInteract(); });
   /* any change of camera, however it came about, takes the labels down; they are laid out again once
      the view is still, so a leader is never drawn to where a part used to be */
   controls.addEventListener('change', () => { idStale = true; if (labelsShown || labelTimer) hideLabels(); kick(); });
@@ -1164,6 +1314,7 @@ void main() {
       if (Object.values(GONE_AT).some((g) => (was >= g) !== (cutK >= g))) applyLook();
       if (was === 0 && cutK > 0 && viewName !== 'section') setView('section');
       kick(); relabelSoon(200);
+      return viewName;                /* the view it leaves you in: turned by you ('own') stays turned */
     },
     cutAt4ch: 0.5,
     setXray(on) { xray = !!on; applyLook(); },
@@ -1212,7 +1363,7 @@ void main() {
     },
     info() {
       const r = renderer.info;
-      return { frames, why, triangles: r.render.triangles, calls: r.render.calls, geometries: r.memory.geometries, textures: r.memory.textures, pixelRatio: renderer.getPixelRatio(), view: viewName, cut: cutK, mode, labels: lastLayout.slice() };
+      return { frames, why, triangles: r.render.triangles, calls: r.render.calls, geometries: r.memory.geometries, textures: r.memory.textures, pixelRatio: renderer.getPixelRatio(), view: viewName, cut: cutK, mode, joinMs: Math.round(joinMs), labels: lastLayout.slice() };
     },
     layoutNow() { layoutLabels(); return lastLayout.slice(); },
     /* checks only: put the camera anywhere (heart frame), and read a valve ring */
