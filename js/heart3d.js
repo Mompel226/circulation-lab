@@ -878,18 +878,25 @@ void main() {
     return pt.xmat;
   }
 
-  /* ---------------- a red ring round a valve set wrongly ----------------
-     After Run this stage in the valves tab, a valve set wrongly flashes red: the valve itself, and a ring
-     round it drawn over the blood and the walls, so it can be found at once. */
-  const flagRings = {};
+  /* ---------------- a red circle round a valve set wrongly ----------------
+     After Run this stage in the valves tab, a valve set wrongly flashes red: the valve itself, and a
+     circle round it drawn over the blood and the walls, so it can be found at once. The circle always
+     faces you and is centred on the middle of the valve, with a radius that takes in all of it, open or
+     shut, from any side (Daniel, 26 Sep: a ring lying in the valve's own ring looked like an ellipse
+     from the side, with the cusps outside it). */
+  const flagRings = {}, FLAG_C = {};
   Object.keys(VALVES).forEach((k) => {
-    const f = VALVES[k].f, rr = f.r * (VALVES[k].kind === 'av' ? 1.12 : 1.2);
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(rr, 0.007, 8, 72),
+    const f = VALVES[k].f, half = (f.depth || f.r) / 2;
+    FLAG_C[k] = f.c.clone().addScaledVector(f.n, half);
+    const R = Math.hypot(f.r, half) * 1.12 + 0.004;
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(R, 0.006, 8, 96),
       new THREE.MeshBasicMaterial({ color: 0xff3b3b, transparent: true, opacity: 0.9, depthTest: false, depthWrite: false, toneMapped: false }));
-    ring.position.copy(f.c); ring.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), f.n);
     ring.renderOrder = 30; ring.visible = false; ring.frustumCulled = false;
-    vgroup.add(ring); flagRings[k] = ring;
+    scene.add(ring); flagRings[k] = ring;
   });
+  function placeFlags() {          /* after the heart and the camera have moved for this frame */
+    flagged.forEach((k) => { const ring = flagRings[k]; if (!ring) return; ring.position.copy(FLAG_C[k]).applyMatrix4(heart.matrixWorld); ring.quaternion.copy(camera.quaternion); });
+  }
 
   /* ---------------- the tendons, for the scanned valves ----------------
      The scan has no tendons (chordae tendineae). With the moving valves (Blood flow, The valves) they
@@ -944,7 +951,7 @@ void main() {
     const pulse = reduced ? 1 : 0.5 + 0.5 * Math.sin(now / 1000 * Math.PI * 2 * 1.1);
     Object.keys(VALVES).forEach((k) => {
       const m = VALVES[k].mesh.material, on = flagged.has(k), ring = flagRings[k];
-      if (ring) { ring.visible = on; ring.material.opacity = 0.35 + 0.6 * pulse; }
+      if (ring) { ring.visible = on && vgroup.visible; ring.material.opacity = 0.35 + 0.6 * pulse; }
       if (on) { m.color.setHex(0xf06a6a); m.emissive.setHex(0xff2424); m.emissiveIntensity = 0.2 + 0.5 * pulse; }
       else if (m.userData.flagged) m.color.setHex(0xeee0c8);
       m.userData.flagged = on;
@@ -1480,7 +1487,7 @@ void main() {
     if (moved) busy = true;
     Object.keys(VALVES).forEach((k) => { if (VALVES[k].dirty && vgroup.visible) buildValve(k); });
     if (vgroup.visible || anim) drawBlood();
-    heart.updateMatrixWorld(true); updateClip();
+    heart.updateMatrixWorld(true); updateClip(); if (flagged.size) placeFlags();
     renderer.render(scene, camera);
     why = (tween ? 'tween ' : '') + (anim && !anim.paused ? 'anim ' : '') + (moved ? 'controls ' : '') + (moving ? 'moving' : '');
     inFrame = false;
@@ -1490,7 +1497,7 @@ void main() {
   }
   function renderNow() {
     Object.keys(VALVES).forEach((k) => { if (VALVES[k].dirty) buildValve(k); });
-    drawBlood(); heart.updateMatrixWorld(true); updateClip(); controls.update(); renderer.render(scene, camera);
+    drawBlood(); heart.updateMatrixWorld(true); updateClip(); controls.update(); if (flagged.size) placeFlags(); renderer.render(scene, camera);
   }
 
   function resize() {
