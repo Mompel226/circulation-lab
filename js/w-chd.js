@@ -519,7 +519,10 @@
       lastD = D; setLayout(D, ww); sp.paint(sp.time());
     }
     setLayout(700);
-    var ro = global.ResizeObserver ? new ResizeObserver(function () { if (!box.isConnected) { ro.disconnect(); return; } fit(); }) : null;
+    /* laid out a frame later: a layout changed inside the observer's own callback makes the browser
+       report a "ResizeObserver loop" */
+    var roF = 0;
+    var ro = global.ResizeObserver ? new ResizeObserver(function () { if (!box.isConnected) { ro.disconnect(); return; } if (!roF) roF = global.requestAnimationFrame(function () { roF = 0; fit(); }); }) : null;
     if (ro) { ro.observe(wrap); ro.observe(fig); }
     var stg = L.stage ? L.stage({ box: box, spec: spec, pack: pack, home: left, watch: function () { return box; },
       onPlace: function (inColumn) { packT.hidden = !inColumn; box.classList.toggle('ar--staged', inColumn); sp.compact(inColumn); lastD = 0; fit(); } }) : null;
@@ -731,7 +734,9 @@
     /* the card's own width decides its layout, not the window's */
     var ro = global.ResizeObserver ? new ResizeObserver(function () {
       if (!box.isConnected) { ro.disconnect(); return; }
-      var w = list.getBoundingClientRect().width; if (w) box.classList.toggle('pf--narrow', w < 560);
+      global.requestAnimationFrame(function () {
+        var w = list.getBoundingClientRect().width; if (w) box.classList.toggle('pf--narrow', w < 560);
+      });
     }) : null;
     if (ro) ro.observe(list);
     box.__onReset = function () { drag = null; if (ro) ro.disconnect(); };

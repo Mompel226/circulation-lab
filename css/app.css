@@ -182,6 +182,13 @@ h1,h2,h3,h4{margin:0;font-weight:700;line-height:1.25}
   background:linear-gradient(180deg,transparent 18%,#FFE98A 18%,#FFE98A 90%,transparent 90%);display:inline-block;padding:0 6px 0 4px;margin-left:-4px;
            margin-bottom:6px;display:flex;align-items:center;gap:7px}
 .golden p{margin:0;font-size:16px;font-weight:600}
+/* one sentence that must not be missed: the golden box's red and yellow, in its place in the text */
+.exam-list li.exam-alert{list-style:none;margin:10px 0 12px -22px;padding:12px 16px;background:#FFF3F0;border:2.4px solid #C94A3D;border-radius:var(--r-lg);
+  font-weight:600;color:#5A1A12;box-shadow:var(--shadow)}
+.exam-list li.exam-alert::marker{content:''}
+.exam-list li.exam-alert::before{display:none}
+.exam-alert__h{display:table;margin:0 0 6px -4px;padding:0 6px 0 4px;font-size:11.5px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:#A83A2E;
+  background:linear-gradient(180deg,transparent 14%,#FFE36B 14%,#FFE36B 92%,transparent 92%)}
 
 .kw dt .t,.kw dt .tc{font-weight:700}
 .exam-list > li{line-height:1.62}
@@ -939,6 +946,12 @@ picture{display:block;line-height:0}
 .curio__pic img{display:block;height:clamp(230px,30vw,340px);width:auto;max-width:100%;object-fit:contain;border-radius:var(--r-md);border:1px solid #E0D3BB;background:#EFE7D8}
 .curio__pcap{margin-top:6px;max-width:300px;font-size:12px;line-height:1.4;color:#4A4A4A;text-align:center}
 .curio__pcap .curio__credit{display:block;margin-top:2px}
+/* one picture under the words: the card's full width, its caption as wide (a family tree or a labelled
+   drawing is read, not glanced at) */
+.curio__pics .curio__pic:only-child{flex:1 1 100%;align-items:stretch}
+.curio__pics .curio__pic:only-child picture{width:100%}
+.curio__pics .curio__pic:only-child img{width:100%;height:auto}
+.curio__pics .curio__pic:only-child .curio__pcap{max-width:none;text-align:left}
 /* a picture on the right, the words round it (side: 'right') */
 .curio__fig--right{float:right;width:min(44%,330px);margin:2px 0 10px 18px}
 .curio__fig--right.curio__fig--upright{width:min(34%,250px)}
