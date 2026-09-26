@@ -230,3 +230,13 @@
 .ec__names .lb__dot{fill:#3A2A28;stroke:#FFFFFF}
 .ec__names .lb__txt{fill:#2A1B19;stroke:#FBF8F2}
 .ec__nlist{margin:8px 0 0;padding-left:20px;font-size:14px;line-height:1.5}
+
+/* standing in the plate's column (CircLearn.stage; Daniel, 26 Sep: "any animations move them to the left and
+   then the text and the buttons on the right"): the drawing fills the column, as tall as it can be without
+   losing its shape, and the words of each step stay in the list on the right */
+.sim > .ow__pack,.sim > .pu__pack,.sim > .ec__pack{flex:1;min-height:0;display:flex;flex-direction:column;gap:6px}
+.sim > .ow__pack .ow__fig,.sim > .pu__pack .pu__fig,.sim > .ec__pack .ec__fig{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;margin:0}
+.sim > .ow__pack .ow__svg,.sim > .pu__pack .pu__svg,.sim > .ec__pack .ec__svg{flex:0 1 auto;min-height:0;width:100%;height:auto;max-height:100%}
+.sim > .ow__pack .sp__now,.sim > .pu__pack .sp__now,.sim > .ec__pack .sp__now{display:none!important}
+.sim > .ow__pack .ow__legend{margin-bottom:6px}
+.sim > .ec__pack .ec__key{margin-top:6px}

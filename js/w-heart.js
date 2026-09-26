@@ -224,17 +224,25 @@
     box.appendChild(sp.bar);
     var wrap = h('div', 'cy__wrap');
     fig.appendChild(sp.now);
-    var left = h('div', 'cy__left'); left.appendChild(top); left.appendChild(fig);
+    /* on a wide screen the drawing stands in the plate's column; its read-outs and the steps stay here */
+    var pack = h('div', 'cy__pack');
+    var packT = h('p', 'stg__title', esc(spec.title || 'One beat, one step at a time')); packT.hidden = true;
+    pack.appendChild(packT); pack.appendChild(fig);
+    var left = h('div', 'cy__left'); left.appendChild(top); left.appendChild(pack);
     wrap.appendChild(left); wrap.appendChild(sp.list);
     box.appendChild(wrap);
     box.appendChild(h('p', 'widget__note', 'Red is oxygenated blood and blue is deoxygenated blood, as on every diagram. Both sides of the heart go through each step at the same moment. The real beat is about fifteen times faster.'));
 
     /* the drawing gets smaller on a phone, so its lettering gets relatively bigger */
     /* on a phone the drawing is cropped to the heart and the labels become pins (CircLearn.pinLabels) */
+    var staged = false;
     function fit() {
       var ww = wrap.getBoundingClientRect().width; if (!ww) return;
-      wrap.classList.toggle('cy--stack', ww < 1000);   /* the list goes under the drawing unless there is room for both at full size */
-      var w = svg.getBoundingClientRect().width; if (!w) return;
+      /* the list goes under the drawing unless there is room for both at full size; standing in the
+         plate's column, the drawing has left, and each step keeps its words in the list */
+      wrap.classList.toggle('cy--stack', !staged && ww < 1000);
+      var rb = svg.getBoundingClientRect(), w = rb.width; if (!w) return;
+      if (staged && rb.height) w = Math.min(w, rb.height * VB.w / VB.h);     /* held back by the height there */
       var nar = w < 520, f;
       if (nar) {
         var NW = 568, k2 = w / NW;
@@ -255,8 +263,11 @@
       if (f !== fontPx || nar !== narrow) { fontPx = f; narrow = nar; sp.paint(sp.time()); }
     }
     var ro = global.ResizeObserver ? new ResizeObserver(function () { if (!box.isConnected) { ro.disconnect(); return; } fit(); }) : null;
-    if (ro) ro.observe(wrap);
-    box.__onReset = function () { sp.stop(); if (ro) ro.disconnect(); };
+    if (ro) { ro.observe(wrap); ro.observe(fig); }
+    var stg = L.stage ? L.stage({ box: box, spec: spec, pack: pack, home: left, watch: function () { return box; },
+      onPlace: function (inColumn) { staged = inColumn; packT.hidden = !inColumn; box.classList.toggle('cy--staged', inColumn); fit(); } }) : null;
+    box.__onMove = function () { if (stg) stg.mount(); };
+    box.__onReset = function () { sp.stop(); if (ro) ro.disconnect(); if (stg) stg.detach(); };
     box.__seek = function (t) { return sp.seek(t); };
     sp.paint(0);
     return box;

@@ -153,7 +153,14 @@
   }
   /* the lettering of a drawing shown small is made larger in drawing units, so that on screen it
      never falls under about 12.5 px (the rule for phones); lo and hi keep it sensible */
-  function fontFor(svg, vbW, lo, hi) { var w = svg.getBoundingClientRect().width; return w ? Math.round(clamp(12.5 / (w / vbW), lo, hi)) : 0; }
+  function fontFor(svg, vbW, lo, hi) {
+    var r = svg.getBoundingClientRect(), vb = svg.viewBox && svg.viewBox.baseVal;
+    if (!r.width) return 0;
+    var k = r.width / vbW;
+    /* standing in the plate's column the drawing is held back by the height, not the width */
+    if (vb && vb.width && vb.height && r.height) k = Math.min(k, r.height / vb.height * vb.width / vbW);
+    return Math.round(clamp(12.5 / k, lo, hi));
+  }
   function observe(el, fn) {
     if (!global.ResizeObserver) return null;
     var ro = new ResizeObserver(function () { if (!el.isConnected) { ro.disconnect(); return; } fn(); });
@@ -300,7 +307,12 @@
     var gProg = q('ow__progress'), pWall = q('ow__wall'), pLumen = q('ow__lumen'), pMus = q('ow__muscle'), pTense = q('ow__tense'),
         gCells = q('ow__cells'), gValves = q('ow__valves'), gArrows = q('ow__arrows'), pStart = q('ow__start'), gMark = q('ow__mark'), gLab = q('ow__labels');
     fig.appendChild(svg);
-    wrap.appendChild(fig);
+    /* on a wide screen the drawing stands in the plate's column and its buttons and results stay here
+       (Daniel, 26 Sep: "all animations ... should then be shown on the left as you scroll down") */
+    var pack = h('div', 'ow__pack');
+    var packT = h('p', 'stg__title', esc(spec.title || 'A pump with and without valves')); packT.hidden = true;
+    pack.appendChild(packT); pack.appendChild(fig);
+    wrap.appendChild(pack);
 
     /* beside it: the valves in words, the two stages, the results */
     var side = h('div', 'ow__side');
@@ -487,16 +499,20 @@
     bV.addEventListener('click', function () { if (mode !== 'valves') setMode('valves'); });
     bN.addEventListener('click', function () { if (mode !== 'none') setMode('none'); });
 
+    var staged = false;
     function fit() {
       var ww = wrap.getBoundingClientRect().width;
-      wrap.classList.toggle('ow--stack', ww < 900);
+      wrap.classList.toggle('ow--stack', staged || ww < 900);
       wrap.classList.toggle('ow--narrow', ww < 540);
       var f = fontFor(svg, G.W, 16, 34);           /* measured after the layout has changed */
       if (f && f !== fontPx) { fontPx = f; paint(); }
     }
     var ro = observe(wrap, fit);
     if (ro) ro.observe(svg);
-    box.__onReset = function () { running = false; unraf(rafId); clearTimeout(holdTimer); if (ro) ro.disconnect(); };
+    var stg = L.stage ? L.stage({ box: box, spec: spec, pack: pack, home: wrap, before: function () { return side; }, watch: function () { return box; },
+      onPlace: function (inColumn) { staged = inColumn; packT.hidden = !inColumn; fit(); } }) : null;
+    box.__onMove = function () { if (stg) stg.mount(); };
+    box.__onReset = function () { running = false; unraf(rafId); clearTimeout(holdTimer); if (ro) ro.disconnect(); if (stg) stg.detach(); };
     /* t >= 0: t squeezes with valves; t < 0: |t| squeezes without. x.5 = the end of a squeeze. */
     box.__seek = function (t) {
       running = false; unraf(rafId); clearTimeout(holdTimer); go.disabled = bV.disabled = bN.disabled = false;
@@ -942,7 +958,10 @@
     var u = 'pu' + (++UID);
     svg.innerHTML = puArt(u) + '<g class="pu__labels"></g>';
     fig.appendChild(svg);
-    wrap.appendChild(fig);
+    var pack = h('div', 'pu__pack');
+    var packT = h('p', 'stg__title', esc(spec.title || 'Count a pulse')); packT.hidden = true;
+    pack.appendChild(packT); pack.appendChild(fig);
+    wrap.appendChild(pack);
     var gLab = svg.querySelector('.pu__labels'), art = svg.querySelector('.pu__art'), artW = svg.querySelector('.pu__art-wide'),
         throb = svg.querySelector('.pu__throb'), rings = svg.querySelector('.pu__rings'), fingers = svg.querySelector('.pu__fingers');
 
@@ -1057,9 +1076,10 @@
       show(0); start.focus(); loop();
     });
 
+    var staged = false;
     function fit() {
       var ww = wrap.getBoundingClientRect().width;
-      wrap.classList.toggle('pu--stack', ww < 820);
+      wrap.classList.toggle('pu--stack', staged || ww < 820);
       wrap.classList.toggle('pu--narrow', ww < 500);
       var f = fontFor(svg, PU_W, 17, 36);          /* measured after the layout has changed */
       if (f && f !== fontPx) { fontPx = f; labels(); }
@@ -1068,7 +1088,10 @@
     if (ro) ro.observe(svg);
     var io = global.IntersectionObserver ? new IntersectionObserver(function (es) { visible = es[0].isIntersecting; if (visible) loop(); }) : null;
     if (io) io.observe(svg);
-    box.__onReset = function () { unraf(rafId); rafId = null; if (ro) ro.disconnect(); if (io) io.disconnect(); };
+    var stg = L.stage ? L.stage({ box: box, spec: spec, pack: pack, home: wrap, before: function () { return panel; }, watch: function () { return box; },
+      onPlace: function (inColumn) { staged = inColumn; packT.hidden = !inColumn; fit(); } }) : null;
+    box.__onMove = function () { if (stg) stg.mount(); };
+    box.__onReset = function () { unraf(rafId); rafId = null; if (ro) ro.disconnect(); if (io) io.disconnect(); if (stg) stg.detach(); };
     /* t: seconds into the count, every beat so far pressed; t >= 15: the result */
     box.__seek = function (t) {
       unraf(rafId); rafId = null;
@@ -1137,7 +1160,11 @@
       [5.5, 10.5, 15.5, 20.5].map(function (v) { return '<line x1="' + v + '" y1=".5" x2="' + v + '" y2="25.5" class="ec__g"/><line x1=".5" y1="' + v + '" x2="25.5" y2="' + v + '" class="ec__g"/>'; }).join('') +
       '<rect x=".5" y=".5" width="25" height="25" fill="none" class="ec__G"/></svg>';
     fig.appendChild(h('figcaption', 'ec__key', '<span>' + sq1 + '<b>1 small square</b> = 0.04 s</span><span>' + sq5 + '<b>1 large square</b> = 0.2 s</span><span>The paper moves at 25 mm each second.</span>'));
-    box.appendChild(fig);
+    /* the strip stands in the plate's column on a wide screen; the answer box and the names stay here */
+    var pack = h('div', 'ec__pack');
+    var packT = h('p', 'stg__title', esc(spec.title || 'Read an ECG')); packT.hidden = true;
+    pack.appendChild(packT); pack.appendChild(fig);
+    box.appendChild(pack);
     var msg = h('p', 'ec__msg'); msg.setAttribute('aria-live', 'polite');
     box.appendChild(msg);
     var calc = h('div', 'ec__calc');
@@ -1280,7 +1307,10 @@
       if (f && f !== fontPx) { fontPx = f; draw(); if (!names.hidden) drawNames(); }
     }
     var ro = observe(fig, fit);
-    box.__onReset = function () { if (ro) ro.disconnect(); };
+    var stg = L.stage ? L.stage({ box: box, spec: spec, pack: pack, home: box, before: function () { return msg; }, watch: function () { return box; },
+      onPlace: function (inColumn) { packT.hidden = !inColumn; fit(); } }) : null;
+    box.__onMove = function () { if (stg) stg.mount(); };
+    box.__onReset = function () { if (ro) ro.disconnect(); if (stg) stg.detach(); };
     /* 0 plain · 1 one spike · 2 two spikes · 3 a wrong answer (time x 60) · 4 the right answer · 5 the waves named */
     box.__seek = function (t) {
       var S = STRIPS[cur], rs = rsIn(S), k = Math.floor(t);

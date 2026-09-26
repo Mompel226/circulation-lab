@@ -207,13 +207,18 @@
     var svg = document.createElementNS(NS, 'svg');
     svg.setAttribute('class', cls + '__svg'); svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', aria);
     fig.appendChild(svg);
-    return { box: box, read: read, fig: fig, svg: svg,
+    return { box: box, read: read, fig: fig, svg: svg, spec: spec, title: spec.title || title,
              pill: function (k, text, tone) { var p = read.querySelector('[data-k="' + k + '"]'), i = p.querySelector('i'); if (i.textContent !== text) i.textContent = text; p.className = cls + '__pill is-' + tone; } };
   }
   function mount(S, sp, cls, notes, setLayout) {
     S.box.appendChild(sp.bar);
     var wrap = h('div', cls + '__wrap');
-    var left = h('div', cls + '__left'); left.appendChild(S.read); left.appendChild(S.fig);
+    /* on a wide screen the drawing stands in the plate's column; its read-outs and the steps stay here
+       (Daniel, 26 Sep: "any animations move them to the left and then the text and the buttons on the right") */
+    var pack = h('div', cls + '__pack');
+    var packT = h('p', 'stg__title', L.esc(S.title)); packT.hidden = true;
+    pack.appendChild(packT); pack.appendChild(S.fig);
+    var left = h('div', cls + '__left'); left.appendChild(S.read); left.appendChild(pack);
     S.fig.appendChild(sp.now);
     wrap.appendChild(left); wrap.appendChild(sp.list);
     S.box.appendChild(wrap);
@@ -228,8 +233,11 @@
     }
     setLayout(700, false);
     var ro = global.ResizeObserver ? new ResizeObserver(function () { if (!S.box.isConnected) { ro.disconnect(); return; } fit(); }) : null;
-    if (ro) ro.observe(wrap);
-    S.box.__onReset = function () { sp.stop(); if (ro) ro.disconnect(); };
+    if (ro) { ro.observe(wrap); ro.observe(S.fig); }
+    var stg = L.stage ? L.stage({ box: S.box, spec: S.spec, pack: pack, home: left, watch: function () { return S.box; },
+      onPlace: function (inColumn) { packT.hidden = !inColumn; S.box.classList.toggle(cls + '--staged', inColumn); lastD = 0; fit(); } }) : null;
+    S.box.__onMove = function () { if (stg) stg.mount(); };
+    S.box.__onReset = function () { sp.stop(); if (ro) ro.disconnect(); if (stg) stg.detach(); };
     S.box.__seek = function (t) { fit(); return sp.seek(t); };
     sp.paint(0);
     return S.box;

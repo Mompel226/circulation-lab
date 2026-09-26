@@ -485,7 +485,11 @@
     var sp = L.stepper({ steps: readerSteps(AR_STEPS, R), end: R[R.length - 1], render: function (t) { render(clock(t)); } });
     box.appendChild(sp.bar);
     var wrap = h('div', 'ar__wrap');
-    var left = h('div', 'ar__left'); left.appendChild(read); left.appendChild(fig);
+    /* on a wide screen the drawing stands in the plate's column; its read-outs and the steps stay here */
+    var pack = h('div', 'ar__pack');
+    var packT = h('p', 'stg__title', esc(spec.title || 'Inside a coronary artery')); packT.hidden = true;
+    pack.appendChild(packT); pack.appendChild(fig);
+    var left = h('div', 'ar__left'); left.appendChild(read); left.appendChild(pack);
     fig.appendChild(sp.now);
     wrap.appendChild(left); wrap.appendChild(sp.list);
     box.appendChild(wrap);
@@ -516,8 +520,11 @@
     }
     setLayout(700);
     var ro = global.ResizeObserver ? new ResizeObserver(function () { if (!box.isConnected) { ro.disconnect(); return; } fit(); }) : null;
-    if (ro) ro.observe(wrap);
-    box.__onReset = function () { sp.stop(); if (ro) ro.disconnect(); };
+    if (ro) { ro.observe(wrap); ro.observe(fig); }
+    var stg = L.stage ? L.stage({ box: box, spec: spec, pack: pack, home: left, watch: function () { return box; },
+      onPlace: function (inColumn) { packT.hidden = !inColumn; box.classList.toggle('ar--staged', inColumn); lastD = 0; fit(); } }) : null;
+    box.__onMove = function () { if (stg) stg.mount(); };
+    box.__onReset = function () { sp.stop(); if (ro) ro.disconnect(); if (stg) stg.detach(); };
     box.__seek = function (t) { fit(); return sp.seek(t); };
     sp.paint(0);
     return box;

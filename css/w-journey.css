@@ -125,3 +125,8 @@
 
 /* in the simulation column beside the questions there is no card round the widget */
 .sim .jn__plate{border-radius:12px}
+
+/* standing in the plate's column (CircLearn.stage): the two drawings, below the title, in the middle of the
+   column; the buttons, the route, the words and the real picture stay on the right */
+.sim > .jn__pack{flex:1;min-height:0;display:flex;flex-direction:column;gap:6px;overflow:auto}
+.sim > .jn__pack .jn__plate{margin:auto 0}

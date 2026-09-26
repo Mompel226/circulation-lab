@@ -256,14 +256,22 @@
     box.appendChild(sp.bar);
     var wrap = h('div', 'mx__wrap');
     fig.appendChild(sp.now);
-    wrap.appendChild(fig); wrap.appendChild(sp.list);
+    /* on a wide screen the drawing stands in the plate's column; the steps stay here */
+    var pack = h('div', 'mx__pack');
+    var packT = h('p', 'stg__title', esc(spec.title || 'Why your heart rate rises')); packT.hidden = true;
+    pack.appendChild(packT); pack.appendChild(fig);
+    wrap.appendChild(pack); wrap.appendChild(sp.list);
     box.appendChild(wrap);
     box.appendChild(h('p', 'widget__note', 'A drawing, not a photograph. The molecules are shown hugely enlarged, and far fewer than the real billions. Blood is drawn red when it is oxygenated and blue when it is deoxygenated, as on every diagram; real blood is never blue. The story is slowed down: a real heart rate rises within a minute of starting to exercise.'));
 
+    var staged = false;
     function fit() {
       var ww = wrap.getBoundingClientRect().width; if (!ww) return;
-      wrap.classList.toggle('mx--stack', ww < 1000);   /* the list goes under the drawing unless there is room for both at full size */
-      var w = svg.getBoundingClientRect().width; if (!w) return;
+      /* the list goes under the drawing unless there is room for both at full size; standing in the
+         plate's column, the drawing has left, and each step keeps its words in the list */
+      wrap.classList.toggle('mx--stack', !staged && ww < 1000);
+      var rb = svg.getBoundingClientRect(), w = rb.width; if (!w) return;
+      if (staged && rb.height) w = Math.min(w, rb.height * VB.w / VB.h);     /* held back by the height there */
       var nar = w < 520, f;
       if (nar) {
         var NW = 640;
@@ -277,8 +285,11 @@
       if (f !== fontPx || nar !== narrow) { fontPx = f; narrow = nar; frame(); sp.paint(sp.time()); }
     }
     var ro = global.ResizeObserver ? new ResizeObserver(function () { if (!box.isConnected) { ro.disconnect(); return; } fit(); }) : null;
-    if (ro) ro.observe(wrap);
-    box.__onReset = function () { sp.stop(); if (ro) ro.disconnect(); };
+    if (ro) { ro.observe(wrap); ro.observe(fig); }
+    var stg = L.stage ? L.stage({ box: box, spec: spec, pack: pack, home: wrap, before: function () { return sp.list; }, watch: function () { return box; },
+      onPlace: function (inColumn) { staged = inColumn; packT.hidden = !inColumn; box.classList.toggle('mx--staged', inColumn); fit(); } }) : null;
+    box.__onMove = function () { if (stg) stg.mount(); };
+    box.__onReset = function () { sp.stop(); if (ro) ro.disconnect(); if (stg) stg.detach(); };
     box.__seek = function (t) { return sp.seek(t); };
     sp.paint(0);
     return box;
