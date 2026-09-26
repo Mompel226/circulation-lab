@@ -1571,6 +1571,16 @@
     function placeRead(inColumn) {
       if (inColumn) { if (read.parentNode !== left) left.insertBefore(read, key); }
       else if (read.parentNode !== pack) pack.appendChild(read);
+      /* the steps as chips with the step's words under them, above the readings and the key (Daniel, 26 Sep:
+         "make the different stages smaller, and more compacted ... But you see the text on the right") */
+      sp.compact(inColumn);
+      if (inColumn) {
+        if (sp.list.nextSibling !== cap) { wrapEl.insertBefore(sp.list, left); wrapEl.insertBefore(cap, left); }
+      } else {
+        if (cap.parentNode !== pack) pack.insertBefore(cap, fig.nextSibling);
+        if (sp.list.parentNode !== wrapEl || sp.list.previousSibling !== left) wrapEl.appendChild(sp.list);
+      }
+      cap.classList.toggle('bf__cap--panel', inColumn);
     }
     var stg = L.stage ? L.stage({ box: box, spec: spec, pack: pack, home: left, before: function () { return key; }, watch: function () { return box; },
       onPlace: function (inColumn) { packT.hidden = !inColumn; box.classList.toggle('bf--staged', inColumn); placeRead(inColumn); requestAnimationFrame(fit); } }) : null;

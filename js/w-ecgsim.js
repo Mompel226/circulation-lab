@@ -215,7 +215,7 @@
     box.appendChild(L.head(spec.title || 'Why an ECG has peaks and troughs', spec.ask || '', 'Press play'));
     box.appendChild(h('p', 'es__beyond', '<b>Beyond the syllabus.</b> 0610 asks you to know that an ECG records the heart’s electrical activity, not why its line rises and falls. Here for anyone who wants to see it.'));
     /* the one rule */
-    box.appendChild(h('div', 'es__rule',
+    var ruleEl; box.appendChild(ruleEl = h('div', 'es__rule',
       '<b>How an ECG draws its line</b>' +
       '<span><i class="es__up" aria-hidden="true">▲</i> The signal moves <b>towards</b> the + electrode: the line <b>rises</b> (a peak).</span>' +
       '<span><i class="es__dn" aria-hidden="true">▼</i> It moves <b>away</b> from the + electrode: the line <b>falls</b> (a trough).</span>' +
@@ -512,7 +512,13 @@
     drawLead(); sp.paint(0);
     /* in the plate's column beside the buttons, on a wide screen (CircLearn.stage) */
     var stg = L.stage ? L.stage({ box: box, spec: spec, pack: pack, home: home, watch: function () { return box; },
-      onPlace: function (inColumn) { packT.hidden = !inColumn; box.classList.toggle('es--staged', inColumn); } }) : null;
+      onPlace: function (inColumn) { packT.hidden = !inColumn; box.classList.toggle('es--staged', inColumn); sp.compact(inColumn); order(inColumn); } }) : null;
+    /* with the drawing on the left, the buttons, the steps and the step's words come first on the right, then
+       the choice of lead and the rule, so the words are never below the screen while the heart is playing */
+    function order(inColumn) {
+      if (inColumn) { box.insertBefore(barSlot, ruleEl); box.insertBefore(listSlot, ruleEl); box.insertBefore(pick, ruleEl); }
+      else { box.insertBefore(ruleEl, barSlot); box.insertBefore(home, barSlot); box.insertBefore(pick, barSlot); }
+    }
     box.__onMove = function () { if (stg) stg.mount(); };
     box.__onReset = function () { if (sp) sp.stop(); if (stg) stg.detach(); };
     /* for the headless checks: any moment of the beat in any lead */

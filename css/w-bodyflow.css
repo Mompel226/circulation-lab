@@ -77,6 +77,15 @@
 .bf__note{margin-top:12px}
 @media (max-width:540px){ .bf__meter{grid-template-columns:minmax(104px,auto) minmax(0,1fr)} .bf__beyond{margin-left:6px} }
 
+/* ---------- standing in the plate's column: its own words panel under the step chips (it carries the
+   Beyond-the-syllabus line), so the step player's plain panel is not shown ---------- */
+.bf .sp__now--panel{display:none!important}
+.bf__cap.bf__cap--panel{display:flex;gap:10px;align-items:flex-start;margin-top:10px;padding:10px 13px 11px;border:1px solid var(--edge);border-left:4px solid var(--k-heart,#A3213A);
+  border-radius:10px;background:#fff;color:var(--ink)}
+.bf__cap--panel .bf__capt{font-size:15px;line-height:1.55}
+.bf.is-staged .bf__wrap > .sp__steps{margin-top:0}
+.bf.is-staged .bf__left{margin-top:12px}
+
 /* ---------- a narrow screen: the step on screen, repeated under the drawing ---------- */
 .bf__cap{display:none}
 .bf--stack .bf__cap{display:flex;gap:10px;align-items:flex-start;margin-top:8px;padding:9px 12px 10px;border:1.5px solid var(--k-heart,#A3213A);border-radius:var(--r);background:#FBECEF;color:var(--ink)}
