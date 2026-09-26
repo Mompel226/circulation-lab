@@ -10,7 +10,10 @@
        opts.end     the last moment (s)
        opts.render  render(t) — must be a pure function of t, so any moment can be drawn on demand
        opts.rate    optional: a function returning how fast time runs (1 normal, 2 twice as fast)
-       returns { bar, list, now, paint(t), seek(t), stop(), isStill() }
+       returns { bar, list, now, paint(t), seek(t), stop(), isStill(), compact(on) }
+       compact(true): the steps become small chips, and the step's words stand in a panel right under
+       them, for a widget whose drawing stands in the plate's column (Daniel, 26 Sep: "make the different
+       stages smaller, and more compacted ... you can still click them. But you see the text on the right")
 
    CircLearn.labels(opts)   labels in two margins, each at its own part's height, joined to it by a
                             ruled horizontal leader. Horizontal leaders at different heights cannot
@@ -75,7 +78,8 @@
       count.textContent = started ? 'Step ' + (k + 1) + ' of ' + STEPS.length : STEPS.length + ' steps';
       /* the step's words under the drawing: read aloud to a screen reader, and shown when the
          step list is stacked below the drawing (a narrow widget), so they are never a scroll away */
-      var nt = started ? '<b class="sp__nowh">Step ' + (k + 1) + ' of ' + STEPS.length + ' · ' + esc(STEPS[k].h) + '</b> ' + L.mk(STEPS[k].p) : '<b class="sp__nowh">Press Play</b> to start. Each step stops until you press Next step.';
+      var nt = started ? '<b class="sp__nowh">Step ' + (k + 1) + ' of ' + STEPS.length + ' · ' + esc(STEPS[k].h) + '</b>' +
+        (STEPS[k].tag ? '<span class="sp__tag sp__nowtag">' + esc(STEPS[k].tag) + '</span> ' : ' ') + L.mk(STEPS[k].p) : '<b class="sp__nowh">Press Play</b> to start. Each step stops until you press Next step.';
       if (now.getAttribute('data-k') !== String(started ? k : -1)) { now.innerHTML = nt; now.setAttribute('data-k', String(started ? k : -1)); }
       sync();
     }
@@ -118,8 +122,22 @@
       var from = !started || T >= END - 1e-3 ? 0 : atStepEnd() ? STEPS[stepAt(T) + 1].t : T;
       run(from, END);
     });
+    /* the words go under the chips, and come back to wherever the widget put them */
+    var nowHome = null, nowNext = null;
+    function compact(on) {
+      on = !!on;
+      list.classList.toggle('sp__steps--chips', on);
+      now.classList.toggle('sp__now--panel', on);
+      if (on) {
+        if (!nowHome && now.parentNode) { nowHome = now.parentNode; nowNext = now.nextSibling; }
+        if (list.parentNode && list.nextSibling !== now) list.parentNode.insertBefore(now, list.nextSibling);
+      } else if (nowHome) {
+        nowHome.insertBefore(now, nowNext && nowNext.parentNode === nowHome ? nowNext : null);
+        nowHome = null; nowNext = null;
+      }
+    }
     return {
-      bar: bar, list: list, now: now, paint: paint, stop: stop, isStill: still,
+      bar: bar, list: list, now: now, paint: paint, stop: stop, isStill: still, compact: compact,
       time: function () { return T; },
       seek: function (t) { stop(); started = t > 0; stopAt = null; T = Math.max(0, Math.min(END, t)); paint(T); return STEPS.map(function (s) { return s.t; }); }
     };

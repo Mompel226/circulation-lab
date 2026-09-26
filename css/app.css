@@ -1334,6 +1334,18 @@ picture{display:block;line-height:0}
 .sp__step.is-on .sp__num{background:var(--k-heart);color:#fff}
 .sp__step.is-done .sp__stepb{border-color:#A9D6BA;background:var(--green-tint)}
 .sp__step.is-done .sp__num{background:var(--green-2);color:#fff}
+/* a widget whose drawing stands in the plate's column (stepper.compact): the steps are small chips, several
+   to a row, still pressed to play a step, and the step's words stand in a panel right under them, so the
+   reader never scrolls between the steps and the words (Daniel, 26 Sep, on "Follow one red blood cell") */
+.sp__steps.sp__steps--chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:6px}
+.sp__steps--chips .sp__stepb{height:100%;align-items:center;gap:7px;padding:6px 9px}
+.sp__steps--chips .sp__num{width:19px;height:19px;font-size:10.5px;margin-top:0}
+.sp__steps--chips .sp__txt{font-size:12.5px;line-height:1.3;padding-top:0}
+.sp__steps--chips .sp__p,.sp__steps--chips .sp__tag,.sp__steps--chips .bf__beyond{display:none!important}
+.sp__now.sp__now--panel{position:static;width:auto;height:auto;overflow:visible;clip:auto;white-space:normal;margin:10px 0 0;padding:11px 14px 12px;
+  background:#fff;border:1px solid var(--edge);border-left:4px solid var(--k-heart);border-radius:10px;font-size:15px;line-height:1.55;color:#2A2A2A}
+.sp__now--panel .sp__nowh{margin-bottom:4px}
+.sp__nowtag{margin-right:6px}
 
 /* labels ruled level, on a dark drawing (js/w-common.js labels) */
 .lb__halo{fill:none;stroke:#0E1920;stroke-opacity:.8;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}

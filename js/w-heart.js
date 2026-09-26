@@ -265,7 +265,7 @@
     var ro = global.ResizeObserver ? new ResizeObserver(function () { if (!box.isConnected) { ro.disconnect(); return; } fit(); }) : null;
     if (ro) { ro.observe(wrap); ro.observe(fig); }
     var stg = L.stage ? L.stage({ box: box, spec: spec, pack: pack, home: left, watch: function () { return box; },
-      onPlace: function (inColumn) { staged = inColumn; packT.hidden = !inColumn; box.classList.toggle('cy--staged', inColumn); fit(); } }) : null;
+      onPlace: function (inColumn) { staged = inColumn; packT.hidden = !inColumn; box.classList.toggle('cy--staged', inColumn); sp.compact(inColumn); fit(); } }) : null;
     box.__onMove = function () { if (stg) stg.mount(); };
     box.__onReset = function () { sp.stop(); if (ro) ro.disconnect(); if (stg) stg.detach(); };
     box.__seek = function (t) { return sp.seek(t); };

@@ -577,8 +577,8 @@
         { kind: 'atria', h: 'The atria contract again', p: 'Both atria contract. The left atrium pushes the blood into the _left ventricle_. The _septum_ keeps this oxygenated blood apart from the deoxygenated blood on the right.',
           path: [[412, 289], [412, 322], [406, 364]], P0: .07, P1: .09, O0: 1, O1: 1 },
         { kind: 'vent', h: 'The ventricles contract again', p: 'Both ventricles contract. The left ventricle has the thickest muscular wall, so it pumps the blood into the _aorta_ at high pressure. The heart has raised the pressure a second time, and the cell has passed through the heart twice.',
-          path: [[406, 364], [418, 382], [430, 393], [448, 398], [462, 400], [474, 401], [481, 406], [484, 416], [484, 560], [482, 568], [477, 573], [469, 575]],
-          exit: [440, 396], P0: .09, Pk: .96, P1: .88, O0: 1, O1: 1 },
+          path: [[406, 364], [398, 352], [388, 342], [376, 338], [367, 330], [367, 300], [367, 262], [367, 172], [369, 165], [374, 161], [380, 160], [498, 160], [504, 161], [508, 165], [510, 172], [510, 560], [508, 568], [503, 573], [496, 575], [484, 575], [469, 575]],
+          exit: [367, 322], P0: .09, Pk: .96, P1: .88, O0: 1, O1: 1 },
         { kind: 'cap', h: 'Through the body capillaries', p: 'The blood reaches the body at high pressure, so it flows fast. In a capillary, oxygen diffuses out of the blood into the respiring cells. The blood becomes deoxygenated, and its pressure falls.',
           path: [[469, 575], [277, 575]], P0: .88, P1: .18, O0: 1, O1: 0 },
         { kind: 'vessel', h: 'Back to the right atrium', p: 'The blood returns to the right atrium in the _vena cava_, at very low pressure. That is one complete circuit of the body, and the cell has passed through the heart twice. This is a _double circulation_.',
@@ -594,7 +594,7 @@
         { id: 'heart', text: 'heart', x: 455, y: 274, side: 'R' },
         { id: 'la', text: 'left atrium', x: 426, y: 302, side: 'R' },
         { id: 'lv', text: 'left ventricle', x: 414, y: 360, side: 'R' },
-        { id: 'ao', text: 'aorta', x: 484, y: 470, side: 'R' },
+        { id: 'ao', text: 'aorta', x: 510, y: 470, side: 'R' },
         { id: 'body', text: 'body', x: 466, y: 602, side: 'R' }
       ]
     }
@@ -676,8 +676,11 @@
       s += ciTube('M277 575L262 575L216 575L209 572L206 565L206 302L209 295L216 292L280 292', C.deo, C.deoHi, 13);
       s += ciTube('M343 330L343 222L340 211L333 203L322 200L284 200L273 197L265 189L262 178L262 104L264 96L269 91L277 89', C.deo, C.deoHi, 13);
       s += ciTube('M469 89L477 91L482 96L484 104L484 178L481 189L473 197L462 200L437 200L426 203L418 211L415 222L415 266', C.oxy, C.oxyHi, 13);
-      s += ciTube('M440 397L462 400L474 401L481 406L484 416L484 560L482 568L477 573L469 575', C.oxy, C.oxyHi, 13);
-      s += ciArrow(206, 430, -90) + ciArrow(245, 292, 0) + ciArrow(262, 150, -90) + ciArrow(303, 200, 180) + ciArrow(484, 140, 90) + ciArrow(445, 200, 180) + ciArrow(484, 480, 90);
+      /* the aorta leaves the TOP of the left ventricle, beside the pulmonary artery, and arches over to the
+         body, passing in front of the pulmonary vein (Daniel, 26 Sep: it left "through the side ... that's not
+         very realistic and it's a bit misleading") */
+      s += ciTube('M367 300L367 172C367 165 372 160 380 160L498 160C505 160 510 165 510 172L510 560C510 568 505 575 496 575L469 575', C.oxy, C.oxyHi, 13);
+      s += ciArrow(206, 430, -90) + ciArrow(245, 292, 0) + ciArrow(262, 150, -90) + ciArrow(303, 200, 180) + ciArrow(484, 124, 90) + ciArrow(445, 200, 180) + ciArrow(432, 160, 0) + ciArrow(510, 480, 90);
       /* the heart, in section as if in the chest of a person facing you: its right side on YOUR left */
       s += '<path class="ci__mus" fill="url(#' + u + 'mus)" d="M262 300C262 266 282 246 306 246C326 246 340 254 352 262L372 262C384 254 398 246 418 246C444 246 462 266 462 300L462 330C462 384 430 430 386 458C380 462 372 462 366 458C314 426 262 382 262 330Z"/>';
     }
@@ -700,10 +703,12 @@
       /* right side (blue): atrium to ventricle, vena cava into the atrium; left side (red): atrium to
          ventricle, pulmonary vein into the atrium, ventricle into the aorta */
       chanD: 'M291 314L321 314L321 331L291 331Z M258 285.5L279 285.5L279 298.5L258 298.5Z',
-      chanO: 'M398 314L428 314L428 331L398 331Z M408.5 242L421.5 242L421.5 266L408.5 266Z M418 390L444 392L444 405L418 403Z',
+      chanO: 'M398 314L428 314L428 331L398 331Z M408.5 242L421.5 242L421.5 266L408.5 266Z M367 331L392 331L392 345L367 345Z',
       /* the pulmonary artery leaves the top of the right ventricle and runs up in front of the atria */
       front: 'M343 334L343 236',
-      av: [[291, 330, 321, 330, 1], [398, 330, 428, 330, 1]], sl: [[336.5, 322, 349.5, 322, -1], [440, 391, 440, 404, 0]]
+      /* and the aorta leaves the top of the left ventricle beside it */
+      frontO: 'M367 340L367 256',
+      av: [[291, 330, 321, 330, 1], [398, 330, 428, 330, 1]], sl: [[336.5, 322, 349.5, 322, -1], [360.5, 322, 373.5, 322, -1]]
     }
   };
   /* one valve: two flaps hinged at (x0,y0) and (x1,y1). dir -1: blood flows up through it; 1: down;
@@ -756,7 +761,7 @@
     box.appendChild(h('p', 'widget__note',
       'Red is oxygenated blood and blue is deoxygenated blood, as on every diagram. Real blood is never blue: deoxygenated blood is dark red. ' +
       'The gauge shows only low and high, and each gauge compares pressures inside one animal. ' +
-      'This is a circuit diagram, not a drawing of a real heart. In the body, the aorta leaves the top of the left ventricle, next to the pulmonary artery. In real life one beat takes less than a second, and one complete circuit takes about a minute.'));
+      'This is a circuit diagram, not a drawing of a real heart. In real life one beat takes less than a second, and one complete circuit takes about a minute.'));
 
     var gauge = read.querySelector('.ci__track i'), gmark = read.querySelector('.ci__track em'), trend = read.querySelector('.ci__trend');
     var passes = read.querySelector('.ci__passes b'), bw = read.querySelector('.ci__bw');
@@ -776,8 +781,9 @@
       barSlot.innerHTML = ''; barSlot.appendChild(sp.bar);
       var old = wrap.querySelector('.sp__steps'); if (old) wrap.removeChild(old);
       wrap.appendChild(sp.list);
-      var oldNow = fig.querySelector('.sp__now'); if (oldNow) fig.removeChild(oldNow);
+      [fig, wrap].forEach(function (el) { var o = el.querySelector('.sp__now'); if (o) o.parentNode.removeChild(o); });
       fig.appendChild(sp.now);
+      sp.compact(staged);
       sp.paint(0);
     }
     function stepAt(t) { var st = CI[animal].steps, k = 0; for (var i = 0; i < st.length; i++) if (t >= st[i].t - 1e-6) k = i; return k; }
@@ -809,6 +815,7 @@
       ch.atria.forEach(function (c) { hs += cav(c, 1 - .14 * s.atr, 1 - .18 * s.atr, s.atr); });
       ch.vents.forEach(function (c) { hs += cav(c, 1 - .16 * s.ven, 1 - .1 * s.ven, s.ven); });
       if (ch.front) hs += ciTube(ch.front, C.deo, C.deoHi, 13);
+      if (ch.frontO) hs += ciTube(ch.frontO, C.oxy, C.oxyHi, 13);
       var vd = ''; ch.av.forEach(function (v) { vd += ciValve(v, s.av); }); ch.sl.forEach(function (v) { vd += ciValve(v, s.sl); });
       hs += '<path class="ci__valve-e" d="' + vd + '"/><path class="ci__valve" d="' + vd + '"/>';
       g.heart.innerHTML = hs;
@@ -841,7 +848,7 @@
     if (ro) ro.observe(svg);
     var staged = false;
     var st = L.stage ? L.stage({ box: box, spec: spec, pack: pack, home: left, watch: function () { return wrap; },
-      onPlace: function (inColumn) { staged = inColumn; wrap.classList.toggle('ci--staged', inColumn); packT.hidden = !inColumn; fit(); } }) : null;
+      onPlace: function (inColumn) { staged = inColumn; wrap.classList.toggle('ci--staged', inColumn); packT.hidden = !inColumn; if (sp) sp.compact(inColumn); fit(); } }) : null;
     packT.hidden = true;
     box.__onMove = function () { if (st) st.mount(); };
     box.__onReset = function () { if (sp) sp.stop(); if (ro) ro.disconnect(); if (st) st.detach(); };
