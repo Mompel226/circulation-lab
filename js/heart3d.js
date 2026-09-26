@@ -69,12 +69,6 @@ const SOLID = /^(lv|rv|la|ra|septum|pap_|valve_)/;
    descending aorta that looked like a vessel leaving the left atrium) */
 const GONE_AT = { aorta: 0.45, valve_pul: 0.2, valve_aor: 0.35 };
 const MODEL_VALVE = /^valve_/;
-/* The model's two left papillary muscles stop 3 to 5 mm short of every wall, and the tendons that tie
-   them to the mitral cusps are drawn only with the moving valves, so in Explore they hung in the left
-   ventricle joined to nothing (Daniel, 26 Sep: "as if they were floating"). They are left out of
-   Explore; the right ventricle's three, which the model joins to its wall, stay. The see-through
-   views keep all five, with their tendons. */
-const FLOATS = /^pap_lv_/;
 /* the blood, in the lab's own reds and blues (heart-art.js COL.oxy / COL.deo) */
 const BLOOD = { deo: 0x3b62b5, oxy: 0xd63c3b };
 
@@ -320,6 +314,43 @@ vec3 h3beat(vec3 p){ vec3 d = vec3(0.0); for (int i = 0; i < 4; i++) { vec3 q = 
     ng.setIndex(tris);
     g.dispose(); pt.mesh.geometry = ng;
   })(parts.coronary);
+  /* ---------------- the left ventricle's papillary muscles ----------------
+     The model's two are rods 4 to 5 cm long down the middle of the left ventricle, 7 to 12 mm from the
+     mitral valve's axis, joined to no wall (Daniel, 26 Sep: "as if they were floating"). They are drawn
+     here as in the textbooks instead: each rises from the ventricle's wall halfway to the apex (50 mm
+     below the valve ring), under one end of the mitral valve's opening (where its two flaps meet: the
+     front one at 65 degrees from the middle of the front flap; the back one at 85, a little towards the
+     back flap, which keeps it whole behind the four-chamber cut), and reaches half way to the flaps'
+     edge; the tendons take the other half. That makes each about 17 mm long, with tendons as long. They replace the
+     model's shapes under the same names, so they are pressed, lit and cut as before. The right
+     ventricle's three are the model's own: joined to its wall and well placed. */
+  const PAP_TIP = {};
+  (function leftPapillary() {
+    const walls = ['lv', 'septum'].map((k) => parts[k] && parts[k].mesh).filter(Boolean);
+    const f = ringFrame(X.valves.mit), rc = new THREE.Raycaster();
+    [['pap_lv_pm', 85], ['pap_lv_al', -65]].forEach(([id, ang]) => {
+      const pt = parts[id]; if (!pt || walls.length < 2) return;
+      const e = f.u.clone().multiplyScalar(Math.cos(ang * Math.PI / 180)).addScaledVector(f.w, Math.sin(ang * Math.PI / 180));
+      const a = f.c.clone().addScaledVector(f.n, 0.5);
+      rc.set(a, e); const hit = rc.intersectObjects(walls, false)[0]; if (!hit) return;
+      const base = hit.point, edge = f.c.clone().addScaledVector(f.n, 0.16).addScaledVector(e, f.r * 0.7);
+      const dir = edge.clone().sub(base), L = dir.length() * 0.5; dir.normalize();
+      const tip = base.clone().addScaledVector(dir, L); PAP_TIP[id] = tip;
+      /* a round-tipped pillar, flared where it grows from the wall; its foot is sunk 3 mm into the wall */
+      const R = 0.028, prof = [[0, -0.03], [0.058, -0.03], [0.05, 0], [0.042, L * 0.3], [0.034, L * 0.65], [R, L - R]];
+      for (let k = 1; k <= 6; k++) { const t = k / 6 * Math.PI / 2; prof.push([R * Math.cos(t), L - R + R * Math.sin(t)]); }
+      const g = new THREE.LatheGeometry(prof.map(([x, y]) => new THREE.Vector2(Math.max(x, 1e-5), y)), 18);
+      g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir)); g.translate(base.x, base.y, base.z);
+      /* into the part's own frame (the model's parts carry their quantisation in their matrices) */
+      const inv = new THREE.Matrix4().copy(pt.mesh.matrixWorld).invert(); g.applyMatrix4(inv);
+      /* outward-facing, so the cut face counts it as solid */
+      const P = g.getAttribute('position'), I = g.index.array; let vol = 0; const A = new THREE.Vector3(), B = new THREE.Vector3(), C = new THREE.Vector3();
+      for (let t = 0; t < I.length; t += 3) { A.fromBufferAttribute(P, I[t]); B.fromBufferAttribute(P, I[t + 1]); C.fromBufferAttribute(P, I[t + 2]); vol += A.dot(B.cross(C)); }
+      if (vol < 0) { for (let t = 0; t < I.length; t += 3) { const q = I[t + 1]; I[t + 1] = I[t + 2]; I[t + 2] = q; } g.computeVertexNormals(); }
+      g.deleteAttribute('uv');
+      pt.mesh.geometry.dispose(); pt.mesh.geometry = g;
+    });
+  })();
   /* ---------------- the cut face ----------------
      Drawn ON the cut plane, the stencil way (three.js's clipping-stencil example, with the test done by
      depth), after the heart itself:
@@ -413,7 +444,7 @@ vec3 h3beat(vec3 p){ vec3 d = vec3(0.0); for (int i = 0; i < 4; i++) { vec3 q = 
   };
   /* the ring is drawn a little inside the scan's valve ring, so the cusps sit in the orifice */
   VALVES.tri.f.r *= 0.9; VALVES.mit.f.r *= 0.86;
-  const PAPS = {}; Object.keys(V.paps).forEach((k) => { PAPS[k] = new THREE.Vector3(...V.paps[k]); });
+  const PAPS = {}; Object.keys(V.paps).forEach((k) => { PAPS[k] = PAP_TIP[k] ? PAP_TIP[k].clone() : new THREE.Vector3(...V.paps[k]); });
   const tmpA = new THREE.Vector3(), tmpB = new THREE.Vector3(), tmpD = new THREE.Vector3();
   Object.keys(VALVES).forEach((key) => {
     const vv = VALVES[key];
@@ -847,6 +878,49 @@ void main() {
     return pt.xmat;
   }
 
+  /* ---------------- the tendons, for the scanned valves ----------------
+     The scan has no tendons (chordae tendineae). With the moving valves (Blood flow, The valves) they
+     are drawn as lines; for the scanned valves shown in Explore they are drawn here as white cords,
+     0.8 mm across (Daniel, 26 Sep: "drawing in white the ligaments that join the valves to the wall"):
+     from the edge of each atrioventricular valve's flaps, taken every 20 degrees round the ring where
+     the scanned flap reaches lowest, to the tip of the nearest papillary muscle. Pressed, they are named
+     like any part. */
+  (function tendons() {
+    const pos = [], nor = [], idx = [];
+    const add = (a, b) => {                /* one cord: a closed-ended tube from a to b */
+      const d = b.clone().sub(a), L = d.length(); if (L < 1e-4) return;
+      const g = new THREE.CylinderGeometry(0.004, 0.004, L, 6, 1, false);
+      g.translate(0, L / 2, 0); g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize())); g.translate(a.x, a.y, a.z);
+      const o = pos.length / 3, gp = g.getAttribute('position'), gn = g.getAttribute('normal');
+      for (let i = 0; i < gp.count; i++) { pos.push(gp.getX(i), gp.getY(i), gp.getZ(i)); nor.push(gn.getX(i), gn.getY(i), gn.getZ(i)); }
+      g.index.array.forEach((q) => idx.push(q + o)); g.dispose();
+    };
+    [['tri', ['pap_rv_ant', 'pap_rv_post', 'pap_rv_sep']], ['mit', ['pap_lv_al', 'pap_lv_pm']]].forEach(([key, paps]) => {
+      const pt = parts['valve_' + key]; if (!pt) return;
+      const f = ringFrame(V[key]), K = 18, low = new Array(K).fill(null), depth = new Array(K).fill(-1e9);
+      const gp = pt.mesh.geometry.getAttribute('position'), P = new THREE.Vector3(), Q = new THREE.Vector3();
+      for (let i = 0; i < gp.count; i++) {
+        P.fromBufferAttribute(gp, i).applyMatrix4(pt.mesh.matrixWorld); Q.copy(P).sub(f.c);
+        const ax = Q.dot(f.n), b = Math.floor(((Math.atan2(Q.dot(f.w), Q.dot(f.u)) / (2 * Math.PI) + 1) % 1) * K) % K;
+        if (ax > depth[b]) { depth[b] = ax; low[b] = P.clone(); }
+      }
+      low.forEach((e) => {
+        if (!e) return;
+        let tip = null, best = Infinity;
+        paps.forEach((k) => { const d = PAPS[k] ? e.distanceTo(PAPS[k]) : Infinity; if (d < best) { best = d; tip = PAPS[k]; } });
+        if (tip) add(e.clone().addScaledVector(f.n, -0.002), tip);      /* from just inside the flap's edge */
+      });
+    });
+    if (!pos.length) return;
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3)); g.setIndex(idx);
+    const mat = new THREE.MeshStandardMaterial({ color: 0xf3ead8, roughness: 0.55, metalness: 0, side: THREE.DoubleSide, clippingPlanes: PLANES });
+    const mesh = new THREE.Mesh(g, mat); mesh.name = 'chordae'; heart.add(mesh);
+    patchWall(mat, mesh, null);
+    const index = byIndex.length; byIndex.push('chordae');
+    parts.chordae = { id: 'chordae', mesh, mat, idMat: idMaterial(index, mesh), index, solid: false };
+  })();
+
   /* ---------------- modes: what is shown ---------------- */
   let mode = 'explore', xray = false, cutK = 0, selected = null;
   function applyLook() {
@@ -854,7 +928,7 @@ void main() {
     const lit = (id) => selected && (selected === id || (selected === 'vena_cava' && /^vena_cava/.test(id)) || (selected === 'papillary' && /^pap_/.test(id)));
     Object.values(parts).forEach((pt) => {
       const m = pt.mat, see = xray && !MODEL_VALVE.test(pt.id);
-      pt.mesh.visible = !(live && MODEL_VALVE.test(pt.id)) && !(!live && FLOATS.test(pt.id)) && !(cutK >= (GONE_AT[pt.id] || 9));
+      pt.mesh.visible = !(live && MODEL_VALVE.test(pt.id)) && !(live && pt.id === 'chordae') && !(cutK >= (GONE_AT[pt.id] || 9));
       pt.mesh.material = see ? xrayMat(pt) : m;
       /* one side shown: the other side's walls fade to a trace, so you can still see where it is */
       if (pt.xmat) pt.xmat.uniforms.uFade.value = sideOnly && XRAY_SIDE[pt.id] && XRAY_SIDE[pt.id] !== 'S' && XRAY_SIDE[pt.id] !== sideOnly ? 0.14 : 1;
@@ -1237,7 +1311,7 @@ void main() {
     /* the regions: every pixel of each wanted part, and the extent of the whole heart on screen */
     const want = new Map(); labelWant.forEach((id, i) => want.set(id, i));
     const keyOf = (v, back) => { const id = byIndex[v]; if (!id) return null; if (back && want.has(id + '#wall')) return id + '#wall'; return want.has(id) ? id : PARTOF(id); };
-    const reg = labelWant.map(() => []), loose = labelWant.map(() => []);
+    const reg = labelWant.map(() => []), loose = labelWant.map(() => []), thin = labelWant.map(() => []);
     let minX = 1e9, maxX = -1e9;
     const m = 3;       /* a candidate should have its own part 3 pixels away on all four sides (1 if nothing else fits) */
     const K = (j) => keyOf(idBuf[j], idBuf[j + 1] > 127);
@@ -1249,7 +1323,7 @@ void main() {
       const id = K(i); const wi = want.get(id);
       if (wi == null) continue;
       const pt = [(x + 0.5) * sx, (IH - 1 - y + 0.5) * sy];     /* the centre of the ID pixel, so it maps back to the same one */
-      if (same(i, m, id)) reg[wi].push(pt); else if (same(i, 1, id)) loose[wi].push(pt);
+      if (same(i, m, id)) reg[wi].push(pt); else if (same(i, 1, id)) loose[wi].push(pt); else if (id === 'chordae') thin[wi].push(pt);
     }
     const midX = (minX + maxX) / 2 * sx;
     const phoneish = w < 520;
@@ -1290,7 +1364,8 @@ void main() {
       }
       return false;
     }
-    order.forEach((wi) => { const id = labelWant[wi]; if (!tryPlace(prep(id, reg[wi]))) tryPlace(prep(id, loose[wi])); });
+    /* the tendons are cords a few pixels across: any pixel of one is on it */
+    order.forEach((wi) => { const id = labelWant[wi]; if (!tryPlace(prep(id, reg[wi])) && !tryPlace(prep(id, loose[wi]))) tryPlace(prep(id, thin[wi])); });
     const colL = Math.max(8, minX * sx - 12), colR = Math.min(w - 8, maxX * sx + 12);
     let svg = '';
     placed.forEach((q) => {

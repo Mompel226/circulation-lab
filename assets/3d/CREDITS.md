@@ -86,10 +86,16 @@ marginal branch, right coronary artery, right marginal branch, posterior descend
 
 A scan is one moment, and the valves in it are open. So that the valves can open and close, the widget
 draws its own cusps on the model's valve rings (three tricuspid, two mitral, three pulmonary, three aortic),
-with chordae tendineae as lines to the model's papillary muscles. In the Explore tab the model's own
-valves are shown instead, and the two left papillary muscles are left out: the source's stop 3 to 5 mm
-short of every wall, so without their tendons they hung in the left ventricle joined to nothing. The
-coronary arteries' cut ends, open tubes in the source, are closed by the widget with a flat disc. The blood particles and the squeeze of each chamber during a beat are also the
+with chordae tendineae as lines to the papillary muscles. In the Explore tab the model's own valves are
+shown instead, with tendons drawn as white cords 0.8 mm across from the edge of each atrioventricular
+valve's flaps (the scanned flap's lowest point every 20 degrees round the ring) to the nearest papillary
+muscle's tip. The left ventricle's two papillary muscles are the widget's own: the source's are rods
+4 to 5 cm long down the middle of the ventricle, 7 to 12 mm from the mitral valve's axis, joined to no
+wall. Each drawn one rises from the wall halfway to the apex (50 mm below the mitral ring), under one end
+of the mitral opening (65 and 85 degrees from the middle of the front flap), and reaches half way to the
+flaps' edge, about 17 mm; its foot is sunk 3 mm into the wall. The right ventricle's three are the
+source's. The coronary arteries' cut ends, open tubes in the source, are closed by the widget with a
+flat disc. The blood particles and the squeeze of each chamber during a beat are also the
 widget's.
 
 ## Errors noticed in the source, and what the widget does
