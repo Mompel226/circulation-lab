@@ -41,7 +41,7 @@
   var STAMP = (/[?&]v=([^&#]+)/.exec(SRC) || [])[1] || '1';
   var BASE = SRC ? SRC.replace(/[^\/?#]*(\?.*)?$/, '') : 'js/';
   var MODULE = BASE + 'heart3d.js?v=' + STAMP;
-  var MODEL = BASE + '../assets/3d/heart.glb';
+  var MODEL = BASE + '../assets/3d/heart.glb?r=07f051be';     /* the model's hash, stamped by tools/build.mjs */
   var MODEL_MB = '0.4 MB';
 
   /* ---------- the parts: syllabus name, the specific name, and one short caption ---------- */
@@ -89,10 +89,10 @@
       step: 'The atria contract. Blood passes through the open atrioventricular valves into the ventricles. The semilunar valves are closed.',
       right: 'Correct. The atria contract and push blood through the open atrioventricular valves into the ventricles. The semilunar valves stay closed.' },
     { key: 'V', name: 'The ventricles contract', correct: { tri: false, mit: false, pul: true, aor: true }, atria: [1, 0], vent: [0, 1], sound: 'lub',
-      step: 'The ventricles contract. The atrioventricular valves close (“lub”) and prevent backflow into the atria. Blood passes through the semilunar valves into the arteries.',
+      step: 'The ventricles contract. The atrioventricular valves close (“lub”) and prevent backflow into the atria. A moment later the semilunar valves open, and blood passes into the arteries.',
       right: 'Correct. The atrioventricular valves close and prevent backflow into the atria. Blood is pumped through the semilunar valves into the arteries.' },
     { key: 'D', name: 'The ventricles relax', correct: { tri: true, mit: true, pul: false, aor: false }, atria: [0, 0], vent: [1, 0], sound: 'dub',
-      step: 'The ventricles relax. The semilunar valves close (“dub”) and prevent backflow into the ventricles. Blood flows from the atria into the ventricles.',
+      step: 'The ventricles relax. The semilunar valves close (“dub”) and prevent backflow into the ventricles. A moment later the atrioventricular valves open, and blood flows from the atria into the ventricles.',
       right: 'Correct. The semilunar valves close and prevent backflow into the ventricles. Blood flows from the atria through the open atrioventricular valves.' }
   ];
   var VK = ['tri', 'mit', 'pul', 'aor'];
@@ -443,7 +443,7 @@
     });
     sel.addEventListener('change', function () {
       if (!sel.value) return;
-      var id = sel.value; pick(id === 'papillary' ? 'pap_lv_al' : id, false, true);
+      var id = sel.value; pick(id === 'papillary' ? 'pap_rv_ant' : id, false, true);      /* the left ones are not in Explore */
     });
     function cutText(k) { return k <= 0 ? 'whole heart' : Math.abs(k - 0.5) < 0.04 ? 'four chambers' : k < 0.5 ? 'the front taken off' : 'towards the back'; }
     cut.addEventListener('input', function () {
@@ -464,7 +464,7 @@
       stopSteps(); mode = m;
       Object.keys(tabBtn).forEach(function (k) { var on = k === m; tabBtn[k].classList.toggle('is-on', on); tabBtn[k].setAttribute('aria-selected', on ? 'true' : 'false'); });
       [pEx, pFl, pVa].forEach(function (p) { p.hidden = p.getAttribute('data-for') !== m; });
-      legend.hidden = m === 'explore';
+      legend.hidden = m !== 'flow';                      /* the valves tab shows no blood */
       if (m !== 'flow' && sideNow) setSide(null);
       capStage(-1);
       box.classList.toggle('h3--live', m !== 'explore');

@@ -1,6 +1,6 @@
 # The 3D heart: sources, licences and changes
 
-`heart.glb` (412,356 bytes, SHA-256 `236f497c…8601657`) is used by the "Explore a real heart" widget
+`heart.glb` (421,208 bytes, SHA-256 `47a29763…098c15c9`) is used by the "Explore a real heart" widget
 (`js/w-heart3d.js`, `js/heart3d.js`). It is a real human heart. The widget's own credit line reads:
 
 > The heart is a real one: HuBMAP Human Reference Atlas (Browne and Schlehlein 2024), from the Visible
@@ -65,12 +65,31 @@ marginal branch, right coronary artery, right marginal branch, posterior descend
    - The tip of each papillary muscle; the four-chamber plane (through the mitral and tricuspid rings and
      the left ventricular apex); a centre for each chamber's cavity.
 
+8. **Semilunar valves moved out of the walls** (26 September 2026). In the source, 47 % of the pulmonary
+   valve's surface lay inside the right ventricle's wall (mostly less than 1.2 mm deep), and 6 % of the
+   aortic valve's inside the walls round it, so seen from the artery the wall broke through the cusps as
+   red patches. Each vertex of these two valves lying inside a chamber wall was moved towards the valve's
+   own axis to 0.5 mm clear of the wall, the move spread smoothly over the valve (at most 0.5 mm per mm)
+   so that its two faces move together; at most 2.5 mm. Now none of the pulmonary valve and 0.06 % of the
+   aortic valve lies inside a wall. Done on the source before step 6 (`valvefix2.py`, `apply_fix.mjs`);
+   every other part of the rebuilt file decodes identically to the old one.
+
+9. **A tunnel in the right atrium's wall plugged** (26 September 2026). Low on the back of the right
+   atrium, beside the inferior vena cava, a small tunnel (about 1.5 by 3 mm) ran through the wall with no
+   vessel in it: from behind it looked like a hole, with the tricuspid valve white through it. A plug made
+   from the wall's own shape (the wall voxelised at 0.1 mm and closed with a 2 mm ball; the filled piece,
+   13.8 mm³, meshed and simplified to a closed 1,498-triangle mesh) is stored as the node `ra_plug`, which
+   the widget joins to the right atrium when it loads (`plug.py`, `tool/add_plug.mjs`). Every other part
+   decodes identically.
+
 ## Drawn by the widget, not in the scan
 
 A scan is one moment, and the valves in it are open. So that the valves can open and close, the widget
 draws its own cusps on the model's valve rings (three tricuspid, two mitral, three pulmonary, three aortic),
 with chordae tendineae as lines to the model's papillary muscles. In the Explore tab the model's own
-valves are shown instead. The blood particles and the squeeze of each chamber during a beat are also the
+valves are shown instead, and the two left papillary muscles are left out: the source's stop 3 to 5 mm
+short of every wall, so without their tendons they hung in the left ventricle joined to nothing. The
+coronary arteries' cut ends, open tubes in the source, are closed by the widget with a flat disc. The blood particles and the squeeze of each chamber during a beat are also the
 widget's.
 
 ## Errors noticed in the source, and what the widget does

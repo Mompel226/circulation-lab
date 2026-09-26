@@ -69,6 +69,12 @@ const SOLID = /^(lv|rv|la|ra|septum|pap_|valve_)/;
    descending aorta that looked like a vessel leaving the left atrium) */
 const GONE_AT = { aorta: 0.45, valve_pul: 0.2, valve_aor: 0.35 };
 const MODEL_VALVE = /^valve_/;
+/* The model's two left papillary muscles stop 3 to 5 mm short of every wall, and the tendons that tie
+   them to the mitral cusps are drawn only with the moving valves, so in Explore they hung in the left
+   ventricle joined to nothing (Daniel, 26 Sep: "as if they were floating"). They are left out of
+   Explore; the right ventricle's three, which the model joins to its wall, stay. The see-through
+   views keep all five, with their tendons. */
+const FLOATS = /^pap_lv_/;
 /* the blood, in the lab's own reds and blues (heart-art.js COL.oxy / COL.deo) */
 const BLOOD = { deo: 0x3b62b5, oxy: 0xd63c3b };
 
@@ -217,9 +223,11 @@ vec3 h3beat(vec3 p){ vec3 d = vec3(0.0); for (int i = 0; i < 4; i++) { vec3 q = 
 
   const parts = {};            /* id -> { mesh, mat, idMat, index } */
   const byIndex = [null];
+  let plug = null;
   gltf.scene.traverse((o) => {
     if (!o.isMesh) return;
     const id = o.name || (o.parent && o.parent.name);
+    if (id === 'ra_plug') { plug = o; return; }          /* joined to the right atrium below */
     const look = LOOK[id] || { c: 0x999999 };
     const solid = SOLID.test(id);
     const mat = new THREE.MeshStandardMaterial({ color: look.c, roughness: look.r || 0.62, metalness: 0, side: THREE.DoubleSide, clippingPlanes: PLANES });
@@ -228,6 +236,90 @@ vec3 h3beat(vec3 p){ vec3 d = vec3(0.0); for (int i = 0; i < 4; i++) { vec3 q = 
     const index = byIndex.length; byIndex.push(id);
     parts[id] = { id, mesh: o, mat, idMat: idMaterial(index, o), index, solid };
   });
+  /* ---------------- a hole in the right atrium's wall ----------------
+     In the model a small tunnel, about 1.5 by 3 mm, runs through the back wall of the right atrium
+     low down beside the inferior vena cava; there is no vessel in it. From behind it looked like a
+     hole, with the tricuspid valve white through it (Daniel, 26 Sep: "in the back, there is a little
+     hole"). The model file carries a plug made to fit it (ra_plug: the wall's own shape closed over
+     the tunnel; assets/3d/CREDITS.md), joined to the wall here so that it is the wall: it is pressed,
+     lit, cut and counted in the cut face as the right atrium. */
+  (function joinPlug() {
+    if (!plug || !parts.ra) return;
+    const ra = parts.ra.mesh, g = ra.geometry, pg = plug.geometry;
+    const toRa = new THREE.Matrix4().copy(ra.matrixWorld).invert().multiply(plug.matrixWorld), nm = new THREE.Matrix3().getNormalMatrix(toRa);
+    const gp = g.getAttribute('position'), gn = g.getAttribute('normal'), pp = pg.getAttribute('position'), pn = pg.getAttribute('normal');
+    const n0 = gp.count, n1 = pp.count, P = new THREE.Vector3(), N = new THREE.Vector3();
+    const pos = new Float32Array((n0 + n1) * 3), nor = new Float32Array((n0 + n1) * 3);
+    for (let i = 0; i < n0; i++) { P.fromBufferAttribute(gp, i).toArray(pos, i * 3); if (gn) N.fromBufferAttribute(gn, i).toArray(nor, i * 3); }
+    for (let i = 0; i < n1; i++) {
+      P.fromBufferAttribute(pp, i).applyMatrix4(toRa).toArray(pos, (n0 + i) * 3);
+      if (pn) N.fromBufferAttribute(pn, i).applyMatrix3(nm).normalize().toArray(nor, (n0 + i) * 3);
+    }
+    const ia = Array.from(g.index.array), ib = pg.index.array;
+    for (let i = 0; i < ib.length; i++) ia.push(ib[i] + n0);
+    const ng = new THREE.BufferGeometry();
+    ng.setAttribute('position', new THREE.BufferAttribute(pos, 3)); ng.setAttribute('normal', new THREE.BufferAttribute(nor, 3)); ng.setIndex(ia);
+    g.dispose(); pg.dispose(); ra.geometry = ng; plug.parent.remove(plug);
+  })();
+  /* ---------------- the coronary arteries' ends ----------------
+     The model's coronary branches stop as open tubes, 4 to 5 mm across, most of them on the back of
+     the heart within 2 mm of its wall: seen end on, each looked like a hole in the heart (Daniel,
+     26 Sep: "in the back, there is a little hole"). Each open end is closed with a flat disc in the
+     artery's own colour, so a branch simply stops, as it does where a real one passes into the wall. */
+  (function closeEnds(pt) {
+    if (!pt) return;
+    const g = pt.mesh.geometry, pos = g.getAttribute('position'), n = pos.count, idx = g.index;
+    if (!idx) return;
+    const P = new THREE.Vector3(), key = (i) => { P.fromBufferAttribute(pos, i); return P.x.toFixed(6) + ',' + P.y.toFixed(6) + ',' + P.z.toFixed(6); };
+    const node = new Int32Array(n), at = new Map(), first = [];
+    for (let i = 0; i < n; i++) { const k = key(i); let j = at.get(k); if (j === undefined) { j = first.length; at.set(k, j); first.push(i); } node[i] = j; }
+    /* an edge used by one triangle only is on an open end; its direction is kept, so the disc faces out */
+    const I = idx.array, uses = new Map(), dir = new Map();
+    for (let t = 0; t < I.length; t += 3) for (let e = 0; e < 3; e++) {
+      const a = node[I[t + e]], b = node[I[t + (e + 1) % 3]], k = a < b ? a + ',' + b : b + ',' + a;
+      uses.set(k, (uses.get(k) || 0) + 1); dir.set(k, [a, b]);
+    }
+    const edges = []; uses.forEach((c, k) => { if (c === 1) edges.push(dir.get(k)); });
+    if (!edges.length) return;
+    /* the edges of one end share their points: group them */
+    const up = new Map(), find = (x) => { while (up.has(x) && up.get(x) !== x) x = up.get(x); return x; };
+    edges.forEach(([a, b]) => { const ra = find(a), rb = find(b); if (!up.has(ra)) up.set(ra, ra); if (!up.has(rb)) up.set(rb, rb); if (ra !== rb) up.set(ra, rb); });
+    const ends = new Map(); edges.forEach((e) => { const r = find(e[0]); if (!ends.has(r)) ends.set(r, []); ends.get(r).push(e); });
+    /* new attributes: the old values, then per end its rim again (with the disc's normal) and its centre */
+    const names = Object.keys(g.attributes), add = [];
+    ends.forEach((es) => {
+      const c = new THREE.Vector3(), N = new THREE.Vector3(), A = new THREE.Vector3(), B = new THREE.Vector3(), rim = [];
+      es.forEach(([a, b]) => { rim.push(a, b); c.add(A.fromBufferAttribute(pos, first[a])); }); c.divideScalar(es.length);
+      es.forEach(([a, b]) => { A.fromBufferAttribute(pos, first[b]).sub(c); B.fromBufferAttribute(pos, first[a]).sub(c); N.add(A.clone().cross(B)); });
+      add.push({ es, c, N: N.normalize() });
+    });
+    let extra = 0; add.forEach((d) => { extra += d.es.length * 2 + 1; });
+    const total = n + extra, next = {};
+    names.forEach((nm) => {
+      const at0 = g.getAttribute(nm), isz = at0.itemSize, arr = new Float32Array(total * isz);
+      for (let i = 0; i < n; i++) for (let q = 0; q < isz; q++) arr[i * isz + q] = at0.getComponent ? at0.getComponent(i, q) : [at0.getX(i), at0.getY(i), at0.getZ(i), at0.getW(i)][q];
+      next[nm] = { arr, isz };
+    });
+    const tris = Array.from(I); let v = n;
+    const put = (src, p, normal) => {           /* a new point copying src's values, at p, with normal */
+      names.forEach((nm) => { const { arr, isz } = next[nm]; for (let q = 0; q < isz; q++) arr[v * isz + q] = arr[src * isz + q]; });
+      next.position.arr.set([p.x, p.y, p.z], v * 3);
+      if (next.normal) next.normal.arr.set([normal.x, normal.y, normal.z], v * 3);
+      return v++;
+    };
+    const T = new THREE.Vector3();
+    add.forEach(({ es, c, N }) => {
+      const mid = put(first[es[0][0]], c, N);
+      es.forEach(([a, b]) => {
+        const pa = put(first[a], T.fromBufferAttribute(pos, first[a]), N), pb = put(first[b], T.fromBufferAttribute(pos, first[b]), N);
+        tris.push(pb, pa, mid);                 /* the rim edge the other way round: the disc faces out */
+      });
+    });
+    const ng = new THREE.BufferGeometry();
+    names.forEach((nm) => ng.setAttribute(nm, new THREE.BufferAttribute(next[nm].arr, next[nm].isz)));
+    ng.setIndex(tris);
+    g.dispose(); pt.mesh.geometry = ng;
+  })(parts.coronary);
   /* ---------------- the cut face ----------------
      Drawn ON the cut plane, the stencil way (three.js's clipping-stencil example, with the test done by
      depth), after the heart itself:
@@ -237,7 +329,9 @@ vec3 h3beat(vec3 p){ vec3 d = vec3(0.0); for (int i = 0; i < 4; i++) { vec3 q = 
           group's solids the count is not zero;
        3. a flat face in the group's cut colour is drawn on the plane there, over whatever is drawn
           (seen from the open side, nothing kept lies between you and the cut), and the count is reset;
-       then the next group (the valves last, over the walls). Seen from the other side the cut face is
+       then the next group. The valves go first and the walls over them: an atrioventricular valve's
+       rim lies inside the wall it is sewn into, and its cut showed as white islands in the wall's cut
+       face. (The semilunar valves' rims were moved out of the walls in the model itself.) Seen from the other side the cut face is
      inside the heart, so none of this is drawn. The depth test in step 2 is made for every sample of a
      pixel; the clipping plane's own test is made once per pixel, so near a wall standing edge-on to you
      a few samples of it poke through the cut, and a cut face tested against them showed faint dotted
@@ -247,9 +341,9 @@ vec3 h3beat(vec3 p){ vec3 d = vec3(0.0); for (int i = 0; i < 4; i++) { vec3 q = 
      closed (the right ventricle's papillary muscles, the aortic valve) keep the old way: a count through
      an open mesh would be wrong. */
   const CAP_GROUPS = [
+    { ids: ['valve_tri', 'valve_mit', 'valve_pul'], color: 0xf7efe2 },
     { ids: ['lv', 'rv', 'septum', 'pap_lv_al', 'pap_lv_pm'], color: 0xc9665b },
-    { ids: ['la', 'ra'], color: 0xd4766a },
-    { ids: ['valve_tri', 'valve_mit', 'valve_pul'], color: 0xf7efe2 }
+    { ids: ['la', 'ra'], color: 0xd4766a }
   ];
   const capObjs = [], capQuads = [];
   const capPlane = new THREE.PlaneGeometry(4, 4);
@@ -760,7 +854,7 @@ void main() {
     const lit = (id) => selected && (selected === id || (selected === 'vena_cava' && /^vena_cava/.test(id)) || (selected === 'papillary' && /^pap_/.test(id)));
     Object.values(parts).forEach((pt) => {
       const m = pt.mat, see = xray && !MODEL_VALVE.test(pt.id);
-      pt.mesh.visible = !(live && MODEL_VALVE.test(pt.id)) && !(cutK >= (GONE_AT[pt.id] || 9));
+      pt.mesh.visible = !(live && MODEL_VALVE.test(pt.id)) && !(!live && FLOATS.test(pt.id)) && !(cutK >= (GONE_AT[pt.id] || 9));
       pt.mesh.material = see ? xrayMat(pt) : m;
       /* one side shown: the other side's walls fade to a trace, so you can still see where it is */
       if (pt.xmat) pt.xmat.uniforms.uFade.value = sideOnly && XRAY_SIDE[pt.id] && XRAY_SIDE[pt.id] !== 'S' && XRAY_SIDE[pt.id] !== sideOnly ? 0.14 : 1;
@@ -776,7 +870,9 @@ void main() {
       m.transparent = thin; m.opacity = thin ? 0.5 : 1; m.depthWrite = !thin; m.needsUpdate = true;
       m.emissive.setHex(on ? 0xffb04a : 0x000000); m.emissiveIntensity = on ? 0.5 : 0;
     });
-    Object.keys(blood).forEach((k) => { blood[k].im.visible = live && !(sideOnly && sideOnly !== k); });
+    /* The valves tab shows the valves alone: with the blood moving through them they were "very very
+       hard to see" (Daniel, 26 Sep). The blood is the Blood flow tab's. */
+    Object.keys(blood).forEach((k) => { blood[k].im.visible = mode === 'flow' && !(sideOnly && sideOnly !== k); });
     Object.keys(VALVES).forEach((k) => { const on = !(sideOnly && VALVE_SIDE[k] !== sideOnly); VALVES[k].mesh.visible = on; if (VALVES[k].cords) VALVES[k].cords.visible = on; });
     idStale = true; kick();
   }
@@ -992,9 +1088,16 @@ void main() {
     for (k = 0; k < plan.length - 1 && t >= t0 + plan[k].dur; k++) t0 += plan[k].dur;
     const seg = plan[k], u = clamp((t - t0) / seg.dur, 0, 1), secs = u * seg.dur;
     const prev = k > 0 ? plan[k - 1].valves : (anim.from || seg.valves);
-    const sw = sstep(0, 0.28, secs);
+    /* A valve that shuts swings first; one that opens waits until it has shut, so for a moment all four
+       valves are shut: just after "lub", while the ventricles squeeze and their pressure rises to the
+       arteries', and just after "dub", while it falls to the atria's. The animation used to swing
+       them all at once. */
+    const SW = Math.min(0.28, seg.dur * 0.18), GAP = Math.min(0.22, seg.dur * 0.12);
+    const shuts = Object.keys(VALVES).some((key) => prev[key] && !seg.valves[key]);
+    const late = (key) => shuts && !prev[key] && !!seg.valves[key];
     Object.keys(VALVES).forEach((key) => {
-      const o = lerp(prev[key] ? 1 : 0, seg.valves[key] ? 1 : 0, sw);
+      const a = late(key) ? SW + GAP : 0;
+      const o = lerp(prev[key] ? 1 : 0, seg.valves[key] ? 1 : 0, sstep(a, a + SW, secs));
       if (Math.abs(VALVES[key].open - o) > 1e-4) { VALVES[key].open = o; VALVES[key].dirty = true; }
     });
     const ce = sstep(0, 0.7, u);
@@ -1003,11 +1106,13 @@ void main() {
        in one smooth surge, while the veins fill and the arteries pass blood on steadily. A stage that
        holds brings everything to rest before its end, so its last frame is still. */
     const bump = (a, b) => (u <= a || u >= b ? 0 : Math.pow(Math.sin(Math.PI * (u - a) / (b - a)), 2) * 2 / (b - a));
-    const pulse = seg.hold ? bump(0.04, 0.86) : bump(0.06, 0.94);
+    const end = seg.hold ? 0.86 : 0.94, pulse = bump(seg.hold ? 0.04 : 0.06, end);
+    const pulseLate = bump((SW * 1.5 + GAP) / seg.dur, end);      /* through a valve that opens late: once it is half open */
     const steady = seg.hold ? bump(0.02, 0.9) : 1;
     ['R', 'L'].forEach((s) => {
       const v = seg.rates[s], F = FLOW[s], q = SIDES[s].SV / seg.dur;
-      F.body = (v.body || 0) * steady * q; F.in = v.in * steady * q; F.av = v.av * pulse * q; F.sl = v.sl * pulse * q; F.out = v.out * steady * q;
+      const pAv = late(s === 'R' ? 'tri' : 'mit') ? pulseLate : pulse, pSl = late(s === 'R' ? 'pul' : 'aor') ? pulseLate : pulse;
+      F.body = (v.body || 0) * steady * q; F.in = v.in * steady * q; F.av = v.av * pAv * q; F.sl = v.sl * pSl * q; F.out = v.out * steady * q;
     });
     if (anim.segIndex !== k) { anim.segIndex = k; if (anim.onStep) anim.onStep(k, seg); }
   }
