@@ -157,7 +157,19 @@
   function beatPlan(real) {
     return STAGES.map(function (st, i) { return seg(i, st.correct, real ? REAL[i] : SLOW[i], false, real); });
   }
-  function stagePlan(si, vs) { return [seg(si, vs, 3.2, true)]; }
+  /* one stage on its own (Run this stage, Play the beat): the volumes each stage moves are real, and the
+     atria give only the last quarter of the filling, so when the atria contract the blood barely moved
+     (Daniel, 26 Sep: "you can barely see anything moving"). In each stage every flow is multiplied by the
+     same factor, so where the blood goes, and which way, stays true: 3 when the atria contract, 1.5 when
+     the ventricles relax, and the ventricles' contraction as it is (more would empty them completely; a
+     real ventricle keeps about 40 % of its blood). Each stage then moves about the same amount of blood
+     through its valves. The Blood flow tab keeps the real volumes throughout. */
+  var SHOW = { A: 3, V: 1, D: 1.5 };
+  function stagePlan(si, vs) {
+    var s = seg(si, vs, 3.2, true), f = SHOW[STAGES[si].key] || 1;
+    ['R', 'L'].forEach(function (k) { var r = s.rates[k]; Object.keys(r).forEach(function (q) { r[q] *= f; }); });
+    return [s];
+  }
 
   function still() { return !!(global.matchMedia && global.matchMedia('(prefers-reduced-motion: reduce)').matches); }
   function coarse() { return !!(global.matchMedia && global.matchMedia('(pointer: coarse)').matches) || (global.innerWidth || 1000) < 700; }
