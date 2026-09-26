@@ -480,8 +480,7 @@
       var tx = LENS.x + (LENS.w - 480 * s) / 2 + 40 * s, ty = LENS.y + 3 + 70 * s;
       var hg = el('g', { transform: 'translate(' + f2(tx) + ' ' + f2(ty) + ') scale(' + f2(s * 1000) / 1000 + ')', 'class': 'cp__lensheart' }, inner);
       hg.innerHTML = global.HeartArt.svg(beat, { mode: heartKind, rightPV: false });
-      lensNodes = { outer: hg.querySelector('.ha__outer'), ra: hg.querySelector('.ha__ra'), la: hg.querySelector('.ha__la'), rv: hg.querySelector('.ha__rv'), lv: hg.querySelector('.ha__lv'),
-                    av: hg.querySelector('.ha__av'), sl: hg.querySelector('.ha__sl'), cords: hg.querySelectorAll('.ha__cords line') };
+      lensNodes = global.HeartArt.nodes(hg);
       var cap = el('text', { x: LENS.x + LENS.w / 2, y: LENS.y + LENS.h - 4.2, 'text-anchor': 'middle', 'class': 'cp__lenscap' }, lensG);
       cap.textContent = heartKind === 'exterior' ? 'the heart from the front' : 'the heart, cut open';
       applyLight();
@@ -663,14 +662,7 @@
         });
       }
       if (!lensMode || !global.HeartArt || !lensNodes.outer) return;
-      var p = global.HeartArt.paths(beat);
-      lensNodes.outer.setAttribute('d', p.outer);
-      if (lensNodes.ra) {
-        lensNodes.ra.setAttribute('d', p.ra); lensNodes.la.setAttribute('d', p.la); lensNodes.rv.setAttribute('d', p.rv); lensNodes.lv.setAttribute('d', p.lv);
-        lensNodes.av.setAttribute('d', p.tri + ' ' + p.mit);
-        if (lensNodes.sl) lensNodes.sl.setAttribute('d', p.pulv + ' ' + p.aov);
-        for (var i = 0; i < lensNodes.cords.length; i++) { var c = p.cords[i]; lensNodes.cords[i].setAttribute('x1', f2(c[0][0])); lensNodes.cords[i].setAttribute('y1', f2(c[0][1])); }
-      }
+      global.HeartArt.update(lensNodes, global.HeartArt.paths(beat));      /* the section, or the outside with its coronary arteries */
     }
     function moveFlow(dt) {
       var s = surge(phase), rateK = .55 + .45 * bpm / 72;

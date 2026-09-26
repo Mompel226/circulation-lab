@@ -352,10 +352,7 @@
       el.setAttribute('stroke-dasharray', '26 ' + n1(wires[i].len * 2 + 60));
     });
     var pins = Array.prototype.map.call(svg.querySelectorAll('.es__pin'), function (el, i) { return { el: el, on: PINS[i].on, key: svg.querySelector('.es__key[data-n="' + PINS[i].n + '"]'), hkey: hkey.querySelector('[data-n="' + PINS[i].n + '"]') }; });
-    var hn = {
-      outer: svg.querySelector('.ha__outer'), ra: svg.querySelector('.ha__ra'), la: svg.querySelector('.ha__la'), rv: svg.querySelector('.ha__rv'), lv: svg.querySelector('.ha__lv'),
-      av: svg.querySelector('.ha__av'), sl: svg.querySelector('.ha__sl'), cords: svg.querySelectorAll('.ha__cords line')
-    };
+    var hn = art ? art.nodes(svg.querySelector('.es__heart') || svg) : {};
     /* the muscle, as soft cells: each fades out at its edge, so together they show the signal as a wave
        sweeping through it (a blur filter did the same at a third of the frame rate) */
     var cells = (global.ECG_CELLS || []).map(function (c) {
@@ -429,12 +426,8 @@
       pins.forEach(function (p) { var on = ms >= p.on[0] && ms < p.on[1]; p.el.classList.toggle('is-on', on); if (p.key) p.key.classList.toggle('is-on', on); if (p.hkey) p.hkey.classList.toggle('is-on', on); });
       /* the heart contracting behind it all */
       if (art && hn.outer) {
-        var P = art.paths(beatState(ms));
-        hn.outer.setAttribute('d', P.outer);
-        if (hn.ra) { hn.ra.setAttribute('d', P.ra); hn.la.setAttribute('d', P.la); hn.rv.setAttribute('d', P.rv); hn.lv.setAttribute('d', P.lv); }
-        if (hn.av) hn.av.setAttribute('d', P.tri + ' ' + P.mit);
-        if (hn.sl) hn.sl.setAttribute('d', P.pulv + ' ' + P.aov);
-        for (var i = 0; i < hn.cords.length; i++) { var cd = P.cords[i]; if (cd) { hn.cords[i].setAttribute('x1', n1(cd[0][0])); hn.cords[i].setAttribute('y1', n1(cd[0][1])); } }
+        /* at 0.4 of the full squeeze: the muscle cells and the conduction paths drawn over the walls stay on them */
+        art.update(hn, art.paths(beatState(ms), { k: .4 }));
       }
       /* the direction the signal is moving now */
       var v = vecAt(ms), mag = Math.hypot(v[0], v[1]), proj = volt(ms, ang), vs = '';

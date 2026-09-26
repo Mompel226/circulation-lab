@@ -944,6 +944,8 @@ picture{display:block;line-height:0}
 .curio__fig--right.curio__fig--upright{width:min(34%,250px)}
 .curio__fig--right .curio__pcap{max-width:none;text-align:left}
 .curio--text .curio__text::after{content:'';display:table;clear:both}
+.curio__below{clear:both;margin:10px 0 0;padding-top:8px;border-top:1px solid #E3D6BF}
+.curio__below .curio__pcap{margin:0;max-width:none;text-align:left}
 @media (max-width:620px){
   .curio__body,.curio--tall .curio__body{grid-template-columns:1fr}
   .curio__fig--right,.curio__fig--right.curio__fig--upright{float:none;width:auto;max-width:360px;margin:0 auto 12px}

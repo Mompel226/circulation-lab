@@ -860,68 +860,37 @@
      3 · PULSE — count a pulse
      ===================================================================== */
   var PU_ASK = 'Watch the artery beat. Press Start, then press the button once for every beat until the 15 seconds are up. The page multiplies by 4 — then compare your count with the true rate.';
-  var PU_W = 900, PU_H = 400, COUNT_S = 15;
-  /* the radial artery in the drawing: from the middle of the forearm near the elbow (left) to the
-     thumb side of the wrist, where it lies about 1 cm in from the edge, then round towards the back
-     of the wrist. Scale: about 25 units to 1 cm (the wrist is about 6 cm across). */
-  var PU_ART = 'M96 210C220 198 340 172 440 164C470 161 492 155 508 142';
-  var PU_TIP = [[396, 181], [441, 176]];          /* the middle and index fingertips, on the artery */
-  var PU_TILT = 12;
+  var PU_W = 900, PU_H = 340, COUNT_S = 15;
+  /* A real photograph (Daniel, 26 Sep: the drawing made it "confusing where the thumb is and where
+     actually you're looking"): a left forearm on a table, the hand turned with its thumb up, and the
+     tips of the index and middle fingers of the other hand on the thumb side of the wrist, just above
+     the wrist crease. "Pulse2.jpg", Mnokel, Wikimedia Commons, public domain; colour-corrected and
+     cropped (assets/photos/CREDITS.md). It fills x 176-746, y 16-324 of the frame, the labels the dark
+     margins. The radial artery is drawn over it where it runs under the skin: along the thumb side of
+     the forearm, under the two fingertips, and on round towards the base of the thumb, where it passes
+     to the back of the wrist. Where the fingers lie over it, it is not drawn. */
+  var PU_IMG = { href: 'assets/photos/pulse-wrist-1140.jpg', x: 176, y: 16, w: 570, h: 308 };
+  var PU_ART = 'M176 145.8C199 144 222 141 245 138.5C268 136 290 134 311.8 132' +     /* the forearm, up to the index finger */
+               'M407.8 131.2C430 127 452 121 474 110.5C488 103 499 95.5 504 90';       /* past the middle finger, towards the thumb */
+  var PU_TIPS = [359.7, 128.5];                  /* between the two fingertips, over the artery */
 
   function puArt(u) {
-    /* a left forearm and hand, palm up, seen from above: the thumb side is at the top, the hand on the right */
     return '<defs>' +
-      '<linearGradient id="' + u + 'skin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#BF866C"/><stop offset=".2" stop-color="#D7A68B"/><stop offset=".5" stop-color="#E0B398"/><stop offset=".82" stop-color="#CF9C81"/><stop offset="1" stop-color="#AE775F"/></linearGradient>' +
-      '<linearGradient id="' + u + 'fing" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#B98269"/><stop offset=".22" stop-color="#D9AB91"/><stop offset=".55" stop-color="#E6BCA2"/><stop offset="1" stop-color="#B57E65"/></linearGradient>' +
-      '<linearGradient id="' + u + 'fade" gradientUnits="userSpaceOnUse" x1="168" y1="0" x2="742" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".09" stop-color="#fff"/><stop offset=".955" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>' +
-      '<mask id="' + u + 'mask" maskUnits="userSpaceOnUse" x="0" y="0" width="' + PU_W + '" height="' + PU_H + '"><rect x="0" y="0" width="' + PU_W + '" height="' + PU_H + '" fill="url(#' + u + 'fade)"/></mask>' +
-      '<filter id="' + u + 'soft" x="-20%" y="-60%" width="140%" height="220%"><feGaussianBlur stdDeviation="3"/></filter>' +
-      '<filter id="' + u + 'blur" x="-20%" y="-60%" width="140%" height="220%"><feGaussianBlur stdDeviation="7"/></filter>' +
-      '<radialGradient id="' + u + 'throb"><stop offset="0" stop-color="#FF6B5B" stop-opacity=".95"/><stop offset=".6" stop-color="#FF6B5B" stop-opacity=".35"/><stop offset="1" stop-color="#FF6B5B" stop-opacity="0"/></radialGradient>' +
+      '<clipPath id="' + u + 'clip"><rect x="' + PU_IMG.x + '" y="' + PU_IMG.y + '" width="' + PU_IMG.w + '" height="' + PU_IMG.h + '" rx="14"/></clipPath>' +
+      '<filter id="' + u + 'soft" x="-20%" y="-60%" width="140%" height="220%"><feGaussianBlur stdDeviation="1.6"/></filter>' +
+      '<filter id="' + u + 'blur" x="-20%" y="-60%" width="140%" height="220%"><feGaussianBlur stdDeviation="4"/></filter>' +
+      '<radialGradient id="' + u + 'throb"><stop offset="0" stop-color="#FF6B5B" stop-opacity=".75"/><stop offset=".6" stop-color="#FF6B5B" stop-opacity=".25"/><stop offset="1" stop-color="#FF6B5B" stop-opacity="0"/></radialGradient>' +
       '</defs>' +
       '<rect class="pu__bg" x="0" y="0" width="' + PU_W + '" height="' + PU_H + '" rx="18"/>' +
-      '<g mask="url(#' + u + 'mask)">' +
-        /* the soft shadow the arm casts on the table */
-        '<path d="M96 330C240 324 380 312 476 308C560 314 660 318 760 314L760 346L96 356Z" fill="#000" opacity=".35" filter="url(#' + u + 'blur)"/>' +
-        /* forearm, wrist, palm and thumb, one outline */
-        '<path fill="url(#' + u + 'skin)" stroke="#9C6A54" stroke-width="1.2" d="M96 112C220 110 360 124 470 136C492 138 510 136 526 132C548 126 566 116 584 104C610 88 640 70 664 60C684 52 704 58 704 76C704 92 690 100 672 110C650 122 626 138 612 154C640 150 690 148 760 150L760 304C680 310 600 312 540 306C516 304 496 302 476 300C380 306 240 316 96 322Z"/>' +
-        /* the fleshy pads at the base of the thumb and of the little finger */
-        '<ellipse cx="562" cy="196" rx="52" ry="62" transform="rotate(-24 562 196)" fill="#EBC3AA" opacity=".45" filter="url(#' + u + 'soft)"/>' +
-        '<ellipse cx="648" cy="268" rx="78" ry="26" fill="#EBC3AA" opacity=".35" filter="url(#' + u + 'soft)"/>' +
-        '<ellipse cx="300" cy="222" rx="190" ry="40" fill="#EBC3AA" opacity=".22" filter="url(#' + u + 'blur)"/>' +
-        /* two tendons at the front of the wrist: the artery lies on the thumb side of both */
-        '<path d="M372 192C412 189 446 186 476 184" stroke="#F0CDB6" stroke-width="7" stroke-linecap="round" fill="none" opacity=".3" filter="url(#' + u + 'soft)"/>' +
-        '<path d="M384 222C420 220 450 219 476 218" stroke="#F0CDB6" stroke-width="6" stroke-linecap="round" fill="none" opacity=".24" filter="url(#' + u + 'soft)"/>' +
-        /* wrist creases, the thumb crease and the crease round the base of the thumb */
-        '<path d="M474 140C468 188 468 250 478 298M490 138C484 188 484 252 494 300" stroke="#8E5E48" stroke-width="1.5" fill="none" opacity=".5"/>' +
-        '<path d="M612 156C582 190 556 236 538 294" stroke="#94644E" stroke-width="1.5" fill="none" opacity=".45"/>' +
-        '<path d="M662 84C670 94 676 102 680 108" stroke="#94644E" stroke-width="1.4" fill="none" opacity=".5"/>' +
-        /* the radial artery, faint under the skin; it throbs with each beat */
+      '<image href="' + PU_IMG.href + '" x="' + PU_IMG.x + '" y="' + PU_IMG.y + '" width="' + PU_IMG.w + '" height="' + PU_IMG.h + '" preserveAspectRatio="xMidYMid slice" clip-path="url(#' + u + 'clip)"/>' +
+      '<rect x="' + PU_IMG.x + '" y="' + PU_IMG.y + '" width="' + PU_IMG.w + '" height="' + PU_IMG.h + '" rx="14" fill="none" stroke="#FFFFFF" stroke-opacity=".18"/>' +
+      /* the radial artery under the skin; it throbs with each beat */
+      '<g clip-path="url(#' + u + 'clip)">' +
         '<path class="pu__art-wide" d="' + PU_ART + '" filter="url(#' + u + 'blur)"/>' +
         '<path class="pu__art" d="' + PU_ART + '" filter="url(#' + u + 'soft)"/>' +
       '</g>' +
-      '<ellipse class="pu__throb" cx="419" cy="172" rx="96" ry="40" fill="url(#' + u + 'throb)"/>' +
-      '<g class="pu__rings"></g>' +
-      /* the tips of the index and middle fingers of the other hand, resting on the artery */
-      '<g class="pu__fingers">' +
-        PU_TIP.map(function (t) { return '<ellipse cx="' + (t[0] - 4) + '" cy="' + (t[1] + 3) + '" rx="23" ry="8" fill="#4A2A20" opacity=".4" filter="url(#' + u + 'soft)"/>'; }).join('') +
-        fingerPath(PU_TIP[0][0], PU_TIP[0][1], u, PU_TILT) + fingerPath(PU_TIP[1][0], PU_TIP[1][1], u, PU_TILT) +
-      '</g>';
-  }
-  /* a finger seen from the back, pointing down at its tip (x, tipY): about 1.7 cm wide, the nail
-     near the tip, creases over the two joints */
-  function fingerPath(x, tipY, u, tilt) {
-    var w = 21, top = tipY - 280;
-    function c(dx, dy) { return (x + dx) + ' ' + (tipY + dy); }
-    return '<g transform="rotate(' + tilt + ' ' + x + ' ' + tipY + ')">' +
-      '<path fill="url(#' + u + 'fing)" stroke="#8A5640" stroke-width="1.2" d="M' + (x - w - 2) + ' ' + top + 'L' + c(-w, -24) + 'C' + c(-w, -8) + ' ' + c(-12, 0) + ' ' + c(0, 0) +
-        'C' + c(12, 0) + ' ' + c(w, -8) + ' ' + c(w, -24) + 'L' + (x + w + 2) + ' ' + top + 'Z"/>' +
-      '<path fill="#F3D6C8" stroke="#BE8C78" stroke-width="1" d="M' + c(-15, -30) + 'C' + c(-15, -44) + ' ' + c(15, -44) + ' ' + c(15, -30) + 'L' + c(15, -15) + 'C' + c(15, -7) + ' ' + c(-15, -7) + ' ' + c(-15, -15) + 'Z"/>' +
-      '<path d="M' + c(-12, -13) + 'C' + c(-5, -9) + ' ' + c(5, -9) + ' ' + c(12, -13) + '" stroke="#FFFFFF" stroke-width="2" fill="none" opacity=".65"/>' +
-      '<path d="M' + c(-10, -36) + 'C' + c(-4, -39) + ' ' + c(4, -39) + ' ' + c(10, -36) + '" stroke="#C9998A" stroke-width="1.2" fill="none" opacity=".8"/>' +
-      '<path d="M' + c(-13, -66) + 'C' + c(-5, -62) + ' ' + c(5, -62) + ' ' + c(13, -66) + 'M' + c(-11, -59) + 'C' + c(-4, -56) + ' ' + c(4, -56) + ' ' + c(11, -59) + '" stroke="#98624E" stroke-width="1.2" fill="none" opacity=".7"/>' +
-      '<path d="M' + c(-15, -150) + 'C' + c(-6, -144) + ' ' + c(6, -144) + ' ' + c(15, -150) + 'M' + c(-13, -142) + 'C' + c(-5, -137) + ' ' + c(5, -137) + ' ' + c(13, -142) + 'M' + c(-10, -134) + 'C' + c(-4, -131) + ' ' + c(4, -131) + ' ' + c(10, -134) + '" stroke="#98624E" stroke-width="1.2" fill="none" opacity=".55"/>' +
-      '</g>';
+      '<ellipse class="pu__throb" cx="' + PU_TIPS[0] + '" cy="' + PU_TIPS[1] + '" rx="54" ry="22" fill="url(#' + u + 'throb)"/>' +
+      '<g class="pu__rings"></g>';
   }
   /* the hidden heart: a mean rate that swings a few per cent with breathing (faster breathing in) */
   function puHeart(rate, phase, breath) {
@@ -961,7 +930,7 @@
     var wrap = h('div', 'pu__wrap');
     var fig = h('figure', 'pu__fig');
     var svg = sv('svg', { viewBox: '0 0 ' + PU_W + ' ' + PU_H, 'class': 'pu__svg', role: 'img',
-      'aria-label': 'A left forearm and hand, palm up. The tips of the index and middle fingers of the other hand rest on the inside of the wrist, on the thumb side, over the radial artery, which shows faintly under the skin and throbs with each beat.' });
+      'aria-label': 'A photograph of a left forearm on a table, the hand turned with its thumb up. The tips of the index and middle fingers of another hand rest on the inside of the wrist, on the thumb side, just above the wrist crease. The radial artery is drawn in red where it runs under the skin, beneath the fingertips, and throbs with each beat.' });
     var u = 'pu' + (++UID);
     svg.innerHTML = puArt(u) + '<g class="pu__labels"></g>';
     fig.appendChild(svg);
@@ -970,7 +939,7 @@
     pack.appendChild(packT); pack.appendChild(fig);
     wrap.appendChild(pack);
     var gLab = svg.querySelector('.pu__labels'), art = svg.querySelector('.pu__art'), artW = svg.querySelector('.pu__art-wide'),
-        throb = svg.querySelector('.pu__throb'), rings = svg.querySelector('.pu__rings'), fingers = svg.querySelector('.pu__fingers');
+        throb = svg.querySelector('.pu__throb'), rings = svg.querySelector('.pu__rings');
 
     var panel = h('div', 'pu__panel');
     var dials = h('div', 'pu__dials',
@@ -1002,20 +971,31 @@
       art.setAttribute('stroke-width', n2(calm ? 5 : 4.5 + 3.5 * w));
       artW.setAttribute('stroke-opacity', n2(.12 + .58 * w));
       throb.setAttribute('opacity', n2(w));
-      fingers.setAttribute('transform', calm ? '' : 'translate(0,' + n2(-2.6 * w) + ')');
       var ts = heart.since(t), rs = '';
-      if (!calm && ts < .7) { var k = ts / .7; rs = '<ellipse cx="419" cy="172" rx="' + n2(48 + 70 * k) + '" ry="' + n2(20 + 28 * k) + '" class="pu__ring" opacity="' + n2(.95 * (1 - k)) + '"/>'; }
+      if (!calm && ts < .7) { var k = ts / .7; rs = '<ellipse cx="' + PU_TIPS[0] + '" cy="' + PU_TIPS[1] + '" rx="' + n2(40 + 62 * k) + '" ry="' + n2(16 + 24 * k) + '" class="pu__ring" opacity="' + n2(.95 * (1 - k)) + '"/>'; }
       rings.innerHTML = rs;
     }
-    /* where the centre line of a tilted finger crosses height y */
-    function fingerX(i, y) { var t = PU_TIP[i]; return n2(t[0] + (t[1] - y) * Math.tan(PU_TILT * Math.PI / 180)); }
+    /* each dot on its own part of the photograph; the artery's is past the fingertips, where the
+       artery turns towards the thumb, so its leader never runs along the artery */
+    var NARROW = false;
     function labels() {
-      gLab.innerHTML = L.labels({ items: [
-        { id: 'mid', text: 'middle finger', x: fingerX(0, 70), y: 70, side: 'L' },
-        { id: 'art', text: 'radial artery', x: 243, y: 190, side: 'L' },
-        { id: 'idx', text: 'index finger', x: fingerX(1, 38), y: 38, side: 'R' },
-        { id: 'thumb', text: 'thumb', x: 684, y: 80, side: 'R' }
-      ], left: 176, right: 746, font: fontPx, width: 140, top: 8, bottom: PU_H - 8, gap: 6 });
+      var items = [
+        { id: 'idx', text: 'index finger', x: 326, y: 189, side: 'L' },
+        { id: 'thumb', text: 'thumb', x: 619, y: 66, side: 'R' },
+        { id: 'art', text: 'radial artery', x: 441.7, y: 123.8, side: 'R' },
+        { id: 'mid', text: 'middle finger', x: 380, y: 197, side: 'R' }
+      ];
+      if (!NARROW) {
+        svg.setAttribute('viewBox', '0 0 ' + PU_W + ' ' + PU_H);
+        gLab.innerHTML = L.labels({ items: items, left: 176, right: 746, font: fontPx, width: 140, top: 8, bottom: PU_H - 8, gap: 6 });
+        return;
+      }
+      /* a phone: the photograph fills the width, numbered pins at its edges, the words in a band above */
+      var P = L.pinLabels({ items: items, left: 176, right: 746, font: fontPx, top: 8, bottom: PU_H - 8, gap: 4 });
+      var bf = Math.round(fontPx * .92), bandH = Math.round(2 * bf * 1.25 + 22);
+      var B = L.pinBand(P.order, 136, -bandH + 8, 648, bf, 2);
+      svg.setAttribute('viewBox', '122 ' + (-bandH) + ' 676 ' + (PU_H + bandH));
+      gLab.innerHTML = '<rect x="0" y="' + (-bandH) + '" width="' + PU_W + '" height="' + (bandH + 18) + '" fill="#0D1A22"/>' + B.svg + P.svg;
     }
     function show(t) {
       /* the dials and the buttons for the current state; t is the time since the count began */
@@ -1088,8 +1068,9 @@
       var ww = wrap.getBoundingClientRect().width;
       wrap.classList.toggle('pu--stack', staged || ww < 820);
       wrap.classList.toggle('pu--narrow', ww < 500);
-      var f = fontFor(svg, PU_W, 17, 36);          /* measured after the layout has changed */
-      if (f && f !== fontPx) { fontPx = f; labels(); }
+      var nar = ww < 500;
+      var f = fontFor(svg, nar ? 676 : PU_W, 17, 36);          /* measured after the layout has changed */
+      if ((f && f !== fontPx) || nar !== NARROW) { if (f) fontPx = f; NARROW = nar; labels(); }
     }
     var ro = observe(wrap, fit);
     if (ro) ro.observe(svg);

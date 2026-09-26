@@ -111,6 +111,7 @@
     if (spec.source) txt.appendChild(h('p', 'curio__src', ital(esc(spec.source))));
     body.appendChild(txt);
     box.appendChild(body);
+    if (right) fitRight(box, fig, txt);
     /* two or more pictures: under the words, side by side, each with its own caption (the Laennec card:
        the 1816 scene, then the wooden stethoscope he made) */
     if (spec.pics) {
@@ -125,6 +126,50 @@
       box.appendChild(row);
     }
     return box;
+  }
+
+  /* A picture on the right is sized to its words (Daniel, 26 Sep: the whale's heart was "too big
+     compared to the text", with "a huge blank below the text"). A picture with its caption under it
+     may run up to 50 px past the words, as a wide picture does; one that would run further is made
+     narrower, down to 170 px; if even then it would, as a tall picture beside a short text does, its
+     caption moves to a line across the foot of the card and the picture runs at most 36 px past the
+     words, as the octopus beside its words does.
+     Laid out again whenever the card's width changes. On a phone the picture sits above the words. */
+  function fitRight(box, fig, txt) {
+    var cap = fig.querySelector('figcaption'), lastW = -1, busy = false;
+    var endEl = txt.querySelector('.curio__src') || txt.lastElementChild;
+    var below = null;
+    function captionUnder(on) {
+      if (!cap) return;
+      if (on && !below) { below = h('p', 'curio__below'); below.appendChild(cap); txt.appendChild(below); }
+      else if (!on && below) { fig.appendChild(cap); below.remove(); below = null; }
+    }
+    function over() { return fig.getBoundingClientRect().bottom - endEl.getBoundingClientRect().bottom; }
+    function fit() {
+      if (busy || !box.isConnected) return;
+      var cw = txt.clientWidth; if (!cw || cw === lastW) return;
+      busy = true; lastW = cw;
+      captionUnder(false); fig.style.width = '';
+      if (global.getComputedStyle(fig).cssFloat !== 'right') { busy = false; return; }
+      var maxW = fig.getBoundingClientRect().width, minW = Math.min(maxW, 170);
+      if (over() > 50) {
+        fig.style.width = minW + 'px';
+        if (over() > 50) {
+          /* even at its narrowest it runs on: caption to the foot of the card, picture as tall as the words */
+          captionUnder(true);
+          var lo = 120, hi = maxW;
+          for (var i = 0; i < 8; i++) { var mid = (lo + hi) / 2; fig.style.width = mid + 'px'; if (over() <= 36) lo = mid; else hi = mid; }
+          fig.style.width = Math.floor(lo) + 'px';
+        } else {
+          var lo2 = minW, hi2 = maxW;
+          for (var j = 0; j < 8; j++) { var m2 = (lo2 + hi2) / 2; fig.style.width = m2 + 'px'; if (over() <= 50) lo2 = m2; else hi2 = m2; }
+          fig.style.width = Math.floor(lo2) + 'px';
+        }
+      }
+      busy = false;
+    }
+    if (global.ResizeObserver) new global.ResizeObserver(function () { global.requestAnimationFrame(fit); }).observe(box);
+    if (global.document.fonts && global.document.fonts.ready) global.document.fonts.ready.then(function () { lastW = -1; fit(); });
   }
 
   /* ---------- labelphoto: a real photograph, labelled the way a drawing is ----------
