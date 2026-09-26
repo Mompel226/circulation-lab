@@ -370,6 +370,21 @@ const nStamp = (idx.match(/\.(?:js|css)\?v=\d+/g) || []).length;
 if (!nStamp) throw new Error('index.html has no ?v= stamps to bump — cache busting would be silent');
 writeFileSync(idxPath, idx.replace(/(\.(?:js|css))\?v=\d+/g, `$1?v=${STAMP}`));
 
+/* ---------- the 3D heart's model: its own hash in its URL ----------
+   The worker keys each picture by a hash of its bytes, but on a miss it fetches the plain URL, and
+   the browser may answer that from its own cache (GitHub Pages: 10 minutes) with the OLD file, which
+   the worker would then keep under the new key. So the widget asks for heart.glb?r=<hash>: a new model
+   is a new URL, which no cache anywhere has seen. Stamped here like the ?v= stamps, and the same hash
+   (sha1, 8 hex) as the worker's MEDIA_REV. */
+{
+  const modelRev = createHash('sha1').update(readFileSync(resolve(REPO, 'assets/3d/heart.glb'))).digest('hex').slice(0, 8);
+  const w3Path = resolve(REPO, 'js/w-heart3d.js');
+  const w3 = readFileSync(w3Path, 'utf8');
+  if (!/heart\.glb\?r=[0-9a-f]{8}/.test(w3)) throw new Error('js/w-heart3d.js no longer asks for heart.glb?r=<hash> — the model would be cached stale after a change');
+  const w3New = w3.replace(/heart\.glb\?r=[0-9a-f]{8}/g, 'heart.glb?r=' + modelRev);
+  if (w3New !== w3) { writeFileSync(w3Path, w3New); console.log('  js/w-heart3d.js       the 3D model is new: heart.glb?r=' + modelRev); }
+}
+
 /* ---------- the register ----------
    labs-shared/labs.json is the single register: this lab's counts are written by this build,
    so the hubs' percentages and the Apps Script's totals can never disagree with what is here. */
