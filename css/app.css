@@ -1513,3 +1513,12 @@ picture{display:block;line-height:0}
 .platecol__tools{flex-wrap:wrap;row-gap:6px}
 @media (max-width:1000px){ .platecol__hint{display:none} .tool--t{font-size:11px} }
 @media (prefers-reduced-motion:reduce){ .cp__veil,.cp__tubes,.cp__f,.cp__lens,.cp__lens [data-part]{transition:none} }
+
+/* standing in the plate's column (CircLearn.stage; Daniel, 26 Sep: "any animations move them to the left and
+   then the text and the buttons on the right"): the drawing fills the column, as tall as it can be without
+   losing its shape, and the words of each step stay in the list on the right */
+.sim > .cy__pack,.sim > .mx__pack{flex:1;min-height:0;display:flex;flex-direction:column;gap:6px}
+.sim > .cy__pack .cy__fig,.sim > .mx__pack .mx__fig{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;margin:0}
+.sim > .cy__pack .cy__svg,.sim > .mx__pack .mx__svg{flex:0 1 auto;min-height:0;width:100%;height:auto;max-height:100%}
+.sim > .cy__pack .sp__now,.sim > .mx__pack .sp__now{display:none!important}
+.cy.cy--staged .cy__wrap,.mx.mx--staged .mx__wrap{grid-template-columns:minmax(0,1fr)}

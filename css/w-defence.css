@@ -73,3 +73,13 @@
 .cl__scabf{stroke:#3B1B10;stroke-width:1}
 .cl__scabt ellipse{fill:#3B1B10;opacity:.45}
 .cl__bug{fill:#7DB43F;stroke:#3B6A1D;stroke-width:.6}
+
+/* standing in the plate's column (CircLearn.stage; Daniel, 26 Sep: "any animations move them to the left and
+   then the text and the buttons on the right"): the drawing fills the column, as tall as it can be without
+   losing its shape, and the words of each step stay in the list on the right */
+.sim > .ph__pack,.sim > .cl__pack{flex:1;min-height:0;display:flex;flex-direction:column;gap:6px}
+.sim > .ph__pack .ph__fig,.sim > .cl__pack .cl__fig{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;margin:0}
+.sim > .ph__pack .ph__svg,.sim > .cl__pack .cl__svg{flex:0 1 auto;min-height:0;width:100%;height:auto;max-height:100%}
+.sim > .ph__pack .sp__now,.sim > .cl__pack .sp__now{display:none!important}
+.ph.ph--staged .ph__wrap,.cl.cl--staged .cl__wrap{grid-template-columns:minmax(0,1fr)}
+.sim > .ph__pack .ph__fig,.sim > .cl__pack .cl__fig{margin:0}

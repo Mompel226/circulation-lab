@@ -125,3 +125,13 @@
 .pf.pf--narrow .pf__who{flex-direction:row;align-items:center;gap:10px;align-self:center}
 .pf.pf--narrow .pf__facts{grid-column:1 / -1;columns:1;margin-top:8px}
 @media (prefers-reduced-motion:reduce){.pf__list.is-dragging .pf__card{transition:none}}
+
+/* standing in the plate's column (CircLearn.stage; Daniel, 26 Sep: "any animations move them to the left and
+   then the text and the buttons on the right"): the drawing fills the column, as tall as it can be without
+   losing its shape, and the words of each step stay in the list on the right */
+.sim > .ar__pack{flex:1;min-height:0;display:flex;flex-direction:column;gap:6px}
+.sim > .ar__pack .ar__fig{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;margin:0}
+.sim > .ar__pack .ar__svg{flex:0 1 auto;min-height:0;width:100%;height:auto;max-height:100%}
+.sim > .ar__pack .sp__now{display:none!important}
+.ar.ar--staged .ar__wrap{grid-template-columns:minmax(0,1fr)}
+.sim > .ar__pack .ar__fig{margin:0}

@@ -444,7 +444,12 @@
     plate.appendChild(views);
     var key = h('p', 'jn__key');
     plate.appendChild(key);
-    root.appendChild(plate);
+    /* on a wide screen the two drawings stand in the plate's column; the buttons, the route, the words
+       and the real picture stay here (Daniel, 26 Sep: "any animations move them to the left") */
+    var pack = h('div', 'jn__pack');
+    var packT = h('p', 'stg__title', esc(spec.title || 'Travel with the blood')); packT.hidden = true;
+    pack.appendChild(packT); pack.appendChild(plate);
+    root.appendChild(pack);
 
     /* ----- the words, and the real picture ----- */
     var below = h('div', 'jn__below');
@@ -1744,6 +1749,7 @@
       lastW = w;
       try { var fam = getComputedStyle(document.documentElement).getPropertyValue('--font').trim(); if (fam) FAMILY = fam; } catch (e) {}
       root.classList.toggle('jn--narrow', w < 600);
+      pack.classList.toggle('jn--narrow', w < 600);      /* the drawings keep their layout when they stand in the plate's column */
       build();
       paint(T0);
     }
@@ -1754,7 +1760,10 @@
     }
     if (global.ResizeObserver) watchSize(); else global.addEventListener('resize', fit);
 
-    box.__onReset = function () { stop(); if (ro) { ro.disconnect(); ro = null; } };
+    var stg = CL.stage ? CL.stage({ box: box, spec: spec, pack: pack, home: root, before: function () { return below; }, watch: function () { return box; },
+      onPlace: function (inColumn) { packT.hidden = !inColumn; box.classList.toggle('jn--staged', inColumn); lastW = 0; fit(); } }) : null;
+    box.__onMove = function () { if (stg) stg.mount(); };
+    box.__onReset = function () { stop(); if (ro) { ro.disconnect(); ro = null; } if (stg) stg.detach(); };
     /* for the headless checks (_journey.html): jump straight to a frame */
     box.__seek = function (t) {
       stop();
