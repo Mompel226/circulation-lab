@@ -87,19 +87,25 @@
     function ital(html) { return html.replace(/~([^~]+)~/g, '<i>$1</i>'); }
     /* a card with no picture is one column: its words used to sit in the picture's 300 px column with the
        rest of the card empty (Daniel, 25 Sep: "all of the text on the left and not expanding the whole space") */
-    var box = h('section', 'curio' + (spec.shape === 'tall' ? ' curio--tall' : '') + (spec.img ? '' : ' curio--text') + (spec.pics ? ' curio--pics' : ''));
+    /* side: 'right' puts the picture on the right with the words round it (Daniel, 26 Sep: the whale's
+       heart and the octopus "to the right and then the text surrounding that image") */
+    var right = !!(spec.img && spec.side === 'right');
+    var box = h('section', 'curio' + (spec.shape === 'tall' ? ' curio--tall' : '') + (spec.img && !right ? '' : ' curio--text') + (spec.pics ? ' curio--pics' : ''));
     box.appendChild(h('div', 'curio__head',
       '<span class="curio__pill">Did you know?</span>' +
       '<span class="curio__fence">Not in 0610 or the IB guide. Nothing here is examined.</span>'));
     var body = h('div', 'curio__body');
     if (spec.img) {
       var P = W.picture({ img: spec.img, alt: spec.alt || '' });
-      var fig = h('figure', 'curio__fig');
+      var wh = (global.PHOTO_SIZE || {})[spec.img] || [4, 3];
+      var fig = h('figure', 'curio__fig' + (right ? ' curio__fig--right' + (wh[1] > wh[0] ? ' curio__fig--upright' : '') : ''));
       fig.appendChild(P.pic);
-      if (spec.credit) fig.appendChild(h('figcaption', 'curio__credit', ital(esc(spec.credit))));
-      body.appendChild(fig);
+      if (right && (spec.cap || spec.credit)) fig.appendChild(h('figcaption', 'curio__pcap', (spec.cap ? ital(W.mk(spec.cap)) : '') + (spec.credit ? ' <span class="curio__credit">' + ital(esc(spec.credit)) + '</span>' : '')));
+      else if (spec.credit) fig.appendChild(h('figcaption', 'curio__credit', ital(esc(spec.credit))));
+      if (!right) body.appendChild(fig);
     }
     var txt = h('div', 'curio__text');
+    if (right) txt.appendChild(fig);          /* floated: the title and the paragraphs run round it */
     txt.appendChild(h('h4', 'curio__title', esc(spec.title || '')));
     (spec.body || []).forEach(function (t) { txt.appendChild(h('p', 'curio__p', ital(W.mk(t)))); });
     if (spec.source) txt.appendChild(h('p', 'curio__src', ital(esc(spec.source))));
