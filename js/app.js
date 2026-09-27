@@ -436,6 +436,9 @@
           if (window.Terms && Terms.teach) Terms.teach(teachHere);
           s2.innerHTML = M(typeof x === 'object' ? x.text : x);
           if (window.Terms && Terms.teach) Terms.teach(false);
+          /* a fact the syllabus words simply, with the fuller truth under it, marked extension (Daniel, 27 Sep: the
+             hepatic portal vein "brings blood from the small intestine", but it is the mesenteric vein that does) */
+          if (typeof x === 'object' && x.note) s2.insertAdjacentHTML('beforeend', '<span class="exam-inote"><span class="sup sup--ext">extension</span> ' + M(x.note) + '</span>');
           if (typeof x === 'object' && x.group) s2.setAttribute('data-group', [].concat(x.group).join(' '));
           ol.appendChild(s2);
         });

@@ -69,7 +69,7 @@
     'pulmonary-artery': { label: 'Pulmonary artery', note: 'carries deoxygenated blood from the right ventricle to the lungs', colour: '#8FB2FF' },
     'pulmonary-vein': { label: 'Pulmonary vein', note: 'carries oxygenated blood from the lungs to the left atrium', colour: '#FF8A7E' },
     'hepatic-artery': { label: 'Hepatic artery', note: 'brings oxygenated blood from the aorta into the liver', colour: '#FF8A7E' },
-    'hepatic-portal-vein': { label: 'Hepatic portal vein', note: 'brings blood from the gut into the liver, rich in absorbed nutrients after a meal', colour: '#7FE3DA' },
+    'hepatic-portal-vein': { label: 'Hepatic portal vein', note: 'formed where the mesenteric vein, from the small intestine, joins the splenic vein; it carries that blood into the liver, rich in absorbed nutrients after a meal', colour: '#7FE3DA' },
     'hepatic-vein': { label: 'Hepatic vein', note: 'takes blood out of the liver, to the vena cava', colour: '#8FB2FF' },
     'mesenteric-vein': { label: 'Mesenteric vein', note: 'carries blood from the intestines, with the nutrients absorbed in the small intestine, to the hepatic portal vein' + NOT, colour: '#7FE3DA' },
     'splenic-vein': { label: 'Splenic vein', note: 'carries blood from the spleen; it joins the mesenteric vein to form the hepatic portal vein' + NOT, colour: '#7FE3DA' },
@@ -171,7 +171,8 @@
     { id: 'pulmonary-vein', text: 'pulmonary vein', at: [258, 216], alt: [[253.1, 205.4], [257.4, 232.8]], lv: 'B' },
     { id: 'hepatic-vein', text: 'hepatic vein', at: [195, 266], alt: [[187.2, 271.2]], lv: 'B' },
     { id: 'hepatic-artery', text: 'hepatic artery', at: [196, 290.5], alt: [[188.1, 295.6]], lv: 'B' },
-    { id: 'hepatic-portal-vein', text: 'hepatic portal vein', at: [197, 300.5], alt: [[163.2, 313.2]], lv: 'B' },
+    /* on its trunk, just after the mesenteric and splenic veins join, before it branches in the liver (Daniel, 27 Sep) */
+    { id: 'hepatic-portal-vein', text: 'hepatic portal vein', at: [205.9, 303.9], alt: [[198.5, 301.9]], lv: 'B' },
     { id: 'mesenteric-vein', text: 'mesenteric vein', at: [215.9, 321.1], alt: [[217.3, 328.5], [212.6, 311.8]], lv: 'B' },
     { id: 'splenic-vein', text: 'splenic vein', at: [236.9, 300.2], alt: [[215.8, 305.4]], lv: 'B' },
     { id: 'spleen', text: 'spleen', at: [272.3, 301.2], alt: [[268.8, 288.7], [270.3, 314.7]], lv: 'B' },
