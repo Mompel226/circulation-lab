@@ -32,7 +32,12 @@
       map: map, tag: tag,
       onEnter: function (id, target) { var g = draw.G[PRESS_AS[id] || id]; if (g) draw.pin(target, g.label, g.colour); },
       onLeave: function () { if (tag) tag.classList.remove('on'); },
-      onClick: function (id) { onPick(PRESS_AS[id] || id); }
+      onClick: function (id) {
+        var gid = PRESS_AS[id] || id;
+        /* the part already chosen, pressed again: it is let go, and the station's parts come back */
+        if (focused && gid === focused) { letGo(); return; }
+        onPick(gid);
+      }
     });
     if (whole) { whole.hidden = false; whole.addEventListener('click', flyHome); }
     var zin = document.getElementById('tZoomIn'), zout = document.getElementById('tZoomOut');
@@ -82,7 +87,7 @@
     draw.heartMode(s.heart === 'exterior' ? 'exterior' : 'section');
     draw.lens(wantsLens(s));
     draw.setRate(s.rate || 72);
-    if (hint) hint.textContent = 'Click a part to see what it does · scroll or pinch to zoom';
+    if (hint) hint.textContent = HINT;
     var r = draw.light(ids);
     shown = { name: st.name, n: ids.length };
     var names = ids.map(function (id) { return draw.G[id] ? draw.G[id].label.toLowerCase() : id; });
@@ -110,9 +115,11 @@
 
   /* one part, named and framed: the student clicked it on the body or in the text */
   var focused = null;
+  var HINT = 'Click a part to see what it does · scroll or pinch to zoom';
   function focus(id) {
     if (!draw || !draw.G[id]) return;
     var g = draw.G[id];
+    if (hint) hint.textContent = 'Press it again, or Whole body, to see all the parts again';
     var lit = FOCUS_WITH[id] || draw.organVessels(id) || [id];
     var r = draw.light(lit);
     focused = id;
@@ -120,6 +127,14 @@
     say(g.label, g.note || '', r.colour);
     if (CHAMBER[id] || id === 'heart') draw.lens('section');
     draw.flyTo(FOCUS_WITH[id] ? boxOfAll(lit, 40) : draw.boxOf(id, 40), function () { var e = draw.elFor(id); if (e && focused === id) draw.pin(e, g.label, r.colour); });
+  }
+  /* a part pressed is let go: the station's own parts are lit again. Daniel, 27 Sep: "once you click on one
+     artery, it's stuck in there": it stayed until the reader scrolled on from its sentence, and Whole body only
+     zoomed out. Now pressing it again, or Whole body, lets it go too. */
+  function letGo() {
+    if (!focused) return;
+    if (global.CircLearn && global.CircLearn.releasePlate) global.CircLearn.releasePlate();   /* its end brings the picture back */
+    if (focused) unfocus();
   }
   /* the reader has moved on from the part: the station's own picture comes back */
   function unfocus() {
@@ -132,6 +147,7 @@
   function flyHome() {
     if (!draw) return;
     if (tag) tag.classList.remove('on');
+    letGo();                                          /* the whole body with all the station's parts, not only the one pressed */
     draw.flyTo(draw.FULL);
     if (shown) say(shown.name, shown.n ? 'the whole body · ' + shown.n + (shown.n === 1 ? ' part lit' : ' parts lit') : 'the whole circulation', null);
   }

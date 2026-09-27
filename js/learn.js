@@ -362,7 +362,9 @@
       requestAnimationFrame(check);
     }
     return {
-      hold: hold, release: function () { release(true); }, drop: function () { release(false); },
+      /* dropHold lets go of a pressed part without bringing the station's picture back (the panel is being
+         rebuilt); it was called drop, like the claims' drop below, which replaced it, so it did nothing */
+      hold: hold, release: function () { release(true); }, dropHold: function () { release(false); },
       add: function (c) { c.wants = false; claims.push(c); return c; },
       drop: function (c) {
         var i = claims.indexOf(c); if (i >= 0) claims.splice(i, 1);
@@ -443,7 +445,7 @@
   var MAKERS = [['video', video], ['watch', watch], ['curio', curio], ['labelphoto', labelphoto], ['figure', figure]];
   global.CircLearn = { add: function (name, fn) { MAKERS.push([name, fn]); W.register(name, fn); }, diagram: function (name, fn) { DIAGRAMS[name] = fn; },
                        h: h, esc: esc, mk: mk, head: head, svgEl: svgEl, stage: stage,
-                       holdPlate: STAGE.hold, releasePlate: STAGE.release, dropPlateHold: STAGE.drop };
+                       holdPlate: STAGE.hold, releasePlate: STAGE.release, dropPlateHold: STAGE.dropHold };
   MAKERS.forEach(function (m) { W.register(m[0], m[1]); });
   global.Learn = { widget: W.widget, reap: W.reap, svgFor: svgFor, DIAGRAMS: DIAGRAMS };
 })(window);
