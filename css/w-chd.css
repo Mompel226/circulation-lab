@@ -164,3 +164,9 @@
 .ar__lcap .ar__lt3.is-dead{fill:#C9C9CF}
 .ar__lrb{fill:#D9463F;stroke:#7A1E21;stroke-width:.45}
 .ar__lrb.is-dusk{fill:#7E3F52;stroke:#40182A}
+/* the small arteriole feeding the lower capillary: its smooth muscle, whose cells wrap round it (cut across here) */
+.ar__lam{fill:#D49A8C;stroke:#A45A50;stroke-width:.35}
+.ar__lamn{fill:#8A4A52}
+/* dead cells breaking: cracks across the fibres (the tissue's colour), bits of cell */
+.ar__lbrk path{fill:none;stroke:#EBD2CA;stroke-linejoin:round}
+.ar__ldeb circle{fill:#8E8C92}
