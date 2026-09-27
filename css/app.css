@@ -1277,7 +1277,7 @@ picture{display:block;line-height:0}
 .plate-key i{display:inline-block;width:18px;height:6px;border-radius:3px}
 .plate-key__o{background:#C4302B;box-shadow:0 0 0 1.5px #FFBF00 inset}
 .plate-key__d{background:#0060B6;box-shadow:0 0 0 1.5px #00A0C6 inset}
-.plate-key__p{background:#0060B6;box-shadow:0 0 0 1.5px #00D8C6 inset}
+.plate-key__p{background:#0E8F88;box-shadow:0 0 0 1.5px #9AF5EA inset}
 .platecol.is-sim .plate-key,.platecol.is-bench .plate-key{display:none}
 /* a station that stands something else on the bench takes the whole column */
 .platecol.is-bench,.platecol.is-sim{background:#F3EFE4;background-image:none;color:var(--ink)}

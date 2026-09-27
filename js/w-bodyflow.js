@@ -156,6 +156,7 @@
   /* ---------- colours: the plate's red and blue, and one colour per substance ---------- */
   var C = {
     oxy: '#E8453F', deo: '#3F72D6', oxyWall: '#7A1E21', deoWall: '#1B3570', oxyCell: '#FF8A7E', deoCell: '#8FB2FF',
+    por: '#23A99D', porWall: '#0B443F',                /* from the gut to the liver: teal, as on the plate */
     glu: '#F6C945', gluLine: '#7A4E00', aa: '#6FD08C', aaLine: '#185C2C', aaN: '#C8A2FF',
     urea: '#C9A4FF', ureaLine: '#43237F', fat: '#FFEFC4', fatLine: '#A5813A',
     o2: '#FF7B6B', co2: '#C3CCD3', co2Dark: '#66737D',
@@ -171,85 +172,170 @@
   function hp(p) { return [hx(p[0]), hy(p[1])]; }
   var AO0 = hp([300, 560]), IVC0 = hp([28, 560]);            /* where the heart drawing's aorta and vena cava end */
 
+  /* ---------- the organs ----------
+     Daniel, 27 Sep: there was no diaphragm between the lungs and the liver, no large intestine and no mesentery
+     (the vessels ran straight into the gut), and the small intestine was a stack of U shapes. Now the diaphragm
+     is a band of muscle domed under each lung and lower under the heart, with the liver under its right dome; the
+     large intestine frames the abdomen; and the small intestine hangs from the mesentery, a fan of thin membrane
+     whose root is fixed to the back wall of the abdomen, from under the transverse colon down to the caecum.
+     The small intestine runs in loops along the fan's free edge (the edge is far longer than the root, so it
+     ruffles), and its vessels run in the fan to it: branches, arches near the gut (arcades), and short straight
+     vessels into its wall. Above the root the abdomen is left clear, so the vena cava and the hepatic portal
+     vein can be followed all the way up. */
   var ORG = {
-    lungR: curve([[566, 514], [546, 524], [526, 550], [512, 590], [504, 640], [500, 700], [502, 766], [530, 784], [572, 781], [604, 775], [600, 740], [597, 700], [595, 660], [595, 610], [591, 560], [583, 527]], true, 4),
-    lungL: curve([[718, 514], [738, 522], [758, 548], [772, 590], [782, 650], [786, 720], [784, 776], [760, 789], [726, 790], [703, 785], [707, 768], [716, 754], [721, 743], [708, 728], [701, 706], [700, 680], [700, 630], [702, 580], [708, 540]], true, 4),
-    liver: curve([[502, 806], [512, 787], [540, 775], [590, 771], [642, 776], [692, 784], [734, 794], [754, 803], [739, 812], [705, 825], [669, 840], [635, 855], [603, 869], [569, 883], [537, 890], [513, 881], [503, 853]], true, 4),
+    lungR: curve([[566, 514], [546, 524], [526, 550], [512, 590], [504, 640], [500, 700], [502, 764], [530, 781], [572, 778], [604, 773], [600, 740], [597, 700], [595, 660], [595, 610], [591, 560], [583, 527]], true, 4),
+    lungL: curve([[718, 514], [738, 522], [758, 548], [772, 590], [782, 650], [786, 720], [784, 774], [760, 786], [726, 787], [703, 782], [707, 768], [716, 754], [721, 743], [708, 728], [701, 706], [700, 680], [700, 630], [702, 580], [708, 540]], true, 4),
+    /* its top follows the underside of the diaphragm */
+    liver: curve([[500, 830], [505, 811], [519, 798], [546, 793], [580, 793], [624, 791], [668, 792], [706, 796], [736, 802], [756, 808], [741, 816], [705, 828], [669, 842], [635, 856], [603, 870], [569, 884], [537, 891], [513, 882], [502, 858]], true, 4),
     kidR: curve([[546, 904], [562, 910], [570, 926], [568, 940], [574, 950], [568, 962], [570, 978], [560, 994], [544, 998], [528, 988], [520, 966], [520, 938], [528, 914]], true, 3),
     kidL: curve([[726, 892], [742, 900], [752, 920], [752, 948], [744, 972], [728, 984], [712, 980], [704, 966], [706, 950], [700, 938], [706, 926], [704, 912], [712, 898]], true, 3),
-    gut: curve([[704, 988], [676, 992], [640, 996], [606, 999], [590, 1010], [598, 1024], [630, 1030], [670, 1030], [708, 1027], [726, 1038], [718, 1054], [684, 1060], [640, 1062], [602, 1063], [588, 1076], [600, 1090], [640, 1094], [682, 1094], [714, 1091], [728, 1104], [716, 1118], [678, 1123], [634, 1124], [598, 1122], [580, 1112]], false, 3)
+    /* the diaphragm's middle line, from the body's right side to its left: a dome under each lung, the right
+       one higher (the liver is under it), and lower in the middle, where the heart rests on it */
+    diaph: curve([[488, 848], [494, 824], [506, 805], [526, 793], [552, 788], [580, 788], [604, 789], [628, 785], [654, 783], [680, 785], [706, 791], [732, 797], [758, 798], [778, 807], [792, 827], [798, 850]], false, 3),
+    /* the large intestine: caecum, ascending colon, transverse colon, descending colon, sigmoid colon, rectum */
+    colon: curve([[557, 1140], [552, 1110], [549, 1070], [549, 1032], [552, 1006], [564, 990], [584, 986], [614, 992], [644, 999], [676, 999], [706, 992], [732, 981], [750, 975], [758, 990], [758, 1026], [757, 1070], [756, 1110], [754, 1140], [742, 1166], [716, 1182], [688, 1188], [666, 1196], [656, 1214], [654, 1244]], false, 3)
   };
+  /* the mesentery's root, on the back wall: from where the small intestine begins, under the transverse colon,
+     down to where it ends at the caecum */
+  var ROOT = { a: [676, 1004], b: [574, 1118] };
+  /* the free edge of the fan, under the loops of the small intestine, round from where it begins to its end */
+  var EDGE = curve([[694, 1012], [722, 1019], [738, 1042], [742, 1074], [735, 1106], [716, 1134], [688, 1151], [656, 1158], [624, 1155], [598, 1146], [579, 1133], [565, 1123]], false, 3);
+  /* the small intestine: loops of different sizes lying different ways, a few over others, packed between the
+     mesentery and the large intestine, from where it begins under the transverse colon to the caecum (a wave
+     along the fan's edge read as a row of letter Us) */
+  ORG.si = (function () {
+    var H = [[694, 1012], [712, 1008], [731, 1014], [741, 1029], [735, 1044], [716, 1045], [699, 1036],
+      [690, 1049], [698, 1064], [719, 1066], [737, 1060], [747, 1074], [742, 1091], [724, 1094], [707, 1085],
+      [698, 1097], [708, 1111], [728, 1113], [741, 1124], [733, 1141], [713, 1143], [700, 1131], [688, 1117],
+      [676, 1127], [682, 1143], [699, 1154], [688, 1167], [667, 1163], [657, 1148], [663, 1133],
+      [648, 1126], [634, 1136], [638, 1152], [626, 1165], [606, 1161], [601, 1146], [611, 1133],
+      [598, 1126], [584, 1135], [582, 1151], [568, 1150], [560, 1137], [565, 1125]];
+    return curve(H, false, 1.6);
+  })();
+  /* the fan itself: from the root out to the gut (EDGE runs under the loops), back to the start */
+  ORG.mesentery = (function () {
+    var pts = [ROOT.b, ROOT.a];
+    for (var s2 = 0; s2 <= EDGE.total; s2 += 6) {
+      var p = at(EDGE, s2), nx = -Math.sin(p.a), ny = Math.cos(p.a);
+      pts.push([p.x + nx * 9, p.y + ny * 9]);
+    }
+    return measure(pts);
+  })();
 
   var VES = [
-    /* arteries, from the heart outwards */
-    { id: 'aoAbd', a: 1, w: 11, z: 0, p: [AO0, [689, 806], [678, 828], [667, 852], [664, 880], [664, 960], [664, 1040], [664, 1110]] },
-    { id: 'iliacAR', a: 1, w: 8, z: 0, p: [[664, 1110], [651, 1136], [627, 1168], [608, 1204], [600, 1238]] },
-    { id: 'iliacAL', a: 1, w: 8, z: 0, p: [[664, 1110], [677, 1136], [701, 1168], [720, 1204], [728, 1238]] },
-    { id: 'renAR', a: 1, w: 5, z: -1, p: [[664, 920], [640, 923], [606, 932], [575, 946]] },
-    { id: 'renAL', a: 1, w: 5, z: 0, p: [[664, 915], [682, 918], [701, 927]] },
-    { id: 'hepA', a: 1, w: 5, z: 1, p: [[664, 846], [650, 845], [633, 848], [618, 854], [610, 859]] },
-    { id: 'sma', a: 1, w: 6, z: 1, p: [[664, 876], [659, 902], [650, 940], [639, 982], [626, 1026], [612, 1070]] },
-    { id: 'bcA', a: 1, w: 6, z: 1, p: [hp([193, -60]), [636, 488], [630, 474]] },
-    { id: 'carAR', a: 1, w: 5, z: 1, p: [[630, 474], [626, 430], [624, 360]] },
-    { id: 'subAR', a: 1, w: 5, z: 1, p: [[630, 474], [600, 467], [552, 470], [508, 494], [482, 536]] },
-    { id: 'carAL', a: 1, w: 5, z: 1, p: [hp([247, -60]), [666, 460], [664, 360]] },
-    { id: 'subAL', a: 1, w: 5, z: 1, p: [hp([299, -60]), [706, 486], [748, 476], [792, 496], [818, 540]] },
-    /* veins, towards the heart */
-    { id: 'iliacVR', a: 0, w: 8, z: -1, p: [[586, 1238], [590, 1204], [595, 1158], [598, 1110]] },
-    { id: 'iliacVL', a: 0, w: 8, z: -1, p: [[742, 1238], [737, 1206], [716, 1170], [681, 1140], [640, 1124], [598, 1110]] },
-    { id: 'ivcAbd', a: 0, w: 12, z: -1, p: [[598, 1110], [598, 1040], [598, 960], [596, 904], [590, 862], [581, 826], [572, 801], IVC0] },
-    { id: 'renVR', a: 0, w: 6, z: 0, p: [[575, 957], [586, 955], [597, 953]] },
-    { id: 'renVL', a: 0, w: 6, z: 0.5, p: [[701, 941], [680, 942], [650, 944], [622, 946], [599, 947]] },
-    { id: 'hepVR', a: 0, w: 6, z: 2, p: [[522, 838], [540, 823], [556, 809], [568, 798]] },
-    { id: 'hepVM', a: 0, w: 6, z: 2, p: [[598, 836], [589, 820], [578, 807], [570, 800]] },
-    { id: 'hepVL', a: 0, w: 5, z: 2, p: [[680, 812], [648, 806], [610, 803], [574, 801]] },
-    { id: 'portal', a: 0, w: 8, z: 1, p: [[586, 1106], [594, 1064], [604, 1022], [613, 983], [620, 945], [625, 913], [622, 889], [613, 873], [604, 864]] },
-    { id: 'jugR', a: 0, w: 5, z: 1, p: [[610, 360], [610, 430], [607, 474]] },
-    { id: 'subVR', a: 0, w: 5, z: 1, p: [[474, 546], [500, 504], [548, 480], [596, 476], [607, 474]] },
-    { id: 'bcvR', a: 0, w: 7, z: 1, p: [[607, 474], [604, 490], hp([104, -60])] },
-    { id: 'jugL', a: 0, w: 5, z: 1, p: [[680, 360], [680, 430], [676, 472]] },
-    { id: 'subVL', a: 0, w: 5, z: 1, p: [[828, 546], [798, 502], [748, 482], [700, 476], [676, 472]] },
-    { id: 'bcvL', a: 0, w: 7, z: 1, p: [[676, 472], [648, 480], [620, 490], hp([104, -60])] },
+    /* arteries, from the heart outwards. g: the group each is drawn in (groupsOf, below). w: its width, or
+       [at the start, at the end] if it tapers. into: how far its start lies inside the vessel it leaves */
+    { id: 'aoAbd', a: 1, g: 'A1', w: [10.4, 8.6], p: [AO0, [689, 806], [678, 828], [667, 852], [664, 880], [664, 960], [664, 1040], [664, 1110]] },
+    { id: 'iliacAR', a: 1, g: 'A2', w: [6.2, 5.2], into: 4, p: [[664, 1110], [651, 1136], [627, 1168], [608, 1204], [600, 1238]] },
+    { id: 'iliacAL', a: 1, g: 'A2', w: [6.2, 5.2], into: 4, p: [[664, 1110], [677, 1136], [701, 1168], [720, 1204], [728, 1238]] },
+    { id: 'renAR', a: 1, g: 'A1', w: 4.4, into: 4, p: [[664, 920], [640, 923], [606, 932], [575, 946]] },
+    { id: 'renAL', a: 1, g: 'A1', w: 4.4, into: 4, p: [[664, 915], [682, 918], [701, 927]] },
+    /* the coeliac artery, a short thick trunk, and the hepatic artery on from it to the liver */
+    { id: 'hepA', a: 1, g: 'A1', w: [5.6, 3.6], into: 4, p: [[664, 848], [656, 842], [646, 843], [633, 848], [618, 854], [610, 859]] },
+    { id: 'sma', a: 1, g: 'M', w: [5.2, 3.2], into: 5, p: [[664, 876], [665, 918], [668, 958], [670, 988], [656, 1016], [636, 1042], [614, 1070], [594, 1094], [582, 1110]] },
+    { id: 'bcA', a: 1, g: 'A1', w: 5.4, p: [hp([193, -60]), [636, 488], [630, 474]] },
+    { id: 'carAR', a: 1, g: 'A1', w: 4.4, p: [[630, 474], [626, 430], [624, 360]] },
+    { id: 'subAR', a: 1, g: 'A1', w: 4.4, p: [[630, 474], [600, 467], [552, 470], [508, 494], [482, 536]] },
+    { id: 'carAL', a: 1, g: 'A1', w: 4.4, p: [hp([247, -60]), [666, 460], [664, 360]] },
+    { id: 'subAL', a: 1, g: 'A1', w: 4.4, p: [hp([299, -60]), [706, 486], [748, 476], [792, 496], [818, 540]] },
+    /* veins, towards the heart. The vena cava begins where the veins from the legs join, and widens as it
+       collects the renal veins and the hepatic veins, to the width of the heart's own */
+    { id: 'iliacVR', a: 0, g: 'V', w: [5.6, 6.6], p: [[586, 1238], [590, 1204], [595, 1158], [598, 1110]] },
+    { id: 'iliacVL', a: 0, g: 'V', w: [5.6, 6.6], p: [[742, 1238], [737, 1206], [716, 1170], [681, 1140], [640, 1124], [598, 1110]] },
+    { id: 'ivcAbd', a: 0, g: 'V', w: [8.8, 15.2], p: [[598, 1110], [598, 1040], [598, 960], [596, 904], [590, 862], [581, 826], [572, 801], IVC0] },
+    { id: 'renVR', a: 0, g: 'V', w: 5, p: [[575, 957], [586, 955], [597, 953]] },
+    { id: 'renVL', a: 0, g: 'V', w: 5, p: [[701, 941], [680, 942], [650, 944], [622, 946], [599, 947]] },
+    { id: 'hepVR', a: 0, g: 'V', w: [4.2, 5.4], p: [[522, 838], [540, 823], [556, 809], [568, 798]] },
+    { id: 'hepVM', a: 0, g: 'V', w: [4.2, 5.4], p: [[598, 836], [589, 820], [578, 807], [570, 800]] },
+    { id: 'hepVL', a: 0, g: 'V', w: [3.8, 5], p: [[680, 812], [648, 806], [610, 803], [574, 801]] },
+    /* from the gut to the liver: the mesenteric vein along the root of the mesentery, then, joined by the veins of
+       the spleen and stomach (not drawn), the hepatic portal vein, up to the liver */
+    { id: 'portal', a: 0, por: 1, g: 'P', w: [4.2, 7.4], p: [[574, 1115], [588, 1100], [604, 1080], [624, 1056], [644, 1031], [657, 1008], [657, 982], [650, 952], [640, 922], [628, 896], [616, 878], [606, 867]] },
+    { id: 'jugR', a: 0, g: 'V', w: 4.4, p: [[610, 360], [610, 430], [607, 474]] },
+    { id: 'subVR', a: 0, g: 'V', w: 4.4, p: [[474, 546], [500, 504], [548, 480], [596, 476], [607, 474]] },
+    { id: 'bcvR', a: 0, g: 'V', w: [6, 7], p: [[607, 474], [604, 490], hp([104, -60])] },
+    { id: 'jugL', a: 0, g: 'V', w: 4.4, p: [[680, 360], [680, 430], [676, 472]] },
+    { id: 'subVL', a: 0, g: 'V', w: 4.4, p: [[828, 546], [798, 502], [748, 482], [700, 476], [676, 472]] },
+    { id: 'bcvL', a: 0, g: 'V', w: [6, 7], p: [[676, 472], [648, 480], [620, 490], hp([104, -60])] },
     /* the ureters: urine, not blood */
-    { id: 'ureR', ure: 1, w: 3.4, z: -1, p: [[566, 972], [578, 1004], [586, 1060], [590, 1120], [594, 1200]] },
-    { id: 'ureL', ure: 1, w: 3.4, z: -1, p: [[705, 962], [696, 1004], [690, 1060], [686, 1120], [682, 1200]] }
+    { id: 'ureR', ure: 1, g: 'U', w: 3.2, p: [[566, 972], [578, 1004], [586, 1060], [590, 1120], [594, 1200]] },
+    { id: 'ureL', ure: 1, g: 'U', w: 3.2, p: [[705, 962], [696, 1004], [690, 1060], [686, 1120], [682, 1200]] }
   ];
   var VI = {};
   VES.forEach(function (v) { v.c = curve(v.p, false, 3); VI[v.id] = v; });
 
-  /* the vessels of the small intestine: arteries from the superior mesenteric artery to each loop,
-     veins from each loop to the vein that becomes the hepatic portal vein */
+  /* the vessels in the mesentery: from the mesenteric artery and vein along the root, a branch to each stretch
+     of the gut, dividing near it into arches (arcades) that join the next branch, and from the arches short
+     straight vessels into the wall of the gut. Each vein runs beside its artery. */
+  var MES = { ma: [], mv: [], arcA: [], arcV: [], recta: [] };
   (function () {
-    var sma = VI.sma.c, por = VI.portal.c, gut = ORG.gut;
-    var A = [[.34, 690, 993], [.5, 701, 1028], [.64, 690, 1061], [.78, 676, 1093], [.92, 646, 1123], [1, 586, 1112]];
-    var V = [[.6, 675, 996], [.47, 686, 1030], [.34, 673, 1062], [.22, 660, 1094], [.08, 630, 1124], [0, 584, 1104]];
-    A.forEach(function (a, i) {
-      var p = atF(sma, a[0]), qs = nearest(gut, a[1], a[2]), q = at(gut, qs);
-      var v = { id: 'ma' + i, a: 1, w: 3, z: 1, p: [[p.x, p.y], [lerp(p.x, q.x, .5) + 3, lerp(p.y, q.y, .5) - 6], [q.x, q.y]] };
-      v.c = curve(v.p, false, 3); VES.push(v); VI[v.id] = v;
+    var si = ORG.si, n = 6, sma = VI.sma.c, por = VI.portal.c;
+    /* the gut's inner turns (the loops' ends nearest the root), where the vessels reach it */
+    var inner = [];
+    for (var i = 1; i < si.pts.length - 1; i++) {
+      var p = si.pts[i], q0 = si.pts[i - 1], q1 = si.pts[i + 1];
+      var d = function (q) { var ax = ROOT.b[0] - ROOT.a[0], ay = ROOT.b[1] - ROOT.a[1], l = Math.hypot(ax, ay); return Math.abs((q[0] - ROOT.a[0]) * ay - (q[1] - ROOT.a[1]) * ax) / l; };
+      if (d(p) <= d(q0) && d(p) <= d(q1)) inner.push({ p: p, s: si.len[i] });
+    }
+    /* six stretches of gut, evenly along it; each branch leaves the trunk at the point of the root nearest it */
+    var nodes = [];
+    for (var k = 0; k < n; k++) {
+      var want = si.total * (k + .5) / n, best = inner[0];
+      inner.forEach(function (q) { if (Math.abs(q.s - want) < Math.abs(best.s - want)) best = q; });
+      nodes.push(best);
+    }
+    function onTrunk(c, x, y, from, to) {
+      var s0 = c.total * from, s1 = c.total * to, bs = s0, bd = Infinity;
+      for (var s = s0; s <= s1; s += 2) { var q = at(c, s), dd = Math.hypot(q.x - x, q.y - y); if (dd < bd) { bd = dd; bs = s; } }
+      return at(c, bs);
+    }
+    nodes.forEach(function (nd, k) {
+      var T = nd.p;
+      /* the artery: from the part of the mesenteric artery in the root */
+      var oA = onTrunk(sma, T[0], T[1], .42, 1), oV = onTrunk(por, T[0], T[1], 0, .42);
+      var mA = [lerp(oA.x, T[0], .68), lerp(oA.y, T[1], .68)], mV = [lerp(oV.x, T[0], .68) - 3, lerp(oV.y, T[1], .68) + 3];
+      MES.ma.push({ id: 'ma' + k, a: 1, g: 'M', w: [2.6, 1.9], into: 2.2, p: [[oA.x, oA.y], [lerp(oA.x, mA[0], .5) + 2, lerp(oA.y, mA[1], .5) - 2], mA] });
+      MES.mv.push({ id: 'mv' + k, a: 0, por: 1, g: 'P', w: [2.1, 2.9], p: [mV, [lerp(oV.x, mV[0], .5) - 2, lerp(oV.y, mV[1], .5) + 2], [oV.x, oV.y]], gut: T, node: mA });
     });
-    V.forEach(function (a, i) {
-      var qs = nearest(gut, a[1], a[2]), q = at(gut, qs), p = atF(por, a[0]);
-      var v = { id: 'mv' + i, a: 0, w: 3.6, z: 1, p: [[q.x, q.y], [lerp(q.x, p.x, .5) - 2, lerp(q.y, p.y, .5) + 7], [p.x, p.y]] };
-      v.c = curve(v.p, false, 3); VES.push(v); VI[v.id] = v;
+    /* the arcades: an arch from each branch's end to the next one's, bowed towards the gut */
+    for (var j = 0; j + 1 < nodes.length; j++) {
+      ['A', 'V'].forEach(function (kind) {
+        var P0 = kind === 'A' ? MES.ma[j].p[2] : MES.mv[j].p[0], P1 = kind === 'A' ? MES.ma[j + 1].p[2] : MES.mv[j + 1].p[0];
+        var mid = [(P0[0] + P1[0]) / 2, (P0[1] + P1[1]) / 2], g1 = nodes[j].p, g2 = nodes[j + 1].p, gm = [(g1[0] + g2[0]) / 2, (g1[1] + g2[1]) / 2];
+        var bow = [lerp(mid[0], gm[0], .38), lerp(mid[1], gm[1], .38)];
+        (kind === 'A' ? MES.arcA : MES.arcV).push({ a: kind === 'A' ? 1 : 0, por: kind === 'V' ? 1 : 0, g: kind === 'A' ? 'M' : 'P', w: 1.5, p: [P0, bow, P1] });
+      });
+    }
+    /* short straight vessels from the arches and the branch ends into the gut, at the loops' inner turns */
+    inner.forEach(function (q) {
+      var best = null, bd = Infinity;
+      MES.arcA.concat(MES.ma.map(function (m) { return { p: [m.p[2], m.p[2], m.p[2]] }; })).forEach(function (arc) {
+        var c = curve(arc.p, false, 3);
+        c.pts.forEach(function (pt) { var dd = Math.hypot(pt[0] - q.p[0], pt[1] - q.p[1]); if (dd < bd) { bd = dd; best = pt; } });
+      });
+      if (!best || bd > 40) return;
+      MES.recta.push({ a: 1, g: 'M', w: 1.1, p: [best, [lerp(best[0], q.p[0], .5), lerp(best[1], q.p[1], .5)], q.p] });
+      MES.recta.push({ a: 0, por: 1, g: 'P', w: 1.1, p: [[q.p[0] - 2.4, q.p[1] + 1.2], [lerp(best[0], q.p[0], .5) - 3, lerp(best[1], q.p[1], .5) + 2], [best[0] - 3, best[1] + 2.4]] });
     });
+    MES.ma.concat(MES.mv).forEach(function (v) { v.c = curve(v.p, false, 3); VES.push(v); VI[v.id] = v; });
+    MES.arcA.concat(MES.arcV, MES.recta).forEach(function (v) { v.c = curve(v.p, false, 3); v.nocell = 1; VES.push(v); });
   })();
-  /* the branches inside the liver: the hepatic portal vein and the hepatic artery divide, the
-     hepatic veins gather. Drawn faint: they are inside the organ. */
+  /* the branches inside the liver: the hepatic portal vein and the hepatic artery divide, the hepatic veins
+     gather. They are inside the organ: its colour lies over them. */
   var LIVER_IN = [
-    { a: 0, w: 4, p: [[604, 864], [584, 856], [560, 849], [534, 844]] },
-    { a: 0, w: 3.4, p: [[604, 864], [626, 852], [656, 838], [690, 822]] },
-    { a: 1, w: 2.4, p: [[610, 859], [590, 851], [566, 845], [542, 840]] },
-    { a: 1, w: 2.2, p: [[610, 859], [630, 848], [660, 834], [694, 818]] }
+    { a: 0, por: 1, g: 'P', w: [5.6, 3], p: [[606, 867], [584, 858], [560, 850], [534, 845]] },
+    { a: 0, por: 1, g: 'P', w: [5, 2.6], p: [[606, 867], [628, 853], [656, 839], [690, 823]] },
+    { a: 1, g: 'A1', w: [2.8, 1.8], p: [[610, 859], [590, 851], [566, 845], [542, 840]] },
+    { a: 1, g: 'A1', w: [2.6, 1.6], p: [[610, 859], [630, 848], [660, 834], [694, 818]] }
   ];
-  LIVER_IN.forEach(function (v) { v.c = curve(v.p, false, 3); });
+  LIVER_IN.forEach(function (v) { v.c = curve(v.p, false, 3); v.nocell = 1; });
 
   /* where the camera looks, as boxes in the body's coordinates */
   var VIEW = {
     trunk:   { x: 452, y: 436, w: 376, h: 806 },
-    portWide: { x: 524, y: 792, w: 232, h: 350 },
+    portWide: { x: 520, y: 796, w: 244, h: 378 },
     liverHeart: { x: 528, y: 556, w: 244, h: 330 },
-    gutSpot: { x: 598, y: 1016, w: 104, h: 92 },
+    gutSpot: null,
     livSpot: { x: 540, y: 800, w: 100, h: 88 },
     livUp:   { x: 520, y: 740, w: 150, h: 170 },
     chestL:  { x: 578, y: 512, w: 232, h: 290 },
@@ -257,7 +343,10 @@
     kidney:  { x: 572, y: 856, w: 206, h: 190 },
     legSpot: { x: 548, y: 1206, w: 86, h: 76 }
   };
-  var SPOT = { B: [650, 1062], C: [590, 844], D: [591, 1244] };
+  /* the lens on the gut opens where the vein the story follows leaves it (TRK, one of the six) */
+  var TRK = 2, GUT0 = MES.mv[TRK].gut;
+  VIEW.gutSpot = { x: GUT0[0] - 52, y: GUT0[1] - 46, w: 104, h: 92 };
+  var SPOT = { B: GUT0.slice(), C: [590, 844], D: [591, 1244] };
 
   /* ================================================================
      THE TIMELINE — ten steps; each plays, then holds on its last frame
@@ -277,7 +366,9 @@
   }
 
   /* the journeys of the two molecules the story follows, in the body (step 4 and steps 7 to 10) */
-  var J4 = curve([[676, 1062], [656, 1048], [634, 1034], [606, 1021], [613, 983], [620, 945], [625, 913], [622, 889], [613, 873], [604, 864], [594, 852]], false, 3);
+  /* from the gut, along its vein through the mesentery, into the mesenteric vein, up the hepatic portal vein to the liver */
+  function fromGut(v) { return chain([curve([v.gut, v.p[0]], false, 3), v.c, sub(VI.portal.c, nearest(VI.portal.c, v.p[2][0], v.p[2][1]), VI.portal.c.total)]); }
+  var J4 = chain([fromGut(MES.mv[TRK]), curve([[606, 867], [600, 860], [594, 852]], false, 3)]);
   var J7 = chain([curve([[596, 832], [589, 820], [578, 807], [570, 800], IVC0], false, 3),
                   curve([[28, 560], [28, 420], [30, 330], [48, 268], [80, 238], [98, 262], [104, 318], [116, 364], [134, 390], [156, 380], [170, 340], [172, 280], [172, 210], [172, 150], [178, 108], [240, 97], [330, 110]].map(hp), false, 3)]);
   var J8 = curve([hp([330, 110]), hp([430, 144]), [768, 588], [782, 612], [779, 648], [764, 660], [756, 640], hp([430, 192]), hp([396, 195]), hp([363, 200]), hp([330, 212]), hp([310, 232]), hp([308, 262]), hp([302, 310]), hp([290, 368]), hp([274, 404])], false, 3);
@@ -396,7 +487,7 @@
   var STEP_DEF = [
     { t: T.s1, h: 'The aorta', tag: 'C 9.3.3',
       p: 'The left ventricle pumps oxygenated blood into the aorta. Each organ of the body receives its own branch of the aorta.',
-      beyond: 'The arteries to the intestine are the mesenteric arteries. The hepatic artery branches from a short artery, the coeliac artery; here it is drawn straight from the aorta.' },
+      beyond: 'The arteries to the intestine are the mesenteric arteries. They reach it through the mesentery, a thin sheet of membrane that holds the small intestine in place. The hepatic artery branches from a short artery, the coeliac artery, which also supplies the stomach and the spleen.' },
     { t: T.s2, h: 'In a villus: oxygen', tag: 'C 9.3.2',
       p: 'Blood flows through the capillaries of each villus. Oxygen diffuses from the blood into the respiring cells of the villus, and carbon dioxide diffuses from the cells into the blood. The blood becomes deoxygenated.',
       beyond: 'Villus cells absorb some of the glucose and amino acids by active transport, which uses energy from respiration. So they respire fast: they use a lot of oxygen and make a lot of carbon dioxide.' },
@@ -473,6 +564,7 @@
       '<linearGradient id="' + id('capD') + '" gradientUnits="userSpaceOnUse" x1="0" y1="540" x2="0" y2="0"><stop offset="0" stop-color="' + C.oxy + '"/><stop offset=".3" stop-color="' + C.oxy + '"/><stop offset=".85" stop-color="' + C.deo + '"/><stop offset="1" stop-color="' + C.deo + '"/></linearGradient>' +
       '<linearGradient id="' + id('sinus') + '" gradientUnits="userSpaceOnUse" x1="0" y1="470" x2="0" y2="80"><stop offset="0" stop-color="#7A4F9A"/><stop offset=".35" stop-color="#5A5CAE"/><stop offset="1" stop-color="' + C.deo + '"/></linearGradient>' +
       '<radialGradient id="' + id('hep') + '" cx=".5" cy=".45" r=".7"><stop offset="0" stop-color="#BE775D"/><stop offset=".75" stop-color="#A5604A"/><stop offset="1" stop-color="#8E4E3C"/></radialGradient>' +
+      crossMask() +
       '<radialGradient id="' + id('flash') + '"><stop offset="0" stop-color="#FFF6C8" stop-opacity="1"/><stop offset=".5" stop-color="#FFD66B" stop-opacity=".55"/><stop offset="1" stop-color="#FFD66B" stop-opacity="0"/></radialGradient>' +
       /* the substances, drawn once each and used many times; their outlines keep one width at any zoom */
       '<g id="' + id('glu') + '"><path d="M1 0L.5 .866L-.5 .866L-1 0L-.5 -.866L.5 -.866Z" fill="' + C.glu + '" stroke="' + C.gluLine + '" stroke-width="1.1" vector-effect="non-scaling-stroke"/></g>' +
@@ -487,13 +579,87 @@
       '</defs>';
 
     /* ----- scene A, the body: everything that does not move is drawn once ----- */
-    function tube(v) {
-      var col = v.ure ? '#E3CF7A' : v.a ? C.oxy : C.deo, wall = v.ure ? '#6E5A1F' : v.a ? C.oxyWall : C.deoWall, d = dOf(v.c);
-      return '<g class="bf__v" data-v="' + v.id + '">' +
-        '<path d="' + d + '" fill="none" stroke="' + wall + '" stroke-width="' + n2(v.w + (v.a ? 2.4 : 1.4)) + '" stroke-linecap="round" stroke-linejoin="round"/>' +
-        '<path d="' + d + '" fill="none" stroke="' + col + '" stroke-width="' + v.w + '" stroke-linecap="round" stroke-linejoin="round"/>' +
-        '<path d="' + d + '" fill="none" stroke="#FFFFFF" stroke-opacity=".16" stroke-width="' + n2(Math.max(.8, v.w * .22)) + '" stroke-linecap="round" transform="translate(' + n2(-v.w * .18) + ',' + n2(-v.w * .12) + ')"/>' +
-        '</g>';
+    function colOf(v) { return v.ure ? ['#E3CF7A', '#6E5A1F'] : v.a ? [C.oxy, C.oxyWall] : v.por ? [C.por, C.porWall] : [C.deo, C.deoWall]; }
+    /* the vessels of one group, drawn as one: every wall, then every lumen, then the sheen, so where one vessel
+       joins another the two lumens run together with no wall across the join (a branch's wall starts only at
+       the side of the vessel it leaves: 'into'); a tapering vessel is drawn in short pieces of its own width */
+    function group(list) {
+      var walls = {}, lumens = {}, sheen = {}, order = [];
+      function add(map, k, seg) { if (map[k] == null) { map[k] = ''; order.push([map, k]); } map[k] += seg; }
+      list.forEach(function (v) {
+        var c = v.c, P = c.pts, cl = colOf(v), wall = v.ure ? 1.2 : v.a ? 2.2 : 1.4;
+        for (var i = 0; i + 1 < P.length; i++) {
+          var sm0 = (c.len[i] + c.len[i + 1]) / 2, w = Array.isArray(v.w) ? lerp(v.w[0], v.w[1], sm0 / c.total) : v.w;
+          var ww = Math.round(w * 4) / 4, seg = 'M' + n2(P[i][0]) + ' ' + n2(P[i][1]) + 'L' + n2(P[i + 1][0]) + ' ' + n2(P[i + 1][1]);
+          if (!(v.into && sm0 < v.into)) add(walls, cl[1] + '|' + n2(ww + wall), seg);
+          add(lumens, cl[0] + '|' + ww, seg);
+          if (ww >= 2.8) add(sheen, ww, seg);
+        }
+      });
+      var o = '';
+      [walls, lumens].forEach(function (map) {
+        Object.keys(map).forEach(function (k) { var q = k.split('|'); o += '<path d="' + map[k] + '" stroke="' + q[0] + '" stroke-width="' + q[1] + '"/>'; });
+      });
+      Object.keys(sheen).forEach(function (k) {
+        var w = +k; o += '<path d="' + sheen[k] + '" stroke="#FFFFFF" stroke-opacity=".15" stroke-width="' + n2(Math.max(.8, w * .22)) + '" transform="translate(' + n2(-w * .18) + ',' + n2(-w * .12) + ')"/>';
+      });
+      return '<g fill="none" stroke-linecap="round" stroke-linejoin="round">' + o + '</g>';
+    }
+    function inGroup(g) { return VES.filter(function (v) { return v.g === g; }).concat(LIVER_IN.filter(function (v) { return v.g === g; })); }
+    /* the veins from the gut pass in front of the vena cava and the aorta and join neither: where they cross
+       them, a thin gap of the body's colour round them, as a drawing shows one vessel passing in front of another */
+    function crossMask() {
+      var o = '';
+      [VI.ivcAbd, VI.aoAbd, VI.iliacVR].forEach(function (v) { var w = Array.isArray(v.w) ? Math.max(v.w[0], v.w[1]) : v.w; o += '<path d="' + dOf(v.c) + '" fill="none" stroke="#FFFFFF" stroke-width="' + n2(w + 3) + '" stroke-linecap="round"/>'; });
+      return '<mask id="' + id('cross') + '" maskUnits="userSpaceOnUse" x="300" y="300" width="700" height="1100">' + o + '</mask>';
+    }
+    function portalHalo() {
+      var o = '';
+      inGroup('P').forEach(function (v) { var w = Array.isArray(v.w) ? Math.max(v.w[0], v.w[1]) : v.w; o += '<path d="' + dOf(v.c) + '" stroke="#172833" stroke-width="' + n2(w + 1.4 + 3.2) + '"/>'; });
+      return '<g fill="none" stroke-linecap="round" stroke-linejoin="round" mask="url(#' + id('cross') + ')">' + o + '</g>';
+    }
+    /* the small intestine: drawn in short lengths, each over the one before, so a loop that lies over another is
+       seen to be in front of it. Each length's wall starts a little after its lumen, and its lumen a little
+       before its wall, so the lumens run on across every join with no crease (a crease every few units looked
+       like the pouches of the large intestine) */
+    function gutTube(c) {
+      var o = '', P = c.pts, step = 10;
+      function d(a, b) { return 'M' + P.slice(Math.max(0, a), Math.min(P.length, b + 1)).map(function (q) { return n2(q[0]) + ' ' + n2(q[1]); }).join('L'); }
+      for (var i = 0; i < P.length - 1; i += step) {
+        var e = Math.min(P.length - 1, i + step);
+        o += '<path d="' + d(i ? i + 4 : 0, e) + '" stroke="#5E3429" stroke-width="12.2"/>' +
+             '<path d="' + d(i - 3, e) + '" stroke="#C68A78" stroke-width="9.6"/>' +
+             '<path d="' + d(i - 3, e) + '" stroke="#F3D2BE" stroke-opacity=".28" stroke-width="2.6" transform="translate(-1,-1.6)"/>';
+      }
+      return '<g fill="none" stroke-linecap="round" stroke-linejoin="round">' + o + '</g>';
+    }
+    /* the large intestine: wider, and pouched: a crease across it every few units */
+    function colonTube(c) {
+      var d = dOf(c), creases = '';
+      for (var s = 7; s < c.total - 20; s += 10.5) {
+        var q = at(c, s), nx = -Math.sin(q.a), ny = Math.cos(q.a), bw = 6.4, tx = Math.cos(q.a) * 1.6, ty = Math.sin(q.a) * 1.6;
+        creases += 'M' + n2(q.x + nx * bw) + ' ' + n2(q.y + ny * bw) + 'Q' + n2(q.x + tx) + ' ' + n2(q.y + ty) + ' ' + n2(q.x - nx * bw) + ' ' + n2(q.y - ny * bw);
+      }
+      return '<g fill="none" stroke-linecap="round" stroke-linejoin="round">' +
+        '<path d="' + d + '" stroke="#4E3A28" stroke-opacity=".92" stroke-width="17"/>' +
+        '<path d="' + d + '" stroke="#A7825F" stroke-width="14"/>' +
+        '<path d="' + creases + '" stroke="#5E4630" stroke-opacity=".75" stroke-width="1.3"/>' +
+        '<path d="' + d + '" stroke="#F2DDBF" stroke-opacity=".22" stroke-width="3" transform="translate(-1.2,-2)"/></g>';
+    }
+    /* the diaphragm: a band of muscle, its fibres running from the sides up to the middle */
+    function diaphragm(c) {
+      var up = [], dn = [], fib = '';
+      c.pts.forEach(function (p, i) {
+        var a = c.pts[Math.max(0, i - 1)], b = c.pts[Math.min(c.pts.length - 1, i + 1)], l = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1, nx = -(b[1] - a[1]) / l, ny = (b[0] - a[0]) / l;
+        up.push([p[0] - nx * 4.4, p[1] - ny * 4.4]); dn.push([p[0] + nx * 4.4, p[1] + ny * 4.4]);
+      });
+      for (var s = 6; s < c.total - 4; s += 7) {
+        var q = at(c, s), nx2 = -Math.sin(q.a), ny2 = Math.cos(q.a);
+        fib += 'M' + n2(q.x - nx2 * 3.4 - Math.cos(q.a) * 2.4) + ' ' + n2(q.y - ny2 * 3.4 - Math.sin(q.a) * 2.4) + 'L' + n2(q.x + nx2 * 3.4 + Math.cos(q.a) * 2.4) + ' ' + n2(q.y + ny2 * 3.4 + Math.sin(q.a) * 2.4);
+      }
+      var band = 'M' + up.map(function (p) { return n2(p[0]) + ' ' + n2(p[1]); }).join('L') + 'L' + dn.reverse().map(function (p) { return n2(p[0]) + ' ' + n2(p[1]); }).join('L') + 'Z';
+      return '<path d="' + band + '" fill="#B04A52" fill-opacity=".9" stroke="#EDA3A3" stroke-opacity=".75" stroke-width="1"/>' +
+             '<path d="' + fib + '" stroke="#7C2C35" stroke-opacity=".55" stroke-width=".8" fill="none"/>';
     }
     /* a capillary bed in an organ: points in the region, joined to their near neighbours; each piece
        coloured by how far it lies between the artery (in) and the vein (out) */
@@ -524,37 +690,31 @@
     if (ART && ART.skin && ART.skin.d) {
       body += '<g transform="translate(' + ART.skin.tx + ',' + ART.skin.ty + ')"><path d="' + ART.skin.d + '" fill="url(#' + id('skin') + ')" stroke="#48697A" stroke-width="1.3"/></g>';
     }
-    /* behind the organs */
-    body += '<g class="bf__back">';
-    VES.filter(function (v) { return v.z < 0; }).forEach(function (v) { body += v.ure ? '<g opacity=".5">' + tube(v) + '</g>' : tube(v); });
-    VES.filter(function (v) { return v.z === 0; }).forEach(function (v) { body += tube(v); });
-    VES.filter(function (v) { return v.z === .5; }).forEach(function (v) { body += tube(v); });
-    body += '</g>';
-    /* the organs */
+    /* back to front: the lungs and the diaphragm; the kidneys and ureters; the great vessels and their branches
+       (arteries, then the veins, which cross in front of them at the kidneys, then the arteries of the legs, in
+       front of their veins); the large intestine; the mesentery with its vessels (the veins from the gut are
+       drawn in front of the transverse colon, where it would hide where they join: in the body the colon lies in
+       front); the liver over the vessels inside it; the small intestine; then the heart */
     body += '<g class="bf__organs">' +
       '<path d="' + dOf(ORG.lungR, 1) + '" fill="#E7B4BE" fill-opacity=".13" stroke="#F0C8D0" stroke-opacity=".5" stroke-width="1.2"/>' +
       '<path d="' + dOf(ORG.lungL, 1) + '" fill="#E7B4BE" fill-opacity=".13" stroke="#F0C8D0" stroke-opacity=".5" stroke-width="1.2"/>' +
       bedNet(polyTest(ORG.lungR), hp([-30, 160]), hp([-30, 214]), 15, 11, true, [500, 514, 606, 790]) +
       bedNet(polyTest(ORG.lungL), hp([430, 145]), hp([430, 220]), 15, 23, true, [700, 514, 787, 792]) +
-      '<path d="' + dOf(ORG.kidR, 1) + '" fill="#A8584A" fill-opacity=".5" stroke="#D89A86" stroke-opacity=".6" stroke-width="1.2"/>' +
-      '<path d="' + dOf(ORG.kidL, 1) + '" fill="#A8584A" fill-opacity=".5" stroke="#D89A86" stroke-opacity=".6" stroke-width="1.2"/>' +
-      '<path d="' + dOf(ORG.liver, 1) + '" fill="#9A4A3C" fill-opacity=".5" stroke="#D08A74" stroke-opacity=".7" stroke-width="1.3"/>' +
-      '<path d="' + dOf(ORG.gut) + '" fill="none" stroke="#6E4336" stroke-opacity=".75" stroke-width="19" stroke-linecap="round" stroke-linejoin="round"/>' +
-      '<path d="' + dOf(ORG.gut) + '" fill="none" stroke="#C99280" stroke-opacity=".62" stroke-width="15.5" stroke-linecap="round" stroke-linejoin="round"/>' +
-      '<path d="' + dOf(ORG.gut) + '" fill="none" stroke="#F3D2BE" stroke-opacity=".28" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" transform="translate(-1,-2)"/>' +
+      diaphragm(ORG.diaph) +
+      group(inGroup('U')) +
+      '<path d="' + dOf(ORG.kidR, 1) + '" fill="#A8584A" fill-opacity=".6" stroke="#D89A86" stroke-opacity=".6" stroke-width="1.2"/>' +
+      '<path d="' + dOf(ORG.kidL, 1) + '" fill="#A8584A" fill-opacity=".6" stroke="#D89A86" stroke-opacity=".6" stroke-width="1.2"/>' + '</g>';
+    body += '<g class="bf__back">' + group(inGroup('A1')) + group(inGroup('V')) +
+      /* the aorta's last stretch again, so the arteries of the legs leave it with no wall across the join */
+      group([{ c: sub(VI.aoAbd.c, VI.aoAbd.c.total - 16, VI.aoAbd.c.total), a: 1, w: 8.6 }].concat(inGroup('A2'))) + '</g>';
+    body += '<g class="bf__gut">' + colonTube(ORG.colon) +
+      '<path d="' + dOf(ORG.mesentery, 1) + '" fill="#EAD5A4" fill-opacity=".15" stroke="#EAD5A4" stroke-opacity=".32" stroke-width=".9"/>' +
+      portalHalo() + group(inGroup('P')) + group(inGroup('M')) +
+      '<path d="' + dOf(ORG.liver, 1) + '" fill="#9A4A3C" fill-opacity=".36" stroke="#D08A74" stroke-opacity=".75" stroke-width="1.3"/>' +
+      gutTube(ORG.si) +
       bedNet(ellTest(592, 1248, 24, 13), [600, 1238], [586, 1238], 8, 41, false, [566, 1234, 618, 1262]) +
       bedNet(ellTest(736, 1248, 24, 13), [728, 1238], [742, 1238], 8, 43, false, [710, 1234, 762, 1262]) +
       '</g>';
-    /* the vessels inside the liver, faint */
-    body += '<g class="bf__inliver" opacity=".55">';
-    LIVER_IN.forEach(function (v) { body += '<path d="' + dOf(v.c) + '" fill="none" stroke="' + (v.a ? C.oxy : C.deo) + '" stroke-width="' + v.w + '" stroke-linecap="round"/>'; });
-    body += '</g>';
-    /* in front of the organs */
-    body += '<g class="bf__front">';
-    VES.filter(function (v) { return v.z === 1; }).forEach(function (v) { body += tube(v); });
-    body += '</g><g class="bf__inside" opacity=".85">';
-    VES.filter(function (v) { return v.z === 2; }).forEach(function (v) { body += tube(v); });
-    body += '</g>';
     /* the glow that names a vessel in a step: under the heart, over everything else */
     body += '<g data-r="glow" class="bf__glow"></g>';
     body += '<g class="bf__heart" transform="translate(' + n4(HT.cx - HT.ox * HT.s) + ',' + n4(HT.cy - HT.oy * HT.s) + ') scale(' + HT.s + ')">' + (HA ? HA.svg({ av: 1, sl: 0 }, { mode: 'section' }) : '') + '</g>';
@@ -663,7 +823,7 @@
     /* ----- the red cells of the body: on every vessel, moving with the flow ----- */
     var FLOW = [];
     VES.forEach(function (v) {
-      if (v.ure) return;
+      if (v.ure || v.nocell) return;
       var g = mk('g', {}, R.cellsA), n = Math.max(1, Math.floor(v.c.total / (v.w > 7 ? 15 : 19))), r = rng(v.c.total * 13 | 0);
       var f = { v: v, g: g, cells: [], speed: v.a ? 34 : 22, pulse: !!v.a };
       for (var i = 0; i < n; i++) { var e = use('rbc', g); e.setAttribute('fill', v.a ? C.oxyCell : C.deoCell); e.setAttribute('stroke', v.a ? '#7A1E21' : '#1B3570'); f.cells.push({ e: e, s0: (i + r() * .6) * v.c.total / n }); }
@@ -690,7 +850,7 @@
       for (var i = 0; i < n; i++) s.items.push({ e: use(sym, g), s0: (i + r() * .7) * c.total / n, th: r(), dx: (r() - .5) * .5 });
       return s;
     }
-    var gutVeins = [0, 1, 2, 3, 4].map(function (i) { return chain([VI['mv' + i].c, sub(VI.portal.c, nearest(VI.portal.c, VI['mv' + i].p[2][0], VI['mv' + i].p[2][1]), VI.portal.c.total)]); });
+    var gutVeins = MES.mv.map(fromGut);
     var ST = {
       portGlu: gutVeins.map(function (c, i) { return stream(c, 'glu', 6, 20, 100 + i); }),
       portAa: gutVeins.map(function (c, i) { return stream(c, 'aa', 5, 20, 200 + i); }),
@@ -986,11 +1146,11 @@
       { d: dOf(AORTA), col: C.oxy, w: 14, on: [[.4, 8.6], [68.2, 78.6]] },
       { d: dOf(VI.aoAbd.c), col: C.oxy, w: 14, on: [[.4, 8.6], [68.4, 78.6]] },
       { d: dOf(VI.hepA.c), col: C.oxy, w: 10, on: [[1.6, 8.6], [34.2, 36.2]] },
-      { d: dOf(VI.sma.c) + ['ma0', 'ma1', 'ma2', 'ma3', 'ma4', 'ma5'].map(function (k) { return dOf(VI[k].c); }).join(''), col: C.oxy, w: 8, on: [[2.6, 8.6]] },
+      { d: dOf(VI.sma.c) + MES.ma.map(function (v) { return dOf(v.c); }).join(''), col: C.oxy, w: 8, on: [[2.6, 8.6]] },
       { d: dOf(VI.renAL.c) + dOf(VI.renAR.c), col: C.oxy, w: 10, on: [[3.6, 8.6], [70.6, 78.6]] },
       { d: dOf(VI.iliacAR.c) + dOf(VI.iliacAL.c), col: C.oxy, w: 11, on: [[4.6, 8.6], [78.4, 81.2]] },
       { d: dOf(VI.carAR.c) + dOf(VI.carAL.c) + dOf(VI.subAR.c) + dOf(VI.subAL.c) + dOf(VI.bcA.c), col: C.oxy, w: 9, on: [[4.6, 8.6]] },
-      { d: dOf(VI.portal.c) + ['mv0', 'mv1', 'mv2', 'mv3', 'mv4', 'mv5'].map(function (k) { return dOf(VI[k].c); }).join(''), col: C.deo, w: 13, on: [[26.4, 34.6]] },
+      { d: dOf(VI.portal.c) + MES.mv.map(function (v) { return dOf(v.c); }).join(''), col: C.por, w: 12, on: [[26.4, 34.6]] },
       { d: dOf(VI.hepVR.c) + dOf(VI.hepVM.c) + dOf(VI.hepVL.c), col: C.deo, w: 11, on: [[52.4, 60.6]] },
       { d: dOf(sub(VI.ivcAbd.c, nearest(VI.ivcAbd.c, 590, 862), VI.ivcAbd.c.total)) + dOf(curve([[28, 560], [28, 420], [30, 330], [48, 268], [70, 244]].map(hp), false, 3)), col: C.deo, w: 14, on: [[53.4, 60.6]] },
       { d: dOf(curve([[172, 380], [172, 280], [172, 210], [172, 150], [178, 108], [240, 97], [330, 110], [430, 144]].map(hp), false, 3)), col: C.deo, w: 12, on: [[56.4, 61.5]] },
@@ -1076,9 +1236,11 @@
       L2('to the legs', 'L', 608, 1204, 4.5, 8.6);
       L2('to the head and arms', 'L', 612, 467.5, 4.5, 8.6);
       /* step 4 */
-      L2('small intestine', 'R', 726, 1104, 26.4, 34.6);
+      var siQ = at(ORG.si, nearest(ORG.si, 744, 1078)); L2('small intestine', 'R', siQ.x, siQ.y, 26.4, 34.6);
+      L2('large intestine', 'L', 549, 1062, 26.8, 34.6);
+      L2('mesentery', 'R', 670, 1112, 27.4, 34.6, 'is-beyond');
       L2('liver', 'L', 540, 870, 26.6, 34.6);
-      L2('hepatic portal vein', 'L', 623, 894, 27, 34.6);
+      var hpQ = at(VI.portal.c, nearest(VI.portal.c, 632, 904)); L2('hepatic portal vein', 'L', hpQ.x, hpQ.y, 27, 34.6);
       var smvQ = atF(VI.portal.c, .3); L2('mesenteric vein', 'R', smvQ.x, smvQ.y, 26.6, 34.6, 'is-beyond');
       L2('hepatic artery', 'R', 646, 845.5, 30.5, 36);
       /* step 7 */
@@ -1087,6 +1249,7 @@
       L2('right atrium', 'L', hx(84), hy(222), 55.2, 60.6);
       L2('right ventricle', 'L', hx(98), hy(330), 56.2, 60.6);
       L2('pulmonary artery', 'R', hx(250), hy(97), 57.2, 61.8);
+      L2('diaphragm', 'R', 734, 797, 54.4, 60.6);
       /* step 8 */
       L2('lung', 'R', 777, 562, 60.4, 68.6);
       L2('pulmonary vein', 'R', hx(396), hy(195), 62.4, 68.6);
@@ -1508,6 +1671,7 @@
     key.innerHTML =
       '<span class="bf__ki"><i class="bf__sw bf__sw--oxy"></i>oxygenated blood</span>' +
       '<span class="bf__ki"><i class="bf__sw bf__sw--deo"></i>deoxygenated blood</span>' +
+      '<span class="bf__ki"><i class="bf__sw bf__sw--por"></i>from the gut to the liver</span>' +
       '<span class="bf__ki">' + glyph('glu') + 'glucose</span>' +
       '<span class="bf__ki"><svg class="bf__kg bf__kg--wide" viewBox="-4 -9 30 18" aria-hidden="true"><path d="' + glyJoins(9, 3, 1) + '" stroke="' + C.gluLine + '" stroke-width=".9" fill="none"/>' + GLY.slice(0, 9).map(function (u) { return '<use href="#' + id('glu') + '" transform="translate(' + n2(u[0] * 3) + ' ' + n2(u[1] * 3) + ') scale(1.8)"/>'; }).join('') + '</svg>glycogen</span>' +
       '<span class="bf__ki">' + glyph('aa') + 'amino acid <small>(violet: the part with nitrogen)</small></span>' +
@@ -1532,7 +1696,7 @@
     wrapEl.appendChild(left); wrapEl.appendChild(sp.list);
     box.appendChild(sp.bar);
     box.appendChild(wrapEl);
-    box.appendChild(h('p', 'widget__note bf__note', 'Red is oxygenated blood and blue is deoxygenated blood, as on the body. Only the substances each step follows are drawn; blood always carries some glucose, amino acids, urea and carbon dioxide. Molecules are drawn far larger than they are, and a protein as four amino acids: fibrinogen has nearly 3,000. The kidneys are drawn above the small intestine so that both can be seen.'));
+    box.appendChild(h('p', 'widget__note bf__note', 'Red is oxygenated blood and blue is deoxygenated blood, as on the body; teal is the deoxygenated blood from the gut to the liver. Only the substances each step follows are drawn; blood always carries some glucose, amino acids, urea and carbon dioxide. Molecules are drawn far larger than they are, and a protein as four amino acids: fibrinogen has nearly 3,000. The kidneys are drawn above the small intestine so that both can be seen.'));
 
     /* ----- size: the lettering stays about 12.5 px on screen at any width ----- */
     function applyLayout() {

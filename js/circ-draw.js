@@ -323,7 +323,12 @@
     defs.innerHTML =
       '<radialGradient id="' + U + 'slab" cx=".5" cy=".42" r=".78"><stop offset="0" stop-color="#16303D"/><stop offset=".62" stop-color="#0D1C25"/><stop offset="1" stop-color="#081218"/></radialGradient>' +
       '<filter id="' + U + 'soft" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="3"/></filter>' +
-      '<clipPath id="' + U + 'lensclip"><rect x="0" y="0" width="1" height="1" rx="6"/></clipPath>';
+      '<clipPath id="' + U + 'lensclip"><rect x="0" y="0" width="1" height="1" rx="6"/></clipPath>' +
+      /* the first stretch of the leg vessels, lit with the aorta and the vena cava, fades out below the pelvis */
+      '<linearGradient id="' + U + 'legfadeG" gradientUnits="userSpaceOnUse" x1="0" y1="399" x2="0" y2="414"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#000"/></linearGradient>' +
+      '<mask id="' + U + 'legfade" maskUnits="userSpaceOnUse" x="120" y="350" width="180" height="80"><rect x="120" y="350" width="180" height="80" fill="url(#' + U + 'legfadeG)"/></mask>' +
+      /* where a lit vein from the gut crosses a lit vena cava or aorta: filled in by tubes() */
+      '<mask id="' + U + 'cross" maskUnits="userSpaceOnUse" x="-600" y="-600" width="' + (AW + 1200) + '" height="' + (AH + 1200) + '"></mask>';
 
     var root = el('g', { 'class': 'cp' }, svg);
     el('rect', { x: -600, y: -600, width: AW + 1200, height: AH + 1200, fill: 'url(#' + U + 'slab)', 'class': 'cp__bg' }, root);
@@ -527,6 +532,22 @@
     /* a lit vessel, drawn again as a tube along its centre line: the drawing's own rim colour, then its
        own fill, at the width the drawing gives it at every point */
     var TUBE = { a: ['#b62717', '#ffbf00'], ag: ['#b62717', '#ffbf00'], pv: ['#b62717', '#ffbf00'], v: ['#0060b6', '#00a0c6'], pa: ['#0060b6', '#00a0c6'], po: ['#0060b6', '#00d8c6'] };
+    /* lit, the veins from the gut to the liver are teal, not blue with a paler rim: blue, the hepatic portal vein
+       running up in front of the vena cava read as a branch of it (Daniel, 27 Sep: "the mesenteric vein joining
+       the vena cava ... around the liver is a bit complicated"). The key under the plate says the same. */
+    var TUBE_LIT = { a: TUBE.a, ag: TUBE.ag, pv: TUBE.pv, v: TUBE.v, pa: TUBE.pa, po: ['#0E8F88', '#9AF5EA'] };
+    /* the vessels that join a lit vessel to its neighbour, lit with it but not named: the coeliac trunk, which
+       takes the hepatic artery's blood from the aorta; and the first stretch of the vessels of the legs, so it
+       shows where the vena cava begins (where the veins from the two legs join) and where the aorta ends
+       (Daniel, 27 Sep: "where do you start calling it the vena cava") */
+    function pelvis(x0, y0, x1, y1) { return y0 <= 414 && y1 <= 414 && x0 > 185 && x0 < 245 && x1 > 185 && x1 < 245; }
+    var CONNECT = { 'hepatic-artery': [{ part: 'coeliac-artery' }], 'vena-cava': [{ part: 'leg-vein', keep: pelvis, fade: 1 }], aorta: [{ part: 'leg-artery', keep: pelvis, fade: 1 }] };
+    /* the connectors lit now: part -> its spec */
+    function joins() {
+      var out = {};
+      if (lit) Object.keys(lit).forEach(function (p) { (CONNECT[p] || []).forEach(function (q) { if (!lit[q.part] && FLOW[q.part]) out[q.part] = q; }); });
+      return out;
+    }
     function tubePaths(edges, c, parent) {        /* centre lines drawn as the drawing draws a vessel: a rim, then its fill */
       var rim = {}, core = {};
       edges.forEach(function (e) {
@@ -548,15 +569,15 @@
       tubePaths(global.CIRC_MESENTERY.vein, 'po', el('g', {}, mesG));
       tubePaths(global.CIRC_MESENTERY.artery, 'ag', el('g', {}, mesG));
     }
-    var BACK = ['a', 'pv', 'v'], FRONT = ['pa', 'po', 'ag'];
+    var BACK = ['a', 'pv', 'v'], FRONT = ['pa', 'po', 'ag'], backRims = [];
     function tubes(host, layers, heartLitNow) {
       host.innerHTML = '';
       if (!lit) return;
       var byLayer = {};
       Object.keys(lit).forEach(function (part) { var P = FLOW[part]; if (P) (byLayer[P.c] = byLayer[P.c] || []).push(P); });
-      function draw(c, keep) {
-        var list = byLayer[c]; if (!list) return;
-        var rim = {}, core = {};
+      function draw(c, keep, list, attrs) {
+        list = list || byLayer[c]; if (!list) return;
+        var rim = {}, core = {}, halo = {};
         list.forEach(function (P) {
           P.e.forEach(function (e) {
             for (var i = 0; i + 5 < e.length; i += 3) {
@@ -564,13 +585,35 @@
               var r = (e[i + 2] + e[i + 5]) / 2, seg = 'M' + e[i] + ' ' + e[i + 1] + 'L' + e[i + 3] + ' ' + e[i + 4];
               var wr = Math.round((2 * r + .15) * 5) / 5, wc = Math.max(.3, Math.round((2 * r - .6) * 5) / 5);
               rim[wr] = (rim[wr] || '') + seg; core[wc] = (core[wc] || '') + seg;
+              if (c === 'po') { var wh = Math.round((wr + 1.5) * 5) / 5; halo[wh] = (halo[wh] || '') + seg; }
             }
           });
         });
-        var g = el('g', { 'class': 'cp__tube cp__tube--' + c, fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, host);
-        Object.keys(rim).forEach(function (w) { el('path', { d: rim[w], stroke: TUBE[c][1], 'stroke-width': w }, g); });
-        Object.keys(core).forEach(function (w) { el('path', { d: core[w], stroke: TUBE[c][0], 'stroke-width': w }, g); });
+        var g = el('g', Object.assign({ 'class': 'cp__tube cp__tube--' + c, fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, attrs || {}), host);
+        /* the veins from the gut to the liver join nothing on their way but each other: where they pass in front
+           of the lit vena cava or aorta, a thin gap of the skin's colour round them, as a drawing shows one vessel
+           crossing another (only there: round every branch it was heavy) */
+        if (c === 'po') {
+          var hg = el('g', { mask: 'url(#' + U + 'cross)' }, g);
+          Object.keys(halo).forEach(function (w) { el('path', { d: halo[w], stroke: SKIN, 'stroke-width': w }, hg); });
+        }
+        if (host === tubesBack && (c === 'a' || c === 'v')) Object.keys(rim).forEach(function (w) { backRims.push([rim[w], w]); });
+        Object.keys(rim).forEach(function (w) { el('path', { d: rim[w], stroke: TUBE_LIT[c][1], 'stroke-width': w }, g); });
+        Object.keys(core).forEach(function (w) { el('path', { d: core[w], stroke: TUBE_LIT[c][0], 'stroke-width': w }, g); });
       }
+      /* the crossings' mask: the lit vena cava and aorta, drawn in the pass behind (applyLight draws it first) */
+      if (host === tubesBack) backRims = [];
+      else {
+        var cm = defs.querySelector('#' + U + 'cross');
+        if (cm) cm.innerHTML = backRims.map(function (q) { return '<path d="' + q[0] + '" fill="none" stroke="#fff" stroke-width="' + q[1] + '" stroke-linecap="round" stroke-linejoin="round"/>'; }).join('');
+      }
+      /* the connectors first, so the lit vessels they join are drawn over their ends */
+      var J = joins();
+      Object.keys(J).forEach(function (p) {
+        var q = J[p], P = FLOW[p];
+        if (layers.indexOf(P.c) < 0) return;
+        draw(P.c, q.keep, [P], q.fade ? { mask: 'url(#' + U + 'legfade)' } : null);
+      });
       layers.forEach(function (c) { draw(c); });
       /* in the drawing the arch of the aorta lies over the heart, and the descending aorta behind it */
       if (host === tubesFront && heartLitNow) draw('a', function (x0, y0, x1, y1) { return y0 < 213 && y1 < 213 && x0 > 196 && x0 < 236; });
@@ -595,7 +638,8 @@
       }
       spotlight(!!(lit && lensMode && heartOn));
       tubes(tubesBack, BACK, heartOn); tubes(tubesFront, FRONT, heartOn);
-      flows.forEach(function (f) { f.el.classList.toggle('is-dim', !!lit && !lit[f.part]); });
+      var J2 = joins();
+      flows.forEach(function (f) { f.el.classList.toggle('is-dim', !!lit && !lit[f.part] && !(J2[f.part] && !J2[f.part].keep)); });
       /* the lens: its chambers and valves, lit or dimmed */
       Array.prototype.forEach.call(lensG.querySelectorAll('[data-part]'), function (n) {
         var p = n.getAttribute('data-part');
