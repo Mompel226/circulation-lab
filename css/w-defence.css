@@ -39,6 +39,9 @@
 .ph__prod circle{fill:#9EDB5E;stroke:#3B6A1D;stroke-width:.5}
 .ph__memo{fill:none;stroke:#F8ECF2;stroke-width:3.6;stroke-linejoin:round}
 .ph__memi{fill:none;stroke:#7B4868;stroke-width:1.3;stroke-linejoin:round}
+.ph__agn{fill:#3FD0F0;stroke:#0A4F63;stroke-width:1;stroke-linejoin:round}
+.ph__agv{fill:#D9EEF5;fill-opacity:.9;stroke:#7B4868;stroke-width:1.2}
+.ph__agc{fill:none;stroke:#4A2C86;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
 
 /* ---------- clot: the drawing ---------- */
 .cl__bg{fill:#0D1A22}
