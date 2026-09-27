@@ -80,15 +80,10 @@ as in the Plants Lab.
 
 | File | Stage | Source | Author | Licence |
 |---|---|---|---|---|
-| `jn-artery-*` (900 and 1400, square) | 1 Artery | [Артерия мышечно - эластического типа, гематоксилин - эозин, увеличение 40.jpg](https://commons.wikimedia.org/wiki/File:%D0%90%D1%80%D1%82%D0%B5%D1%80%D0%B8%D1%8F_%D0%BC%D1%8B%D1%88%D0%B5%D1%87%D0%BD%D0%BE_-_%D1%8D%D0%BB%D0%B0%D1%81%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%BE%D0%B3%D0%BE_%D1%82%D0%B8%D0%BF%D0%B0,_%D0%B3%D0%B5%D0%BC%D0%B0%D1%82%D0%BE%D0%BA%D1%81%D0%B8%D0%BB%D0%B8%D0%BD_-_%D1%8D%D0%BE%D0%B7%D0%B8%D0%BD,_%D1%83%D0%B2%D0%B5%D0%BB%D0%B8%D1%87%D0%B5%D0%BD%D0%B8%D0%B5_40.jpg) — an artery of the muscular-elastic type cut across, haematoxylin and eosin, ×40, photographed through the eyepiece (Wiki Science Competition 2017). Cropped to the round field of the microscope. | Андрюша Романов (Andryusha Romanov) | CC BY 4.0 |
-| `jn-skin-capillaries-*` (900 and 1400) | 2 Arteriole | [Nailfold Capillaries.png](https://commons.wikimedia.org/wiki/File:Nailfold_Capillaries.png) — capillary loops in the skin at the base of a fingernail, in a living person, by high-speed videocapillaroscopy (Russian Science Photo Competition 2019). Converted from PNG. Shown at the arteriole stage as the capillaries an arteriole supplies, and captioned so. | Dmitry Stavtsev, Nikita Margaryants and Mikhail Volkov | CC BY 4.0 |
-| `jn-capillary-tem-*` (900 and 1400) | 3 Capillary | [A red blood cell in a capillary, pancreatic tissue - TEM.jpg](https://commons.wikimedia.org/wiki/File:A_red_blood_cell_in_a_capillary,_pancreatic_tissue_-_TEM.jpg) — a capillary in the pancreas cut across, one red cell almost filling it; transmission electron microscope, with its 1 µm scale bar. Uncropped. | Louisa Howard, Dartmouth Electron Microscope Facility | Public domain (PD-author) |
+| `jn-artery-*` (900 × 675 and 1400 × 1050) | 1 Artery | [Артерия мышечно - эластического типа, гематоксилин - эозин, увеличение 40.jpg](https://commons.wikimedia.org/wiki/File:%D0%90%D1%80%D1%82%D0%B5%D1%80%D0%B8%D1%8F_%D0%BC%D1%8B%D1%88%D0%B5%D1%87%D0%BD%D0%BE_-_%D1%8D%D0%BB%D0%B0%D1%81%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%BE%D0%B3%D0%BE_%D1%82%D0%B8%D0%BF%D0%B0,_%D0%B3%D0%B5%D0%BC%D0%B0%D1%82%D0%BE%D0%BA%D1%81%D0%B8%D0%BB%D0%B8%D0%BD_-_%D1%8D%D0%BE%D0%B7%D0%B8%D0%BD,_%D1%83%D0%B2%D0%B5%D0%BB%D0%B8%D1%87%D0%B5%D0%BD%D0%B8%D0%B5_40.jpg) — an artery of the muscular-elastic type cut across, haematoxylin and eosin, ×40, photographed through the eyepiece (Wiki Science Competition 2017). Cropped to the round field of the microscope, then to 4:3 round the artery; labelled (lumen, thick wall) for this lab, 27 Sep 2026. | Андрюша Романов (Andryusha Romanov) | CC BY 4.0 |
+| `jn-arteriole-*`, `jn-venule-*` (900 × 621 and 1400 × 967) | 2 Arteriole, 4 Venule | [Blutgefäße (1).jpg](https://commons.wikimedia.org/wiki/File:Blutgef%C3%A4%C3%9Fe_(1).jpg) — small blood vessels in a plastic section, cresyl violet: an arteriole, a venule and a capillary joining the venule. Cropped to the three vessels, whole; the printed numbers 1–2–3 removed and replaced by English labels, one version for each stage (27 Sep 2026). The labelled versions are shared under the same licence. **Daniel allowed this ShareAlike exception on 27 Sep 2026**, as for the whale: no open micrograph of a normal arteriole or venule is CC BY or public domain. | Rollroboter | CC BY-SA 3.0 |
+| `jn-capillary-tem-*` (900 and 1400) | 3 Capillary | [A red blood cell in a capillary, pancreatic tissue - TEM.jpg](https://commons.wikimedia.org/wiki/File:A_red_blood_cell_in_a_capillary,_pancreatic_tissue_-_TEM.jpg) — a capillary in the pancreas cut across, one red cell almost filling it; transmission electron microscope, with its 1 µm scale bar. Uncropped; labelled (lumen, red blood cell, wall: one cell thick) for this lab, 27 Sep 2026. | Louisa Howard, Dartmouth Electron Microscope Facility | Public domain (PD-author) |
 | `jn-artery-vein-*` (600 × 400, no 1400) | 5 Vein | The 9.3 lesson slides (`9.3 Blood Vessels`, slide 9): "Artery and Vein (40X)", a round artery beside a flattened vein, with the words on it as in the slide. The original bytes, not re-encoded. | From the 9.3 lesson slides; the original source is not recorded in the deck | Used as in the lesson |
-
-**Stage 4, the venule, has no picture.** Every clear micrograph of a venule found on Wikimedia Commons
-is CC BY-SA, which these labs do not use: Josef Reischig's venules with a valve (`Venule (238 10A)`,
-`(238 11A)`, `(238 12A)`), `Blutgefäße (1).jpg` (an arteriole, a venule and a capillary together) and
-the rabbit vessel series by John Alan Elson. The section drawing is shown full width instead.
 
 **Looked at and not used:**
 - `Arteriole elastic membrane.jpg` (CC BY 4.0): its red cells measure about a thirtieth of its lumen,
@@ -97,7 +92,8 @@ the rabbit vessel series by John Alan Elson. The section drawing is shown full w
   fully collapsed into a slit, so its wall looks thick — it would teach the opposite of "thin wall".
 - `A Blood Vessel fixed and Stain.jpg` (CC BY 4.0): probably a venule, but not identified by its author.
 - `2102 Comparison of Artery and Vein.jpg` (OpenStax): its micrograph is © University of Michigan
-  Medical School, so its licence is not clearly CC BY.
+  Medical School, so its licence is not clearly CC BY. (Downloaded again on 27 Sep 2026 to replace the vein
+  picture, and not used for this reason; the file was deleted.)
 
 ## Videos and sound
 
