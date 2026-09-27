@@ -76,8 +76,18 @@
     var venule = [[X1 + 14, yv], [X1 + 40, yv - 4], [VX - VR + 6, yv - 14]];
     return { yb: yb, yv: yv, arteriole: arteriole, caps: caps, venule: venule };
   });
-  /* the capillaries also link one bed to the next: a network, not three separate fans */
-  var LINKS = [[[X0 + 70, BEDS[0] + 50], [X0 + 76, BEDS[0] + 100], [X0 + 70, BEDS[1] - 50]], [[X0 + 84, BEDS[1] + 52], [X0 + 90, BEDS[1] + 100], [X0 + 84, BEDS[2] - 48]]];
+  /* The capillaries of one bed also join those of the next: a network, not separate fans. Blood in a link flows
+     from higher pressure to lower, so each runs from the arteriole half of one capillary to the venule half of the
+     next and carries red cells (Daniel, 27 Sep: the links were upright tubes with no flow, their ends sealed by the
+     capillaries' walls). i1, i2: where it leaves and joins, as sample numbers along the two capillaries. */
+  var LINKS = [0, 1].map(function (b) {
+    var A = sampleCurve(BED[b].caps[2], 8), B = sampleCurve(BED[b + 1].caps[0], 8);
+    var i1 = Math.round(A.length * .34), i2 = Math.round(B.length * .64), p1 = A[i1], p2 = B[i2];
+    var a1 = A[i1 + 1], b1 = B[i2 - 1];                /* leave and join along each capillary's own direction */
+    var d1 = [a1[0] - p1[0], a1[1] - p1[1]], d2 = [p2[0] - b1[0], p2[1] - b1[1]], l1 = Math.hypot(d1[0], d1[1]) || 1, l2 = Math.hypot(d2[0], d2[1]) || 1;
+    return { b: b, i1: i1, i2: i2, A: A, B: B,
+             pts: [p1, [p1[0] + d1[0] / l1 * 14, p1[1] + d1[1] / l1 * 14 + 12], [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2], [p2[0] - d2[0] / l2 * 14, p2[1] - d2[1] / l2 * 14 - 12], p2] };
+  });
 
   /* the routes a red cell can take, each a list of [points, speed, kind] segments */
   function routes() {
@@ -92,6 +102,18 @@
           [[[VX, bd.yv - 14], [VX, TOP]], 1.3, 'v']
         ]);
       });
+    });
+    LINKS.forEach(function (lk) {                             /* through a link, from one bed to the next */
+      var bd = BED[lk.b], bn = BED[lk.b + 1];
+      out.push([
+        [[[AX, TOP], [AX, bd.yb]], 1.8, 'a'],
+        [sampleCurve(bd.arteriole, 6), 1.2, 'a'],
+        [lk.A.slice(0, lk.i1 + 1), .42, 'c'],
+        [sampleCurve(lk.pts, 8), .42, 'c'],
+        [lk.B.slice(lk.i2), .42, 'c'],
+        [sampleCurve(bn.venule, 6), .9, 'v'],
+        [[[VX, bn.yv - 14], [VX, TOP]], 1.3, 'v']
+      ]);
     });
     out.push([[[[AX, TOP], [AX, BOT]], 1.8, 'a']]);          /* on down the artery, to the beds below */
     out.push([[[[VX, BOT], [VX, TOP]], 1.3, 'v']]);          /* up the vein, from the beds below */
@@ -147,7 +169,7 @@
     s += '<rect x="' + (AX + AR + 2) + '" y="' + (TOP + 30) + '" width="' + (VX - VR - AX - AR - 4) + '" height="' + (BOT - TOP - 60) + '" rx="18" class="cb__tissue"/>';
     var capPts = [];
     BED.forEach(function (bd) { bd.caps.forEach(function (cp) { capPts = capPts.concat(sampleCurve(cp, 8)); }); capPts = capPts.concat(sampleCurve(bd.arteriole, 6), sampleCurve(bd.venule, 6)); });
-    LINKS.forEach(function (lk) { capPts = capPts.concat(sampleCurve(lk, 6)); });
+    LINKS.forEach(function (lk) { capPts = capPts.concat(sampleCurve(lk.pts, 6)); });
     var cells = '', CELLC = [];
     for (var gy = TOP + 42; gy < BOT - 32; gy += 23) {
       for (var gx = AX + AR + 16 + (Math.round(gy / 23) % 2 ? 11 : 0); gx < VX - VR - 12; gx += 23) {
@@ -162,16 +184,21 @@
     }
     s += '<g class="cb__cells">' + cells + '</g>';
     /* the capillaries, the links, the arterioles and venules: each a wall, then its blood */
-    function tube(d, wallW, lumW, wallCls, blood, extra) {
-      return '<path d="' + d + '" class="cb__wall ' + wallCls + '" stroke-width="' + wallW + '"/>' + '<path d="' + d + '" class="cb__blood" stroke="' + blood + '" stroke-width="' + lumW + '"' + (extra || '') + '/>';
+    /* every wall first, then every lumen: where two vessels meet, their lumens run into each other with no wall
+       drawn across the opening */
+    var WALLS = [], BLOOD = [];
+    function tube(d, wallW, lumW, wallCls, blood) {
+      WALLS.push('<path d="' + d + '" class="cb__wall ' + wallCls + '" stroke-width="' + wallW + '"/>');
+      BLOOD.push('<path d="' + d + '" class="cb__blood" stroke="' + blood + '" stroke-width="' + lumW + '"/>');
     }
     var capBlood = 'url(#' + u + 'cg)';
-    LINKS.forEach(function (lk) { s += tube(curve(lk), 7, 4.4, 'cb__wall--c', capBlood); });
-    BED.forEach(function (bd) { bd.caps.forEach(function (cp) { s += tube(curve(cp), 7.2, 4.6, 'cb__wall--c', capBlood); }); });
+    LINKS.forEach(function (lk) { tube(curve(lk.pts), 7.2, 4.6, 'cb__wall--c', capBlood); });
+    BED.forEach(function (bd) { bd.caps.forEach(function (cp) { tube(curve(cp), 7.2, 4.6, 'cb__wall--c', capBlood); }); });
     BED.forEach(function (bd) {
-      s += tube(curve(bd.arteriole), 16, 8.5, 'cb__wall--ao', OXY);
-      s += tube(curve(bd.venule), 15, 11, 'cb__wall--vo', DEO);
+      tube(curve(bd.arteriole), 16, 8.5, 'cb__wall--ao', OXY);
+      tube(curve(bd.venule), 15, 11, 'cb__wall--vo', DEO);
     });
+    s += WALLS.join('') + BLOOD.join('');
     /* the artery and the vein: tubes shaded round, the artery's wall thick, the vein's thin with a wide lumen */
     s += '<rect x="' + (AX - AR) + '" y="' + TOP + '" width="' + (AR * 2) + '" height="' + (BOT - TOP) + '" fill="url(#' + u + 'aw)"/>' +
          '<rect x="' + (AX - AL) + '" y="' + TOP + '" width="' + (AL * 2) + '" height="' + (BOT - TOP) + '" fill="' + OXY + '"/>' +
