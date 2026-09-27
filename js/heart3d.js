@@ -1110,6 +1110,7 @@ void main() {
   /* ---------------- views ----------------
      front: as it sits in a person facing you. back: from behind. section: the heart turned so you look
      straight at the cut, atria at the top, the right side on your left — the diagram's layout. */
+  const HPOS0 = heart.position.clone();       /* where the heart sits in every named view (the arrows move it about the view's middle) */
   const Q_ID = new THREE.Quaternion();
   const Q_SEC = (() => {
     const e3 = PN.clone(), e2 = PUP.clone(), e1 = new THREE.Vector3().crossVectors(e2, e3).normalize();
@@ -1143,11 +1144,12 @@ void main() {
     viewName = name;
     const T = viewTarget(name);
     if (instant || reduced || opts.test) {
-      heart.quaternion.copy(T.q); camera.position.copy(T.pos); controls.target.copy(T.target);
+      turning = null; spinning = null; heart.quaternion.copy(T.q); heart.position.copy(HPOS0); camera.position.copy(T.pos); controls.target.copy(T.target);
       heart.updateMatrixWorld(true); updateClip(); controls.update(); tween = null; idStale = true; relabelSoon(); kick(); return;
     }
     controls.enabled = false;
-    tween = { t: 0, dur: 0.9, q0: heart.quaternion.clone(), q1: T.q, p0: camera.position.clone(), p1: T.pos, c0: controls.target.clone(), c1: T.target };
+    turning = null; spinning = null;
+    tween = { t: 0, dur: 0.9, q0: heart.quaternion.clone(), q1: T.q, p0: camera.position.clone(), p1: T.pos, c0: controls.target.clone(), c1: T.target, h0: heart.position.clone(), h1: HPOS0.clone() };
     hideLabels(); kick();
   }
   function stepTween(dt) {
@@ -1155,6 +1157,7 @@ void main() {
     tween.t = Math.min(tween.dur, tween.t + dt);
     const e = easeIO(tween.t / tween.dur);
     heart.quaternion.slerpQuaternions(tween.q0, tween.q1, e);
+    if (tween.h0) heart.position.lerpVectors(tween.h0, tween.h1, e);
     /* the camera swings round the target, it does not cut through the heart */
     const a = tween.p0.clone().sub(tween.c0), b = tween.p1.clone().sub(tween.c1);
     const la = a.length(), lb = b.length();
@@ -1169,26 +1172,38 @@ void main() {
 
   /* ---------------- turning by buttons ----------------
      Daniel, 25 Sep: "if I just want to turn it I click those arrows and it turns more easily, and then if
-     I just want to flip it then I can use the mouse". turn(): one smooth step round the heart, the same
-     way a drag would turn it (left: the heart's front goes left; up: its front tips up). spin(): keeps
-     turning, in degrees a second, while a button is held; spin(0, 0) stops. Never past the poles, the
-     same 20 degrees from them as the mouse. */
-  const SPH = new THREE.Spherical(), OFF = new THREE.Vector3();
-  function orbitBy(az, pol) {
-    OFF.copy(camera.position).sub(controls.target);
-    SPH.setFromVector3(OFF);
-    SPH.theta += az; SPH.phi = clamp(SPH.phi + pol, controls.minPolarAngle, controls.maxPolarAngle); SPH.makeSafe();
-    OFF.setFromSpherical(SPH);
-    return controls.target.clone().add(OFF);
+     I just want to flip it then I can use the mouse". turn(): one smooth step; spin(): keeps turning, in
+     degrees a second, while a button is held; spin(0, 0) stops. Left and right turn the HEART about the
+     line that is upright on the screen, through the middle of the view; up and down tip it about the
+     level line (left: its front goes left; up: its front tips up). They used to orbit the camera about the
+     body's vertical axis, as a drag does: after the heart had been tipped, that axis pointed nearly at
+     you, so left and right swung the apex up and round instead of turning the heart (Daniel, 27 Sep).
+     The named views put the heart back where it was. */
+  const AX_U = new THREE.Vector3(), AX_R = new THREE.Vector3(), QD = new THREE.Quaternion();
+  function rotateHeart(az, pol) {
+    const pivot = controls.target;
+    AX_U.set(0, 1, 0).applyQuaternion(camera.quaternion); AX_R.set(1, 0, 0).applyQuaternion(camera.quaternion);
+    if (az) { QD.setFromAxisAngle(AX_U, -az); heart.quaternion.premultiply(QD); heart.position.sub(pivot).applyQuaternion(QD).add(pivot); }
+    if (pol) { QD.setFromAxisAngle(AX_R, -pol); heart.quaternion.premultiply(QD); heart.position.sub(pivot).applyQuaternion(QD).add(pivot); }
+    heart.updateMatrixWorld(true); updateClip(); idStale = true;
   }
+  let turning = null;
   function turn(azDeg, polDeg) {
     if (tween) stepTween(tween.dur);                      /* a view still arriving: land it first */
     spinning = null; viewName = 'own';
-    const p1 = orbitBy(THREE.MathUtils.degToRad(azDeg), THREE.MathUtils.degToRad(polDeg));
-    if (reduced || opts.test) { camera.position.copy(p1); controls.update(); idStale = true; hideLabels(); relabelSoon(); kick(); return; }
-    controls.enabled = false;
-    tween = { t: 0, dur: 0.42, q0: heart.quaternion.clone(), q1: heart.quaternion.clone(), p0: camera.position.clone(), p1, c0: controls.target.clone(), c1: controls.target.clone() };
+    const az = THREE.MathUtils.degToRad(azDeg), pol = THREE.MathUtils.degToRad(polDeg);
+    if (reduced || opts.test) { turning = null; rotateHeart(az, pol); hideLabels(); relabelSoon(); kick(); return; }
+    if (turning) rotateHeart(turning.az * (1 - turning.done), turning.pol * (1 - turning.done));   /* finish a step still going */
+    turning = { az, pol, t: 0, dur: 0.42, done: 0 };
     hideLabels(); kick();
+  }
+  function stepTurn(dt) {
+    if (!turning) return false;
+    turning.t = Math.min(turning.dur, turning.t + dt);
+    const e = easeIO(turning.t / turning.dur), de = e - turning.done; turning.done = e;
+    rotateHeart(turning.az * de, turning.pol * de);
+    if (turning.t >= turning.dur) { turning = null; relabelSoon(); }
+    return true;
   }
   let spinning = null;
   function spin(azRate, polRate) {
@@ -1200,8 +1215,7 @@ void main() {
   }
   function stepSpin(dt) {
     if (!spinning) return false;
-    camera.position.copy(orbitBy(spinning.az * dt, spinning.pol * dt));
-    idStale = true;
+    rotateHeart(spinning.az * dt, spinning.pol * dt);
     return true;
   }
 
@@ -1376,14 +1390,20 @@ void main() {
     const m = 3;       /* a candidate should have its own part 3 pixels away on all four sides (1 if nothing else fits) */
     const K = (j) => keyOf(idBuf[j], idBuf[j + 1] > 127);
     const same = (i, d, id) => K(i + d * 4) === id && K(i - d * 4) === id && K(i + d * IW * 4) === id && K(i - d * IW * 4) === id;
+    /* how deep inside its part a point is: its own part all round it, in eight directions, 5, 8 or 12 pixels
+       away. The dot goes as deep as it can (Daniel, 27 Sep: the right atrium's dot sat on its edge, beside
+       the coronary artery that runs along it, and read as naming the artery) */
+    const ring = (i, r, id) => { const a = r * 4, b = r * IW * 4, q = Math.round(r * 0.7), c = q * 4, e = q * IW * 4;
+      return K(i + a) === id && K(i - a) === id && K(i + b) === id && K(i - b) === id && K(i + c + e) === id && K(i - c - e) === id && K(i + c - e) === id && K(i - c + e) === id; };
+    const deep = (i, id) => { let d = m; for (const r of [5, 8, 12]) { if (ring(i, r, id)) d = r; else break; } return d; };
     for (let y = m; y < IH - m; y += 2) for (let x = m; x < IW - m; x += 2) {
       const i = (y * IW + x) * 4, v = idBuf[i];
       if (!v) continue;
       if (x < minX) minX = x; if (x > maxX) maxX = x;
       const id = K(i); const wi = want.get(id);
       if (wi == null) continue;
-      const pt = [(x + 0.5) * sx, (IH - 1 - y + 0.5) * sy];     /* the centre of the ID pixel, so it maps back to the same one */
-      if (same(i, m, id)) reg[wi].push(pt); else if (same(i, 1, id)) loose[wi].push(pt); else if (id === 'chordae') thin[wi].push(pt);
+      const pt = [(x + 0.5) * sx, (IH - 1 - y + 0.5) * sy, 0];     /* the centre of the ID pixel, so it maps back to the same one */
+      if (same(i, m, id)) { pt[2] = deep(i, id); reg[wi].push(pt); } else if (same(i, 1, id)) loose[wi].push(pt); else if (id === 'chordae') thin[wi].push(pt);
     }
     const midX = (minX + maxX) / 2 * sx;
     const phoneish = w < 520;
@@ -1399,7 +1419,7 @@ void main() {
     function prep(id, pts) {
       const nm = labelText(id), hgt = lineH * (nm.sub ? 2 : 1) + 6;
       let cx = 0, cy = 0; pts.forEach((p) => { cx += p[0]; cy += p[1]; }); cx /= pts.length || 1; cy /= pts.length || 1;
-      pts.sort((a, b) => (a[0] - cx) ** 2 + (a[1] - cy) ** 2 - ((b[0] - cx) ** 2 + (b[1] - cy) ** 2));
+      pts.sort((a, b) => ((b[2] || 0) - (a[2] || 0)) || ((a[0] - cx) ** 2 + (a[1] - cy) ** 2 - ((b[0] - cx) ** 2 + (b[1] - cy) ** 2)));
       /* the stage's own furniture keeps its space: the view name, its buttons, the top arrow and the stage
          caption along the top; the hint, the bottom arrow and the colour key along the bottom */
       return { id, nm, hgt, pts: pts.filter((p) => p[1] - hgt / 2 >= (phoneish ? 112 : 80) && p[1] + hgt / 2 <= h - 74) };
@@ -1514,6 +1534,7 @@ void main() {
     const dt = last < 0 ? 0 : clamp((now - last) / 1000, 0, 0.05); last = now;
     let busy = false;
     if (stepTween(dt)) busy = true;
+    if (stepTurn(dt)) busy = true;
     if (stepSpin(dt)) busy = true;
     if (stepAnim(dt)) busy = true;
     if (flagged.size) { paintFlags(now); if (!reduced) busy = true; }

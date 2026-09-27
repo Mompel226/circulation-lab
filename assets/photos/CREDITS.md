@@ -41,6 +41,7 @@ Every base name below stands for two files, `-900.jpg` and `-900.webp`.
 | the small intestine on the plate (`js/circ-gut.js`) | borrowed so the hepatic portal vein has something to come from | Mariana Ruiz (LadyofHats) and Jmarchn, [Digestive system without labels.svg](https://commons.wikimedia.org/wiki/File:Digestive_system_without_labels.svg) (the Digestion Lab's plate), placed by matching the two drawings' livers | public domain |
 | body outline (`js/body-art.js`) | the silhouette in the "After a meal" animation | Mikael Häggström, "Man shadow", from his [Human body diagrams](https://commons.wikimedia.org/wiki/Human_body_diagrams), Wikimedia Commons | CC0 |
 | `js/data/chd-heart.js` (drawn, not a photo) | the heart from the front with its coronary arteries, in "Inside a coronary artery" | [Servier Medical Art](https://smart.servier.com), *Heart – pathophysiology* kit, slide 13 "Myocardial infarction – Anteroseptal infarct"; the infarct removed, converted to SVG | CC BY 4.0 |
+| `chd-john-*`, `chd-anna-*`, `chd-james-*`, `chd-lucy-*`, `chd-david-*`, `chd-samantha-*` | the six people of "Who is most at risk?" (fictional) | the 9.2 worksheet "Coronary Heart Disease" (Dr Mompel's lesson): pictures made with AI for the lesson; James and Lucy cropped to the face | the lesson's own |
 
 ## From the lesson slides and handouts
 
