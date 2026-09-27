@@ -74,6 +74,7 @@
     if (sim) sim.hidden = true;
     var s = spec(st), ids = s.light || [];
     var onBench = !!s.bench;
+    draw.vesselNamesOnly(s.names === 'vessels');         /* plate.names: 'vessels' — the side names are vessels only */
     if (col) col.classList.toggle('is-bench', onBench);
     if (bench) { bench.hidden = !onBench; bench.innerHTML = ''; }
     if (onBench) { draw.stop(); draw.clear(); if (tag) tag.classList.remove('on'); return; }
