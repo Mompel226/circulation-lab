@@ -34,7 +34,13 @@
      enzymes, never "eat" (MS 0610/32/M/J/14 Q4(d)(ii); MS 0610/31/O/N/12 Q2(e); MS 0610/31/O/N/10
      Q4(c)(iii)); clotting: platelets; fibrinogen converted to fibrin; soluble to insoluble; a mesh
      that traps blood cells; a scab; keeps pathogens out, not "germs" or "foreign bodies"
-     (MS 0610/32/M/J/15 Q3(d)(ii); MS 0610/41/M/J/24 Q6(b); MS 0610/32/O/N/11 Q4(b)(ii)).
+     (MS 0610/32/M/J/15 Q3(d)(ii); MS 0610/41/M/J/24 Q6(b); MS 0610/32/O/N/11 Q4(b)(ii)). These are
+     the words in bold in the clot's steps: the points 0610 schemes on clotting credit again and
+     again (s09/3, w11/32, s12/31, s13/32, s15/32, w16/42, w19/41, w19/43, m21/42, s24/41, w24/43;
+     the scab is credited in most, but w16/42 ignored it).
+     Beyond the syllabus but credited: "thrombin / enzyme" (s09/3, s12/31, s13/32, s15/32) and, for
+     healing, "cells divide by mitosis ... grow epidermis / new skin" (0610/31/M/J/12 Q1(c)) and
+     "wound healing / tissue repair" (0610/42/O/N/18 Q5(b)(ii)).
    · The phagocyte is drawn as a neutrophil, the commonest phagocyte in blood: 10–12 µm across,
      a nucleus of 2–5 lobes joined by thin strands, a cytoplasm full of small granules (Tortora GJ,
      Derrickson B, Principles of Anatomy and Physiology, 15th ed., 2017, ch. 19, table 19.3).
@@ -73,10 +79,11 @@
      Histology, 6th ed., 2014, ch. 9). The drawing keeps the cells to one scale (about 2.4 units
      to the micrometre) and the skin close to it.
    · Order and times of clotting: platelets stick to the damaged wall and to each other and
-     release chemicals; a chain of reactions ends with the enzyme thrombin converting fibrinogen
-     to fibrin; a small cut stops bleeding within a few minutes (Guyton & Hall, ch. 37). The scab
-     dries over hours; new skin grows under it over days (Gurtner GC et al. 2008, Nature 453:
-     314–321).
+     release chemicals; with a factor exposed by the damaged tissue (tissue factor), they start a
+     chain of reactions that ends with the enzyme thrombin converting fibrinogen to fibrin; a small
+     cut stops bleeding within a few minutes (Guyton & Hall, ch. 37). The scab dries over hours;
+     skin cells near the wound divide by mitosis and new skin grows under the scab over days
+     (Gurtner GC et al. 2008, Nature 453: 314–321).
    ============================================================ */
 (function (global) {
   'use strict';
@@ -206,8 +213,8 @@
     return { tall: tall, win: win, f: ft.f, mL: ft.mL, mR: ft.mR, vb: vb,
              to: function (x, y) { return tall ? [y - win.y0, x - win.x0] : [x - win.x0, y - win.y0]; } };
   }
-  function drawLabels(lay, items, tiny) {
-    var vb = lay.vb, o = { left: -8, right: vb.bw + 8, font: lay.f, top: vb.y + 6, bottom: vb.y + vb.h - 6, gap: 5 };
+  function drawLabels(lay, items, tiny, gap) {
+    var vb = lay.vb, o = { left: -8, right: vb.bw + 8, font: lay.f, top: vb.y + 6, bottom: vb.y + vb.h - 6, gap: gap == null ? 5 : gap };
     var out = L.labels(Object.assign({}, o, { items: items.filter(function (q) { return q.side === 'L'; }), width: lay.mL - 26 })) +
               L.labels(Object.assign({}, o, { items: items.filter(function (q) { return q.side === 'R'; }), width: lay.mR - 26 }));
     /* a part smaller than the usual dot (a platelet, a molecule) gets a smaller dot, so it still shows round it */
@@ -575,12 +582,12 @@
   var CL = { W: 620, H: 520, ys: 70, vx: 310, vy: 400, vo: 98, vw: 11 };
   CL.vi = CL.vo - CL.vw;
   var CL_STEPS = [
-    { t: 0,  h: 'A cut breaks the skin and a blood vessel', p: 'A cut breaks the skin and the wall of a small blood vessel. Blood flows out through the wound.' },
-    { t: 8,  h: 'Platelets stick at the wound', p: 'Platelets are fragments of cells, much smaller than red blood cells. At the wound they stick to the damaged wall and to each other. They release chemicals that start the clotting reactions.' },
-    { t: 18, h: 'Fibrinogen is converted into fibrin', tag: 'Supplement', p: 'Plasma carries a soluble protein called fibrinogen. At the wound, fibrinogen is converted into fibrin, which is insoluble. The fibrin forms long threads.' },
-    { t: 27, h: 'A mesh traps the cells: a clot', tag: 'Supplement', p: 'The fibrin threads make a mesh across the wound. The mesh traps red blood cells and platelets, forming a clot. The clot prevents blood loss.' },
-    { t: 36, h: 'The clot becomes a scab', p: 'The clot dries and hardens into a scab. The scab prevents the entry of pathogens into the body.' },
-    { t: 44, h: 'New skin grows under the scab', p: 'Under the scab, the skin repairs itself. New skin cells grow across the wound, and the wall of the blood vessel is repaired. Then the scab falls off.' }
+    { t: 0,  h: 'A cut breaks the skin and a blood vessel', p: 'A cut breaks the skin and the wall of a small blood vessel. Blood is lost through the wound.' },
+    { t: 8,  h: 'Platelets stick at the wound', p: '**Platelets** are fragments of cells, much smaller than red blood cells. At the wound they stick to the damaged wall and to each other. Chemicals from the platelets and the damaged tissue start a chain of reactions.' },
+    { t: 18, h: 'Fibrinogen is converted into fibrin', tag: 'Supplement', p: 'Plasma carries a **soluble** protein, **fibrinogen**. The chain of reactions makes an enzyme, thrombin. Thrombin **converts** fibrinogen into **fibrin**, which is **insoluble**. The fibrin forms long threads.' },
+    { t: 27, h: 'A mesh traps the cells: a clot', tag: 'Supplement', p: 'The fibrin threads form a **mesh** across the wound. The mesh **traps red blood cells** and platelets, forming a clot. The clot **prevents blood loss**.' },
+    { t: 36, h: 'The clot becomes a scab', p: 'The clot dries and hardens into a **scab**. The scab **prevents the entry of pathogens** into the body.' },
+    { t: 44, h: 'New skin grows under the scab', tag: 'Beyond the 0610 syllabus', p: 'Under the scab, skin cells near the wound divide by mitosis. The new cells grow across the wound, and the wall of the blood vessel is repaired. Then the scab separates from the new skin.' }
   ];
   var CL_END = 55;
   /* the two sides of the cut, surface to vessel, when it is fully open */
@@ -646,6 +653,8 @@
     }
     return { cells: cells, plts: plts, rods: rods };
   })();
+  /* the red blood cell that is named: face-on, on the left of the lumen, half-way down */
+  var RBC_L = LUM.cells.filter(function (c) { return c[3]; }).sort(function (a, b) { return len(a[0] - 244, a[1] - 388) - len(b[0] - 244, b[1] - 388); })[0];
   /* platelets that stick at the wound: from the blood to the edges of the gap and the cut, then to each other */
   var STICK = (function () {
     var tg = [[321, 311], [300, 311], [319, 300], [302, 300], [317, 290], [305, 289], [323, 278], [299, 280], [311, 305], [312, 296], [314, 284], [308, 276]];
@@ -832,6 +841,18 @@
           st += '<circle class="cl__chem" cx="' + n1(x + Math.cos(aa) * rr) + '" cy="' + n1(y + Math.sin(aa) * rr) + '" r="1.3" opacity="' + n1(op) + '"/>';
         }
       });
+      /* and from the damaged tissue: the broken ends of the vessel wall and the sides of the cut */
+      if (t > 8.6 && t < 27) {
+        var dmg = [[ga, CL.vi + 3], [ga, CL.vo - 3], [gb, CL.vi + 3], [gb, CL.vo - 3]].map(function (q) { return [CL.vx + Math.cos(q[0]) * q[1], CL.vy + Math.sin(q[0]) * q[1]]; });
+        dmg.push([edgeX(o, 0, 262), 262], [edgeX(o, 1, 262), 262], [edgeX(o, 0, 226), 226], [edgeX(o, 1, 226), 226]);
+        dmg.forEach(function (q, k) {
+          for (var j = 0; j < 2; j++) {
+            var age = ((t - 8.6 + k * .37 + j * .9) % 1.8 + 1.8) % 1.8, aa = k * 1.9 + j * 2.6, rr = 3 + age * 6;
+            var op = (1 - age / 1.8) * seg(t, 8.6, 9.4) * (1 - seg(t, 24, 27));
+            st += '<circle class="cl__chem" cx="' + n1(q[0] + Math.cos(aa) * rr) + '" cy="' + n1(q[1] + Math.sin(aa) * rr) + '" r="1.3" opacity="' + n1(op) + '"/>';
+          }
+        });
+      }
       gStick.innerHTML = o > .01 ? st : '';
 
       /* fibrinogen in the wound joins into fibrin threads; the threads make a mesh */
@@ -926,17 +947,19 @@
       var mb = ease(seg(t, 37.5, 41.5));
       if (t > 37.2 && fall < .2) add('bug', 'pathogens', lerp(BUGS[3][0], 356, mb), lerp(BUGS[3][1], domeY(356, hD) - 2.4, mb), 'R', Math.min(clamp01((t - 37.2) / .8), 1 - seg(fall, 0, .2)));
       add('skin', 'skin', wide ? 80 : 214, 128, 'L');
-      add('wall', 'blood vessel wall', CL.vx - CL.vi - CL.vw / 2, CL.vy, 'L');
-      add('rbc', 'red blood cell', LUM.cells[0][0], LUM.cells[0][1], 'L');
+      /* the names on the left a clear gap apart: the wall named high on the ring, the red blood cell on one
+         half-way down, the white blood cell at the bottom */
+      add('wall', 'blood vessel wall', CL.vx + Math.cos(-2.09) * (CL.vi + CL.vw / 2), CL.vy + Math.sin(-2.09) * (CL.vi + CL.vw / 2), 'L');
+      add('rbc', 'red blood cell', RBC_L[0], RBC_L[1], 'L');
       add('wbc', 'white blood cell', 286, 462, 'L');
       var p0 = STICK[0], pm = ease(seg(t, p0.t0, p0.t0 + 1.8));
       if (t < 50) add('plt', 'platelet', lerp(p0.fx, p0.tx, pm), lerp(p0.fy, p0.ty, pm), 'R', 1 - seg(t, 46.5, 49));
       add('fgn', 'fibrinogen (soluble)', LUM.rods[0][0], LUM.rods[0][1], 'R');
-      var th0 = THREADS[0]; if (t > th0.g0 + th0.dur * .55 && t < 50) add('fib', 'fibrin (insoluble threads)', th0.mx, th0.my, 'R', Math.min(clamp01((t - th0.g0 - th0.dur * .55) / .6), 1 - seg(t, 46.5, 49)));
+      var th0 = THREADS[3]; if (t > th0.g0 + th0.dur * .55 && t < 50) add('fib', 'fibrin (insoluble threads)', th0.mx, th0.my, 'R', Math.min(clamp01((t - th0.g0 - th0.dur * .55) / .6), 1 - seg(t, 46.5, 49)));
       if (ck > .3 && t < 50) add('clot', 'clot', 306, 262, 'R', Math.min(clamp01((ck - .3) * 3), 1 - seg(t, 47, 49.5)));
       if (sk > .3 && fall < .2) add('scab', 'scab', 296, 62, 'L', Math.min(clamp01((sk - .3) * 3), 1 - seg(fall, 0, .2)));
       if (t > 47.5) add('new', 'new skin', 318, 142, 'R', clamp01((t - 47.5) / .8));
-      gLab.innerHTML = drawLabels(lay, items, { plt: 1.4, fgn: 1.2, bug: 1.2 });
+      gLab.innerHTML = drawLabels(lay, items, { plt: 1.4, fgn: 1.2, bug: 1.2 }, lay.f * .75);   /* names a clear gap apart */
 
       var when = t < 8 ? 'in seconds' : t < 18 ? 'within a minute' : t < 36 ? 'a few minutes' : t < 44 ? 'hours later' : 'days later';
       var bl = t < 1.1 ? ['none yet', 'plain'] : t < 8 ? ['blood flows out', 'bad'] : t < 31 ? ['slowing', 'warn'] : ['stopped', 'ok'];
@@ -946,8 +969,8 @@
     var R = [0, 9, 21, 30, 40, 48, 59], M = [0, 8, 18, 27, 36, 44, CL_END], clock = readerClock(R, M);
     var sp = L.stepper({ steps: readerSteps(CL_STEPS, R), end: R[R.length - 1], render: function (t) { render(clock(t)); } });
     return mount(S, sp, 'cl', [
-      ['The blood vessel is cut across, so you see its wall as a ring; blood flows along it, towards you. The cells are drawn to one scale: a red blood cell is about 7.5 µm across, a platelet about 2–3 µm, a white blood cell about 12 µm. Fibrinogen molecules are drawn hundreds of times larger than real, as short rods. Time is squeezed: the bleeding stops within minutes, the scab dries over hours, and new skin takes days.'],
-      ['<b>Not asked in 0610.</b> The conversion of fibrinogen into fibrin is done by an enzyme, thrombin, which is made at the wound by a chain of reactions.', 'cl__fence']
+      ['The cells are drawn to scale; fibrinogen (the short rods) is drawn hundreds of times larger than real.'],
+      ['<b>Beyond the 0610 syllabus:</b> thrombin (step 3) and step 6, though 0610 mark schemes have given marks for both (for example Paper 31, June 2012, Q1(c)).', 'cl__fence']
     ], function (D, nar) {
       var narrow = !!nar;
       lay = frameOf(svg, bg, model, cr, narrow ? { x0: 198, x1: 422, y0: 20, y1: 510 } : { x0: 0, x1: 620, y0: 20, y1: 510 }, false, D, narrow ? 10 : 10, narrow ? 11 : 11, narrow ? 112 : 132, narrow ? 112 : 132);
