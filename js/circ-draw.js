@@ -217,7 +217,7 @@
     { id: 'head-artery', text: 'external carotid artery', at: [233.3, 98.1], lv: 'X', z: 1.6 },
     { id: 'head-artery', text: 'basilar artery', at: [212.5, 72.3], lv: 'X', z: 1.8 },
     { id: 'head-vein', text: 'venous sinus', at: [239.5, 64.4], lv: 'X', z: 1.6 },
-    { id: 'coeliac-artery', text: 'coeliac artery', at: [222.5, 281.2], lv: 'X', z: 1.6 },
+    { id: 'coeliac-artery', text: 'coeliac artery', at: [218.2, 286.2], lv: 'X', z: 1.6 },
     { id: 'gastric-artery', text: 'gastric artery', at: [225.2, 275.4], lv: 'X', z: 1.8 },
     { id: 'splenic-artery', text: 'splenic artery', at: [240.4, 293.3], lv: 'X', z: 1.6 },
     { id: 'mesenteric-artery', text: 'mesenteric artery', at: [221.1, 326.2], lv: 'X', z: 1.6 },
@@ -253,15 +253,108 @@
     return false;
   });
   if (AUTO['hepatic-vein']) AUTO['hepatic-vein'] = AUTO['hepatic-vein'].filter(function (q) { return !hepStub(q[0], q[1]); });
-  /* where a branch joins a wider vessel, its traced centre line takes that vessel's width for its last few units:
-     lit on its own, the branch ended in a blob (the hepatic veins at the vena cava). These are drawn no wider than
-     their own width: a quarter over the widest tenth of their middle points */
-  var CAPK = { 'hepatic-vein': 1.25, 'renal-vein': 1.02, 'renal-artery': 1.08, 'leg-artery': 1.25 };
-  Object.keys(CAPK).forEach(function (k) {
-    var P = FLOW[k], rs = []; if (!P) return;
-    P.e.forEach(function (e) { var n = e.length / 3; for (var i = 0; i < n - 2; i++) rs.push(e[i * 3 + 2]); });
-    rs.sort(function (a, b) { return a - b; });
-    if (rs.length) P.cap = CAPK[k] * rs[Math.floor(rs.length * .9)];
+  /* Pieces the drawing's tracing gave to the wrong vessel, or that close a loop the vessel does not have: not lit,
+     pressed or named with it (Daniel, 27 Sep, of the splenic artery: "a lot of circles ... it also seems to go to the
+     kidney"; "fully audit each and every single one of the arteries and veins"). Each is [x0, y0, x1, y1], its two
+     ends. The splenic artery keeps one tortuous path from the coeliac trunk into the spleen: a second arc and a lower
+     path beside it closed two loops, and a branch ran down towards the left kidney. The gastric arteries lose a stub
+     below them, the coeliac trunk a hook above it (its name, at the artist's arrow on the hook, moves onto the
+     trunk), and the gonadal veins a stray piece in the pelvis. The aorta loses a spike towards the coeliac trunk (the
+     trunk has its own start on the aorta) and a stump on top of its arch (the left common carotid and subclavian
+     arteries start at the arch itself); the renal arteries a scrap beside the spleen; the mesenteric vein a stub
+     hanging from the splenic vein with nothing below it; the head veins the thin piece that joined the two sigmoid
+     sinuses under the brain into two rings (each internal jugular vein begins at its own side); the right gonadal
+     vein a zigzag, which BRIDGE replaces with a straight piece; the vena cava three short pieces that tied it to that
+     vein below the vein's own junction (lit, bumps on its side), and a spur beside the superior vena cava's opening
+     into the heart. */
+  var DROP = {
+    'splenic-artery': [[234.1, 296.1, 220.6, 302.1], [235.6, 295.4, 234.2, 295.9], [220.8, 285.8, 233.9, 295.9], [250.8, 295.9, 255.9, 304.9], [214.1, 288.8, 220.4, 301.9]],
+    'gastric-artery': [[213.8, 288.8, 213.2, 296.8]],
+    'coeliac-artery': [[224.6, 279.9, 221.8, 284.2]],
+    vein: [[176.8, 396.9, 186.4, 402.9], [162.8, 384.1, 176.8, 396.9], [204.8, 364.8, 200.8, 360.8], [202.6, 369.1, 204.8, 364.9]],
+    aorta: [[220.8, 290.9, 214.2, 285.9], [219.8, 195.1, 221.6, 189.8]],
+    'renal-artery': [[234.4, 296.8, 235.8, 294.1]],
+    'mesenteric-vein': [[227.6, 310.6, 225.4, 303.4]],
+    'head-vein': [[222.2, 74.2, 200.4, 73.9]],
+    'vena-cava': [[202.8, 369.1, 209.1, 364.2], [204.9, 364.9, 208.1, 362.4], [200.9, 360.6, 207.8, 360.4], [202.8, 218.4, 209.6, 224.1]]
+  };
+  var BRIDGE = { vein: [[202.6, 369.2, 1, 201.8, 364.9, 1, 200.8, 360.6, .9]] };
+  function near(x, y, a, b) { return Math.abs(x - a) < .8 && Math.abs(y - b) < .8; }
+  /* the part's box (what a press zooms to) from the pieces it keeps */
+  function rebox(P) {
+    var b = [Infinity, Infinity, -Infinity, -Infinity];
+    P.e.forEach(function (e) { for (var i = 0; i < e.length; i += 3) { b[0] = Math.min(b[0], e[i]); b[1] = Math.min(b[1], e[i + 1]); b[2] = Math.max(b[2], e[i]); b[3] = Math.max(b[3], e[i + 1]); } });
+    P.box = [b[0], b[1], Math.round((b[2] - b[0]) * 10) / 10, Math.round((b[3] - b[1]) * 10) / 10];
+  }
+  if (FLOW['hepatic-vein']) rebox(FLOW['hepatic-vein']);
+  function ends(e, d) { var n = e.length; return (near(e[0], e[1], d[0], d[1]) && near(e[n - 3], e[n - 2], d[2], d[3])) || (near(e[0], e[1], d[2], d[3]) && near(e[n - 3], e[n - 2], d[0], d[1])); }
+  Object.keys(DROP).forEach(function (part) {
+    var P = FLOW[part]; if (!P) return;
+    P.e = P.e.filter(function (e) { return !DROP[part].some(function (d) { return ends(e, d); }); }).concat(BRIDGE[part] || []);
+    rebox(P);
+    /* its label points found in the drawing: only those still on it */
+    if (AUTO[part]) AUTO[part] = AUTO[part].filter(function (q) {
+      return P.e.some(function (e) { for (var i = 0; i < e.length; i += 3) if (Math.hypot(e[i] - q[0], e[i + 1] - q[1]) < 1.6) return true; return false; });
+    });
+  });
+  /* The ascending aorta rises out of the heart. Its trace ran on, thin, behind the pulmonary trunk to the descending
+     aorta, so lit, the aorta closed into a ring: it now starts where it leaves the heart. */
+  if (FLOW.aorta) {
+    FLOW.aorta.e = FLOW.aorta.e.map(function (e) { return ends(e, [225.4, 222.6, 212.1, 196.1]) && near(e[0], e[1], 225.4, 222.6) ? e.slice(12) : e; });
+    rebox(FLOW.aorta);
+  }
+  /* Where a vessel ends inside a wider one of its own system (a branch leaving the aorta, a vein joining the vena
+     cava), its traced centre line took the wider vessel's width for its last few units: lit on its own, it ended in
+     a blob (the hepatic, renal and gonadal veins at the vena cava, the renal and gonadal arteries at the aorta, the
+     carotids at the arch, the jugular veins). Only such an end is narrowed, and only its last few units, to a little
+     over the vessel's own width just beyond them (the narrowest there, and no more than a quarter over its usual
+     width). A branch that narrows to its tip inside its own tree keeps its taper, and an artery drawn across a vein,
+     as in the limbs and lungs, is not a junction. */
+  var SYSTEM = { a: 'a', ag: 'a', v: 'v', po: 'po', pa: 'pa', pv: 'pv' }, CELL = 10, GRID = {}, JOIN = [];
+  Object.keys(FLOW).forEach(function (part) {
+    FLOW[part].e.forEach(function (e) {
+      for (var i = 0; i + 5 < e.length; i += 3) {
+        var s = [part, e[i], e[i + 1], e[i + 2], e[i + 3], e[i + 4], e[i + 5]], p = Math.max(e[i + 2], e[i + 5]) + .5;
+        for (var a = Math.floor((Math.min(e[i], e[i + 3]) - p) / CELL); a <= Math.floor((Math.max(e[i], e[i + 3]) + p) / CELL); a++)
+          for (var b = Math.floor((Math.min(e[i + 1], e[i + 4]) - p) / CELL); b <= Math.floor((Math.max(e[i + 1], e[i + 4]) + p) / CELL); b++)
+            (GRID[a + ',' + b] = GRID[a + ',' + b] || []).push(s);
+      }
+    });
+  });
+  function inWider(part, x, y) {
+    var sys = SYSTEM[FLOW[part].c];
+    return (GRID[Math.floor(x / CELL) + ',' + Math.floor(y / CELL)] || []).some(function (s) {
+      if (s[0] === part || SYSTEM[FLOW[s[0]].c] !== sys) return false;
+      var dx = s[4] - s[1], dy = s[5] - s[2], L2 = dx * dx + dy * dy, t = L2 ? Math.max(0, Math.min(1, ((x - s[1]) * dx + (y - s[2]) * dy) / L2)) : 0;
+      return Math.hypot(x - s[1] - t * dx, y - s[2] - t * dy) < s[3] + t * (s[6] - s[3]) + .5;
+    });
+  }
+  Object.keys(FLOW).forEach(function (part) {
+    FLOW[part].e.forEach(function (e) {
+      var n = e.length / 3;
+      if (n < 3) return;
+      if (inWider(part, e[0], e[1])) JOIN.push([e, 0, 1]);
+      if (inWider(part, e[e.length - 3], e[e.length - 2])) JOIN.push([e, n - 1, -1]);
+    });
+  });
+  JOIN.map(function (j) {
+    var e = j[0], n = e.length / 3, L = [0], all = [], i;
+    for (i = 1; i < n; i++) L.push(L[i - 1] + Math.hypot(e[i * 3] - e[i * 3 - 3], e[i * 3 + 1] - e[i * 3 - 2]));
+    for (i = 0; i < n; i++) all.push(e[i * 3 + 2]);
+    all.sort(function (a, b) { return a - b; });
+    var tot = L[n - 1], z = Math.min(6, tot * .35), usual = all[Math.floor((n - 1) / 2)] * 1.25;
+    /* its own width: the narrowest in the ten units beyond its last few, short of the other end's last few (on a
+       short piece, the nearest point beyond) */
+    var at = function (k) { return j[2] > 0 ? L[k] : tot - L[k]; }, k, lo = -1, ref = Infinity;
+    for (k = j[1]; k >= 0 && k < n; k += j[2]) {
+      if (at(k) < z) continue;
+      if ((at(k) > z + 10 || at(k) > tot - z) && lo >= 0) break;
+      if (e[k * 3 + 2] < ref) { ref = e[k * 3 + 2]; lo = k; }
+    }
+    return lo < 0 ? null : [e, j[1], j[2], lo, Math.min(ref, usual) * 1.2 + .15];
+  }).forEach(function (c) {
+    /* every width measured before any is narrowed */
+    if (c) for (var k = c[1]; k !== c[3]; k += c[2]) if (c[0][k * 3 + 2] > c[4]) c[0][k * 3 + 2] = c[4];
   });
   /* one name per word: the entries that say the same thing are one name, with all their points, then
      the points found in the drawing, nearest to its first point first. A beyond-syllabus name stays at
@@ -605,7 +698,7 @@
           P.e.forEach(function (e) {
             for (var i = 0; i + 5 < e.length; i += 3) {
               if (keep && !keep(e[i], e[i + 1], e[i + 3], e[i + 4])) continue;
-              var r = Math.min((e[i + 2] + e[i + 5]) / 2, P.cap || 1e9), seg = 'M' + e[i] + ' ' + e[i + 1] + 'L' + e[i + 3] + ' ' + e[i + 4];
+              var r = (e[i + 2] + e[i + 5]) / 2, seg = 'M' + e[i] + ' ' + e[i + 1] + 'L' + e[i + 3] + ' ' + e[i + 4];
               var wr = Math.round((2 * r + .15) * 5) / 5, wc = Math.max(.3, Math.round((2 * r - .6) * 5) / 5);
               rim[wr] = (rim[wr] || '') + seg; core[wc] = (core[wc] || '') + seg;
               if (c === 'po') { var wh = Math.round((wr + 1.5) * 5) / 5; halo[wh] = (halo[wh] || '') + seg; }
