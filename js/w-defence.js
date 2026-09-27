@@ -1,11 +1,15 @@
 /* ============================================================
    w-defence.js — two widgets about how blood defends the body (0610 9.4).
 
-     phagocyte  "A phagocyte at work" (station `blood`). Six steps, each held until "Next step":
+     phagocyte  "A phagocyte at work" (station `blood`). Seven steps, each held until "Next step":
                 a bacterium releases chemicals and a phagocyte moves towards it; the cytoplasm
                 flows round it; the bacterium is engulfed into a vacuole; small sacs release
                 enzymes into the vacuole; the enzymes digest the bacterium; the small soluble
-                products are absorbed into the cytoplasm or released from the cell.
+                products are absorbed into the cytoplasm or released from the cell; and, beyond
+                0610 (IB C3.2), pieces of the bacterium's antigens are carried to the cell membrane
+                and displayed on its outer surface (Daniel, 27 Sep: "show that the phagocyte or
+                macrophage shows the antigens of the bacteria being engulfed on its membrane ...
+                add it as what topic it belongs to").
                 The cell is drawn as the outline of a smooth shape (a signed distance field traced
                 with marching squares), so its membrane is always one closed line: the extensions
                 grow round the bacterium, meet and join, and the vacuole is then a closed membrane
@@ -39,6 +43,17 @@
      ch. 3). The sacs are drawn larger than real ones so they can be seen.
    · A rod-shaped bacterium is about 2 µm long and 1 µm wide (Madigan MT et al., Brock Biology of
      Microorganisms, 15th ed., 2018, ch. 2), so a phagocyte is several times larger.
+   · Step 7, antigen display. Not in 0610, whose Topic 10.1 (Supplement) has only "each pathogen has
+     its own antigens, which have specific shapes". IB Biology guide 2025, C3.2.7 "Antigens as
+     recognition molecules that trigger antibody production" (most antigens are proteins or
+     glycoproteins on the outer surface of pathogens) and C3.2.8 "Activation of B-lymphocytes by
+     helper T-lymphocytes" (the helper T-cell "has also become activated by the same type of
+     antigen"). Phagocytes, above all macrophages, break the pathogen's proteins into short pieces in
+     the vacuole, load them onto their own membrane proteins (MHC class II) and carry them to the
+     cell surface in small vesicles; a helper T-cell whose receptor fits the piece binds to it
+     (Murphy K, Weaver C, Janeway's Immunobiology, 9th ed., 2016, ch. 6). Macrophages and dendritic
+     cells do this most; neutrophils, like the cell drawn, only in some conditions (Vono M et al.
+     2017, Blood 129: 1991–2001). The antigens are drawn as triangles, far larger than real.
    · Bacteria release small peptides that attract neutrophils (Schiffmann E, Corcoran BA,
      Wahl SM 1975, PNAS 72: 1059–1062); damaged tissue releases others. Extensions of the cell
      surround the particle and fuse, enclosing it in a vacuole; sacs fuse with the vacuole and
@@ -255,9 +270,23 @@
     { t: 20, h: 'The bacterium is engulfed', p: 'The ends of the extensions meet and join. The bacterium is now inside the phagocyte, enclosed in a vacuole. This is phagocytosis: the phagocyte engulfs the pathogen.' },
     { t: 29, h: 'Enzymes are released into the vacuole', p: 'Small sacs in the cytoplasm contain digestive enzymes. The sacs join with the vacuole and release their enzymes into it.' },
     { t: 37, h: 'The enzymes digest the bacterium', p: 'The enzymes digest the bacterium. They break down its large molecules into small, soluble molecules. The pathogen is destroyed.' },
-    { t: 45, h: 'The products are absorbed', tag: 'Not asked in 0610', p: 'The small, soluble products are harmless. They are absorbed into the cytoplasm, or released from the cell. The vacuole becomes smaller, and the phagocyte can engulf another pathogen.' }
+    { t: 45, h: 'The products are absorbed', tag: 'Not asked in 0610', p: 'The small, soluble products are harmless. They are absorbed into the cytoplasm, or released from the cell. The vacuole becomes smaller, and the phagocyte can engulf another pathogen.' },
+    { t: 54, h: 'The phagocyte displays the antigens', tag: 'IB C3.2 Defence against disease · not in 0610', p: 'Pieces of the bacterium\'s antigens are kept. Small sacs carry them to the cell membrane, and proteins in the membrane hold them on its outer surface. The phagocyte now displays the antigens (antigen presentation). A helper T-cell, a lymphocyte whose receptor fits these antigens, can bind to them. This helps to start antibody production against this pathogen.' }
   ];
-  var PH_END = 54;
+  var PH_END = 64;
+  /* The antigens: on the bacterium, triangles on its surface, in its own frame (x, y, the angle they point);
+     in step 7, pieces carried from the vacuole to the membrane, each held by a protein of the cell there,
+     at an angle round the cell: on the side away from the nucleus, and clear of every label's dot and
+     leader in both layouts (wide: the vacuole's leader crosses the membrane at about -7 degrees; on a
+     phone, turned on its side, the cell membrane's dot is at about -95, the vacuole's and cytoplasm's
+     leaders at about 58 and 70) */
+  var AG_ON = [[-9, -10, -90], [3, -10, -90], [14, -9, -80], [-3, 10, 90], [9, 10, 90], [-23, 0, 180]];
+  var AG_OUT = (function () {
+    var r = rng(41), out = [], ang = [-78, -48, -22, 8, 34, 86];
+    ang.forEach(function (a, i) { out.push({ th: a * Math.PI / 180, va: r() * 6.283, vr: .2 + .5 * r(), t0: 55.2 + .55 * i }); });
+    return out;
+  })();
+  var AG_BAC = 'M4.6 0L0 -3L0 3Z', AG_SHOWN = 'M12 0L0 -5.6L0 5.6Z', AG_HOLD = 'M3.8 -7.6L-3 -7.6L-3 7.6L3.8 7.6';
 
   /* the nucleus: four lobes joined by thin strands, in the cell's own frame */
   var LOBES = [[-44, -56, 25, 19, 32], [-74, -4, 24, 20, 84], [-50, 50, 25, 19, -32], [-6, 73, 22, 17, -8]];
@@ -370,23 +399,24 @@
     var chr = '';
     LOBES.forEach(function (l, k) { for (var j = 0; j < 4; j++) { var a = r() * 6.283, rr = r() * .55; chr += '<ellipse cx="' + n1(l[0] + Math.cos(a) * l[2] * rr) + '" cy="' + n1(l[1] + Math.sin(a) * l[3] * rr) + '" rx="' + n1(3 + 3 * r()) + '" ry="' + n1(2 + 2 * r()) + '"/>'; } });
     s += '<g class="ph__chr">' + chr + '</g></g>';
-    s += '<g class="ph__enz"></g><g class="ph__bac"></g><g class="ph__prod"></g><path class="ph__memo"/><path class="ph__memi"/>';
+    s += '<g class="ph__enz"></g><g class="ph__bac"></g><g class="ph__prod"></g><path class="ph__memo"/><path class="ph__memi"/><g class="ph__ag"></g>';
     return s;
   }
 
   function phagocyte(spec) {
-    var u = 'ph' + (++UID) + '-';
-    var S = shell(spec, 'ph', 'A phagocyte at work', 'A phagocyte, a white blood cell with a lobed nucleus, moves towards a bacterium, surrounds it, and encloses it in a vacuole. Enzymes are released into the vacuole and digest the bacterium, and the small soluble products are absorbed.', [['bac', 'The bacterium']]);
+    var u = 'ph' + (++UID) + '-', cx0 = 0;
+    var S = shell(spec, 'ph', 'A phagocyte at work', 'A phagocyte, a white blood cell with a lobed nucleus, moves towards a bacterium, surrounds it, and encloses it in a vacuole. Enzymes are released into the vacuole and digest the bacterium, and the small soluble products are absorbed. Beyond the syllabus, pieces of the bacterium\'s antigens are then displayed on the cell membrane.', [['bac', 'The bacterium']]);
     var svg = S.svg;
     svg.innerHTML = '<rect class="ph__bg"/><g class="ph__model" clip-path="url(#' + u + 'cp)">' + phStatic(u) + '</g><g class="ph__labs"></g>';
     var q = function (c) { return svg.querySelector(c); };
     var bg = q('.ph__bg'), model = q('.ph__model'), cr = q('.ph__cr'), gLab = q('.ph__labs');
     var glow = q('.ph__glow'), gChem = q('.ph__chem'), cyto = q('.ph__cyto'), vac = q('.ph__vac'), vac1 = q('.ph__vac1'), gGran = q('.ph__gran'), nucg = q('.ph__nucg');
-    var gEnz = q('.ph__enz'), gBac = q('.ph__bac'), gProd = q('.ph__prod'), memo = q('.ph__memo'), memi = q('.ph__memi');
+    var gEnz = q('.ph__enz'), gBac = q('.ph__bac'), gProd = q('.ph__prod'), memo = q('.ph__memo'), memi = q('.ph__memi'), gAg = q('.ph__ag');
     var lay = null;
 
     function render(t) {
       var St = phState(t), i;
+      cx0 = St.cx;
       var sacs = SACS.map(function (s, k) { return sacAt(k, St); });
       var f = function (x, y) { return cellSdf(x, y, St, sacs); };
       /* the outline: every closed loop of the field; the largest is the cell, the others are holes */
@@ -450,7 +480,8 @@
         var gap = dig > .02 ? ' stroke-dasharray="' + n1(9 * (1 - dig) + .8) + ' ' + n1(5 * dig) + '"' : '';
         bac = '<g transform="translate(' + n1(St.bx) + ' ' + n1(St.by) + ') rotate(' + n1(St.al) + ') scale(' + n1(sc2) + ')" opacity="' + n1(bop) + '">' +
           '<rect class="ph__rod" x="-23" y="-10" width="46" height="20" rx="10" fill="url(#' + u + 'ba)"' + gap + '/>' +
-          '<path class="ph__dna" d="M-13 1 C-9 -5 -5 5 -1 -1 S7 -5 11 1"/></g>';
+          '<path class="ph__dna" d="M-13 1 C-9 -5 -5 5 -1 -1 S7 -5 11 1"/>' +
+          AG_ON.map(function (a) { return '<path class="ph__agn" transform="translate(' + a[0] + ' ' + a[1] + ') rotate(' + a[2] + ')" d="' + AG_BAC + '"/>'; }).join('') + '</g>';
       }
       gBac.innerHTML = bac;
       /* the small, soluble products of digestion */
@@ -468,6 +499,24 @@
       });
       gProd.innerHTML = pr;
 
+      /* step 7: pieces of the bacterium's antigens, carried in small sacs from the vacuole to the membrane and
+         held on its outer surface by a protein of the cell */
+      var ag = '', agShown = null;
+      if (t > 54.2) AG_OUT.forEach(function (a, k) {
+        var fin = ease(seg(t, 54.3, 55.1)), mv = ease(seg(t, a.t0, a.t0 + 3)), land = ease(seg(t, a.t0 + 2.6, a.t0 + 3.4));
+        var rm = PH.R + wob(a.th, t), nx = Math.cos(a.th), ny = Math.sin(a.th);
+        /* a piece starts in the vacuole, small; a sac buds off round it and carries it out to the membrane */
+        var sx = St.bx + Math.cos(a.va) * a.vr * (St.rv - 7), sy = St.by + Math.sin(a.va) * a.vr * (St.rv - 7);
+        var ex = cx0 + nx * (rm + 1.2), ey = St.cy + ny * (rm + 1.2);
+        var x = lerp(sx, ex, mv), y = lerp(sy, ey, mv), rot = Math.atan2(ey - sy, ex - sx) * (1 - land) + a.th * land;
+        var sc = n1(.45 + .55 * mv);
+        if (mv > 0 && land < 1) ag += '<circle class="ph__agv" cx="' + n1(x) + '" cy="' + n1(y) + '" r="' + n1(11.5 * (1 - land)) + '"/>';
+        if (land > 0) ag += '<path class="ph__agc" transform="translate(' + n1(cx0 + nx * rm) + ' ' + n1(St.cy + ny * rm) + ') rotate(' + n1(a.th * 180 / Math.PI) + ') scale(' + n1(land) + ')" d="' + AG_HOLD + '"/>';
+        ag += '<path class="ph__agn" transform="translate(' + n1(x) + ' ' + n1(y) + ') rotate(' + n1(rot * 180 / Math.PI) + ') scale(' + sc + ')" opacity="' + n1(fin) + '" d="' + AG_SHOWN + '"/>';
+        if (k === 3) agShown = [ex + nx * 8, ey + ny * 8, land];
+      });
+      gAg.innerHTML = ag;
+
       /* labels */
       var items = [], T = lay.tall, cx = St.cx, cy = St.cy;
       function add(id, text, x, y, side, op) { var p = lay.to(x, y); items.push({ id: id, text: text, x: p[0], y: p[1], side: side, op: op == null ? 1 : op }); }
@@ -480,8 +529,9 @@
         if (cg > .05) add('chem', 'chemicals', St.bx - 6, St.by - 56, 'R', clamp01(cg * 1.5));
         if (bop > .25) add('bac', 'bacterium', St.bx, St.by, 'R', clamp01((bop - .25) * 3));
         if (t > 21.8) add('vac', 'vacuole', St.bx + Math.sin(St.al * Math.PI / 180) * (St.rv - 7) * .9, St.by - Math.cos(St.al * Math.PI / 180) * (St.rv - 7) * .9, 'R', clamp01((t - 21.8) / .8));
-        if (t > 31.8) add('enz', 'enzymes', enzPos[0][0], enzPos[0][1], 'R', clamp01((t - 31.8) / .8));
-        if (t > 42.6 && prodPos[0]) add('pro', 'soluble products', prodPos[0][0], prodPos[0][1], 'R', clamp01((t - 42.6) / .8));
+        if (t > 31.8 && t < 55) add('enz', 'enzymes', enzPos[0][0], enzPos[0][1], 'R', clamp01((t - 31.8) / .8) * clamp01((55 - t) / .8));
+        if (t > 42.6 && t < 55 && prodPos[0]) add('pro', 'soluble products', prodPos[0][0], prodPos[0][1], 'R', clamp01((t - 42.6) / .8) * clamp01((55 - t) / .8));
+        if (agShown && agShown[2] > 0) add('ag', 'antigen from the bacterium', agShown[0], agShown[1], 'R', agShown[2]);
       } else {
         add('pha', 'phagocyte', cx - 92, cy - 40, 'L');
         add('nuc', 'lobed nucleus', cx - 44 - 4 * St.inw, cy - 56, 'L');
@@ -491,19 +541,21 @@
         if (cg > .05) add('chem', 'chemicals', St.bx - 56, St.by + 26, 'R', clamp01(cg * 1.5));
         if (bop > .25) add('bac', 'bacterium', St.bx, St.by, 'R', clamp01((bop - .25) * 3));
         if (t > 21.8) add('vac', 'vacuole', St.bx - Math.sin(St.al * Math.PI / 180) * (St.rv - 7) * .9, St.by + Math.cos(St.al * Math.PI / 180) * (St.rv - 7) * .9, 'R', clamp01((t - 21.8) / .8));
-        if (t > 31.8) add('enz', 'enzymes', enzPos[1][0], enzPos[1][1], 'R', clamp01((t - 31.8) / .8));
-        if (t > 42.6 && prodPos[0]) add('pro', 'soluble products', prodPos[0][0], prodPos[0][1], 'R', clamp01((t - 42.6) / .8));
+        if (t > 31.8 && t < 55) add('enz', 'enzymes', enzPos[1][0], enzPos[1][1], 'R', clamp01((t - 31.8) / .8) * clamp01((55 - t) / .8));
+        if (t > 42.6 && t < 55 && prodPos[0]) add('pro', 'soluble products', prodPos[0][0], prodPos[0][1], 'R', clamp01((t - 42.6) / .8) * clamp01((55 - t) / .8));
+        if (agShown && agShown[2] > 0) add('ag', 'antigen from the bacterium', agShown[0], agShown[1], 'R', agShown[2]);
       }
-      gLab.innerHTML = drawLabels(lay, items, { enz: 1.5, pro: 1.3, chem: 1.5 });
-      var state = t < 11 ? ['free in the tissue', 'warn'] : t < 21.6 ? ['being surrounded', 'warn'] : t < 37.6 ? ['in a vacuole', 'ok'] : t < 44.5 ? ['being digested', 'ok'] : ['digested', 'ok'];
+      gLab.innerHTML = drawLabels(lay, items, { enz: 1.5, pro: 1.3, chem: 1.5, ag: 1.5 });
+      var state = t < 11 ? ['free in the tissue', 'warn'] : t < 21.6 ? ['being surrounded', 'warn'] : t < 37.6 ? ['in a vacuole', 'ok'] : t < 44.5 ? ['being digested', 'ok'] : t < 54.5 ? ['digested', 'ok'] : ['digested; its antigens displayed', 'ok'];
       S.pill('bac', state[0], state[1]);
     }
 
-    var R = [0, 13.5, 23.5, 33.5, 42, 50, 60], M = [0, 11, 20, 29, 37, 45, PH_END], clock = readerClock(R, M);
+    var R = [0, 13.5, 23.5, 33.5, 42, 50, 60, 78], M = [0, 11, 20, 29, 37, 45, 54, PH_END], clock = readerClock(R, M);
     var sp = L.stepper({ steps: readerSteps(PH_STEPS, R), end: R[R.length - 1], render: function (t) { render(clock(t)); } });
     return mount(S, sp, 'ph', [
-      ['The phagocyte drawn is a neutrophil, the commonest phagocyte in blood: its nucleus has several lobes, and its cytoplasm is full of small granules. A real one is about 11 µm across, and the bacterium about 2 µm long. The sacs of enzymes are drawn larger than real, and the chemicals, enzymes and products are drawn as dots, far larger than real molecules. You see a thin slice, so the extensions look like two arms: in the whole cell they are a cup.'],
-      ['<b>Not asked in 0610.</b> Moving towards the chemicals is called chemotaxis. The sacs of enzymes are called lysosomes. Step 6, what happens to the products, goes beyond the syllabus.', 'ph__fence']
+      ['The phagocyte drawn is a neutrophil, the commonest phagocyte in blood: its nucleus has several lobes, and its cytoplasm is full of small granules. A real one is about 11 µm across, and the bacterium about 2 µm long. The sacs of enzymes are drawn larger than real, and the chemicals, enzymes, products and antigens far larger than real molecules. You see a thin slice, so the extensions look like two arms: in the whole cell they are a cup.'],
+      ['<b>Not asked in 0610.</b> Moving towards the chemicals is called chemotaxis. The sacs of enzymes are called lysosomes. Step 6, what happens to the products, goes beyond the syllabus.', 'ph__fence'],
+      ['<b>Step 7 is IB Biology C3.2, Defence against disease</b>, not 0610 (in 0610, antigens come only in Topic 10: each pathogen has its own antigens, with specific shapes). Antigens are presented mostly by macrophages, larger phagocytes in the tissues, and by dendritic cells; a neutrophil, the cell drawn, does it only in some conditions (Vono et al. 2017).', 'ph__fence']
     ], function (D, narrow) {
       var tall = !!narrow;
       lay = frameOf(svg, bg, model, cr, tall ? { x0: 22, x1: 584, y0: 16, y1: 284 } : { x0: 0, x1: 620, y0: 8, y1: 292 }, tall, D, 9, 9, 118, 118);
