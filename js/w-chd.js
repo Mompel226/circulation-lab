@@ -293,45 +293,82 @@
      and can never contract again (Reimer KA et al. 1977, Circulation 56: 786-794). So the muscle is shown too,
      as a microscope shows it, cut along its fibres: striated cells, each with one central nucleus, joined end to
      end at intercalated discs, with capillaries between them (Young B et al., Wheater's Functional Histology,
-     6th ed., 2014, ch. 6). Dead muscle is drawn grey: a real heart changes colour only over hours.
-     Its own units: a circle of radius 50 (about 50 µm). LOUPE: the point of the heart it magnifies, in the
-     patch beyond the ring. */
+     6th ed., 2014, ch. 6). Dead muscle is drawn grey and breaking down: its membranes break within the first
+     hour of death, and over the following days white cells clear the dead cells away (Reimer 1977; Kumar V et al.,
+     Robbins and Cotran Pathologic Basis of Disease, 10th ed., 2021, ch. 12); a real heart changes colour only over
+     hours. Its own units: a circle of radius 50 (about 50 µm). LOUPE: the point of the heart it magnifies, beyond
+     the small branch where the piece of clot lodges in step 5 (Daniel, 27 Sep: show that clot in the magnified
+     muscle, and the cells below it going grey): there the lower capillary is fed by a small arteriole that narrows
+     into it, and the piece sticks where it narrows; the fibres below that capillary lose their blood first, stop
+     first, and die first. */
   var LNS = { th: -16 };                                                         /* the fibres' slant, degrees */
   var LFIB = [[-56, -37.5], [-26.5, -9], [-7.5, 10], [21, 38.5], [40, 58]];     /* muscle fibres: v from, to */
   var LCAP = [[-36, -28], [11.5, 19.5]];                                          /* capillaries, walls included */
   var LNUC = [[-12, 0], [34, 0], [-34, 1], [10, 1], [-4, 2], [44, 2], [-26, 3], [20, 3], [-40, 4], [6, 4]];   /* nuclei: u, fibre */
   var LDISC = [[16, 0], [-22, 1], [34, 1], [-48, 2], [22, 2], [-6, 3], [-18, 4], [40, 4]];                   /* intercalated discs */
-  var LOUPE = [214, 300], LOUPE_R = 12;
+  var LOUPE = [245, 280], LOUPE_R = 12;
+  var LCR = [[-30, 8, 40], [-44, -2, 30], [-20, 18, 46], [-36, 4, 36], [-26, 14, 44]];   /* where each fibre breaks when dead */
+  var LU_STUCK = -30;                                        /* where the piece sticks: the arteriole as narrow as the piece */
+  function sm01(k) { k = k < 0 ? 0 : k > 1 ? 1 : k; return k * k * (3 - 2 * k); }
+  function artHalf(uu) { return 5.2 - 2 * sm01((uu + 74) / 46); }    /* the arteriole's lumen, half-width: 5.2 narrowing to 3.2 */
   var LPARA = 'M-.6 -2.75C1.5 -2.5 2.7 -1.4 2.7 0C2.7 1.4 1.5 2.5 -.6 2.75C.5 1.6 .7 .7 .7 0C.7 -.7 .5 -1.6 -.6 -2.75Z';   /* a red cell folded into a parachute */
   function lensStatic(u) {
-    var s = '', i;
+    var s = '', rq = rng(12);
     function band(v0, v1, k) {       /* a fibre: its two edges a little wavy, as a cell membrane is */
       var up = '', dn = '', uu;
       for (uu = -72; uu <= 72; uu += 4) up += (up ? ' L' : 'M') + uu + ' ' + n1(v0 + .45 * Math.sin(uu / 6 + k * 1.7));
       for (uu = 72; uu >= -72; uu -= 4) dn += ' L' + uu + ' ' + n1(v1 + .45 * Math.sin(uu / 7 + k * 2.3));
       return up + dn + 'Z';
     }
+    /* the fibres above the lower capillary (T) and below it (B): each set has its own beat, colour and death */
+    function fibres(ks, tag) {
+      var o = '<g class="ar__lfib ar__lfib' + tag + '"><g class="ar__lfc ar__lfc' + tag + '">';
+      ks.forEach(function (k) { var f = LFIB[k], d = band(f[0], f[1], k); o += '<path d="' + d + '"/><path d="' + d + '" fill="url(#' + u + 'st' + tag + ')"/>'; });
+      o += '</g><g class="ar__ldisc ar__ldisc' + tag + '">';
+      LDISC.forEach(function (q) {    /* an intercalated disc: a stepped line across the fibre, where two cells meet */
+        if (ks.indexOf(q[1]) < 0) return;
+        var f = LFIB[q[1]], v = f[0] + .6, d = 'M' + q[0] + ' ' + n1(v), k = 0;
+        while (v < f[1] - .6) { var v2 = Math.min(f[1] - .6, v + 3.4); d += ' L' + n1(q[0] + (k % 2 ? 1.5 : 0)) + ' ' + n1(v2); k++; if (v2 < f[1] - .6) d += ' L' + n1(q[0] + (k % 2 ? 1.5 : 0)) + ' ' + n1(v2); v = v2; }
+        o += '<path d="' + d + '"/>';
+      });
+      o += '</g><g class="ar__lnuc ar__lnuc' + tag + '">';
+      LNUC.forEach(function (q) { if (ks.indexOf(q[1]) >= 0) { var f = LFIB[q[1]]; o += '<ellipse cx="' + q[0] + '" cy="' + n1((f[0] + f[1]) / 2) + '" rx="4.6" ry="2.1"/>'; } });
+      /* dead, the cells break: their fibres crack across, their membranes break, and bits lie about */
+      o += '</g><g class="ar__lbrk ar__lbrk' + tag + '" opacity="0">';
+      ks.forEach(function (k) {
+        var f = LFIB[k];
+        LCR[k].forEach(function (uc) {
+          var d = 'M' + n1(uc) + ' ' + n1(f[0] - .5), v = f[0] - .5, j = 0;
+          while (v < f[1] + .5) { v = Math.min(f[1] + .5, v + 2.6); d += ' L' + n1(uc + (j % 2 ? 1.4 : -.8)) + ' ' + n1(v); j++; }
+          o += '<path d="' + d + '"/>';
+        });
+      });
+      o += '</g><g class="ar__ldeb ar__ldeb' + tag + '" opacity="0">';
+      ks.forEach(function (k) { var f = LFIB[k]; for (var i = 0; i < 7; i++) { var ed = i % 2 ? f[0] - .9 : f[1] + .9; o += '<circle cx="' + n1(-60 + 120 * rq()) + '" cy="' + n1(ed + (rq() - .5) * 1.2) + '" r="' + n1(.45 + .6 * rq()) + '"/>'; } });
+      return o + '</g></g>';
+    }
     s += '<defs><clipPath id="' + u + 'lc"><circle r="50"/></clipPath>' +
-      '<pattern id="' + u + 'st" patternUnits="userSpaceOnUse" width="2.3" height="10"><rect class="ar__lstr" x="0" y="0" width="1.05" height="10"/></pattern></defs>';
+      '<pattern id="' + u + 'stT" patternUnits="userSpaceOnUse" width="2.3" height="10"><rect class="ar__lstr ar__lstrT" x="0" y="0" width="1.05" height="10"/></pattern>' +
+      '<pattern id="' + u + 'stB" patternUnits="userSpaceOnUse" width="2.3" height="10"><rect class="ar__lstr ar__lstrB" x="0" y="0" width="1.05" height="10"/></pattern></defs>';
     s += '<circle class="ar__lbg" r="50"/>';
     s += '<g clip-path="url(#' + u + 'lc)"><g transform="rotate(' + LNS.th + ')">';
-    s += '<g class="ar__lfib"><g class="ar__lfc">';
-    LFIB.forEach(function (f, k) { var d = band(f[0], f[1], k); s += '<path d="' + d + '"/><path d="' + d + '" fill="url(#' + u + 'st)"/>'; });
-    s += '</g><g class="ar__ldisc">';
-    LDISC.forEach(function (q) {          /* an intercalated disc: a stepped line across the fibre, where two cells meet */
-      var f = LFIB[q[1]], v = f[0] + .6, d = 'M' + q[0] + ' ' + n1(v), k = 0;
-      while (v < f[1] - .6) { var v2 = Math.min(f[1] - .6, v + 3.4); d += ' L' + n1(q[0] + (k % 2 ? 1.5 : 0)) + ' ' + n1(v2); k++; if (v2 < f[1] - .6) d += ' L' + n1(q[0] + (k % 2 ? 1.5 : 0)) + ' ' + n1(v2); v = v2; }
-      s += '<path d="' + d + '"/>';
-    });
-    s += '</g><g class="ar__lnuc">';
-    LNUC.forEach(function (q) { var f = LFIB[q[1]]; s += '<ellipse cx="' + q[0] + '" cy="' + n1((f[0] + f[1]) / 2) + '" rx="4.6" ry="2.1"/>'; });
-    s += '</g></g>';
+    s += fibres([0, 1, 2], 'T') + fibres([3, 4], 'B');
     LCAP.forEach(function (c, k) {       /* a capillary: a wall of flat cells, one cell thick, round the plasma */
-      s += '<rect class="ar__lcp" x="-72" y="' + (c[0] + .8) + '" width="144" height="' + n1(c[1] - c[0] - 1.6) + '"/>';
-      s += '<path class="ar__lcw" d="M-72 ' + n1(c[0] + .5) + ' H72 M-72 ' + n1(c[1] - .5) + ' H72"/>';
+      var x0 = k ? -28 : -72;             /* the lower one starts where the arteriole feeding it ends */
+      s += '<rect class="ar__lcp" x="' + x0 + '" y="' + (c[0] + .8) + '" width="' + (72 - x0) + '" height="' + n1(c[1] - c[0] - 1.6) + '"/>';
+      s += '<path class="ar__lcw" d="M' + x0 + ' ' + n1(c[0] + .5) + ' H72 M' + x0 + ' ' + n1(c[1] - .5) + ' H72"/>';
       s += '<ellipse class="ar__lcn" cx="' + (-24 + 34 * k) + '" cy="' + n1(c[0] + .9) + '" rx="3.6" ry=".8"/><ellipse class="ar__lcn" cx="' + (14 - 30 * k) + '" cy="' + n1(c[1] - .9) + '" rx="3.6" ry=".8"/>';
     });
-    s += '<g class="ar__lrbc"></g>';
+    /* the small arteriole that feeds the lower capillary: a lumen narrowing to the capillary's, in a wall with a
+       layer of smooth muscle, whose cells wrap round it and so are cut across here */
+    var vm = (LCAP[1][0] + LCAP[1][1]) / 2, up = '', dn = '', ow = '', ow2 = '', uu;
+    for (uu = -76; uu <= -28; uu += 2) { up += (up ? ' L' : 'M') + uu + ' ' + n1(vm - artHalf(uu)); ow += (ow ? ' L' : 'M') + uu + ' ' + n1(vm - artHalf(uu) - 2.6); }
+    for (uu = -28; uu >= -76; uu -= 2) { dn += ' L' + uu + ' ' + n1(vm + artHalf(uu)); ow2 += ' L' + uu + ' ' + n1(vm + artHalf(uu) + 2.6); }
+    s += '<path class="ar__lam" d="' + ow + ow2.replace(/^ L/, ' L') + 'Z"/>';
+    s += '<path class="ar__lcp" d="' + up + dn + 'Z"/>';
+    s += '<path class="ar__lcw" d="' + up + '"/><path class="ar__lcw" d="M' + dn.slice(2) + '"/>';
+    for (uu = -72; uu <= -32; uu += 4.5) s += '<ellipse class="ar__lamn" cx="' + uu + '" cy="' + n1(vm - artHalf(uu) - 1.3) + '" rx="1.1" ry=".8"/><ellipse class="ar__lamn" cx="' + n1(uu + 2) + '" cy="' + n1(vm + artHalf(uu + 2) + 1.3) + '" rx="1.1" ry=".8"/>';
+    s += '<g class="ar__lrbc"></g><g class="ar__lpiece"></g>';
     s += '</g></g><circle class="ar__lrim" r="50"/>';
     return s;
   }
@@ -411,8 +448,11 @@
     var stiff = svg.querySelector('.ar__stiff'), terr = svg.querySelector('.ar__terr'), ladD = svg.querySelector('.ar__ladD');
     var lodge = svg.querySelector('.ar__lodge'), lodgeS = svg.querySelector('.ar__lodgeS');
     var panG = svg.querySelector('.ar__pan'), ringEls = [svg.querySelector('.ar__ringH'), svg.querySelector('.ar__ring')];
-    var lensG = svg.querySelector('.ar__lens'), lFib = svg.querySelector('.ar__lfib'), lFibC = svg.querySelector('.ar__lfc'), lStr = svg.querySelector('.ar__lstr');
-    var lNuc = svg.querySelector('.ar__lnuc'), lDisc = svg.querySelector('.ar__ldisc'), lRbc = svg.querySelector('.ar__lrbc');
+    var lensG = svg.querySelector('.ar__lens'), lRbc = svg.querySelector('.ar__lrbc'), lPiece = svg.querySelector('.ar__lpiece');
+    var LSET = ['T', 'B'].map(function (k) {
+      return { fib: svg.querySelector('.ar__lfib' + k), fc: svg.querySelector('.ar__lfc' + k), str: svg.querySelector('.ar__lstr' + k), nuc: svg.querySelector('.ar__lnuc' + k),
+               nucs: svg.querySelectorAll('.ar__lnuc' + k + ' ellipse'), disc: svg.querySelector('.ar__ldisc' + k), brk: svg.querySelector('.ar__lbrk' + k), deb: svg.querySelector('.ar__ldeb' + k) };
+    });
     var coneF = svg.querySelector('.ar__conef'), coneL = svg.querySelector('.ar__conel');
     var lCap = svg.querySelector('.ar__lcap'), lT = [svg.querySelector('.ar__lt1'), svg.querySelector('.ar__lt2'), svg.querySelector('.ar__lt3')];
     var LRB = [], rl = rng(9);        /* the red cells in the two capillaries */
@@ -459,21 +499,39 @@
       /* the muscle beyond the ring, magnified. It contracts with every beat (72 a minute, in the reader's own
          seconds) while it has blood; the flow a moment ago decides, because it stops about a minute after the
          blockage, and it dusks as its oxygen runs out; dead, it is grey and still */
-      var fl = flowAt(t - 1), amp = clamp01(fl / .35) * (1 - dead), starve = 1 - clamp01(fl / .35);
-      var ph = ((tr || 0) * 1.2) % 1, pulse = ph < .36 ? Math.pow(Math.sin(Math.PI * ph / .36), 2) : 0, bt = amp * pulse;
-      lFib.setAttribute('transform', 'scale(' + n1((1 - .12 * bt) * 1000) / 1000 + ' ' + n1((1 + .04 * bt) * 1000) / 1000 + ')');
-      lFibC.setAttribute('fill', mixc(mixc('#C9655D', '#8E5470', .45 * starve), '#A4A2A7', dead));
-      lStr.setAttribute('fill', mixc(mixc('#8C3531', '#5A3350', .45 * starve), '#77757B', dead));
-      lNuc.setAttribute('fill', mixc('#6E3E5E', '#6F6D73', dead)); lDisc.setAttribute('stroke', mixc('#4F1B22', '#5E5C62', dead));
-      /* in a capillary the red cells go in single file, each folded into a parachute that fills the lumen, its
-         rounded side leading (as in the exercise animation) */
-      var dusk = Q < .02 && flowAt(t - .8) < .02, lr2 = '';
-      LRB.forEach(function (c) {
-        var uu = -64 + ((c.s0 + V * .5) % 1) * 128;
-        lr2 += '<path class="ar__lrb' + (dusk ? ' is-dusk' : '') + '" d="' + LPARA + '" transform="translate(' + n1(uu) + ' ' + n1(c.v) + ') rotate(' + n1(c.tilt * .4) + ')"/>';
+      /* the fibres above the lower capillary lose their blood when the artery is blocked (step 6); those below
+         it when the piece of clot sticks in the arteriole that feeds it (step 5), so they stop first and die first */
+      var fl = flowAt(t - 1), blockB = ease(seg(t, LODGE_T, LODGE_T + 1));
+      var ph = ((tr || 0) * 1.2) % 1, pulse = ph < .36 ? Math.pow(Math.sin(Math.PI * ph / .36), 2) : 0;
+      var deadT = dead, deadB = ease(seg(t, 55.2, 61.6)), ampAll = 0;
+      LSET.forEach(function (L2, i) {
+        var f2 = i ? fl * (1 - blockB) : fl, dd = i ? deadB : deadT, amp = clamp01(f2 / .35) * (1 - dd), starve = 1 - clamp01(f2 / .35), bt = amp * pulse;
+        if (!i) ampAll = amp;
+        L2.fib.setAttribute('transform', 'scale(' + n1((1 - .12 * bt) * 1000) / 1000 + ' ' + n1((1 + .04 * bt) * 1000) / 1000 + ')');
+        L2.fc.setAttribute('fill', mixc(mixc('#C9655D', '#8E5470', .45 * starve), '#A4A2A7', dd));
+        L2.fc.setAttribute('stroke-dasharray', dd > .3 ? '7 2.4' : 'none');
+        L2.str.setAttribute('fill', mixc(mixc('#8C3531', '#5A3350', .45 * starve), '#77757B', dd));
+        L2.str.setAttribute('opacity', n1(.55 * (1 - .7 * dd)));
+        L2.nuc.setAttribute('fill', mixc('#6E3E5E', '#6F6D73', dd)); L2.nuc.setAttribute('opacity', n1(1 - .7 * dd));
+        Array.prototype.forEach.call(L2.nucs, function (el) { el.setAttribute('rx', n1(4.6 * (1 - .45 * dd))); el.setAttribute('ry', n1(2.1 * (1 - .3 * dd))); });
+        L2.disc.setAttribute('stroke', mixc('#4F1B22', '#5E5C62', dd));
+        var bk = clamp01((dd - .35) / .5);
+        L2.brk.setAttribute('opacity', n1(bk)); L2.brk.setAttribute('stroke-width', n1(.6 + 2 * bk)); L2.deb.setAttribute('opacity', n1(bk));
+      });
+      /* the red cells: in the upper capillary they stop when the artery is blocked; in the lower one when the piece
+         of clot sticks at its arteriole. Stopped, they give up their oxygen and turn dusky */
+      if (V_LODGE == null) { V_LODGE = volumeAt(LODGE_T); volumeAt(t); }
+      var dusk = Q < .02 && flowAt(t - .8) < .02, duskB = t > LODGE_T + .8, VB = Math.min(V, V_LODGE), lr2 = '';
+      var pAt = t < LODGE_T - .9 ? null : LU_STUCK - 38 * (1 - ease(seg(t, LODGE_T - .9, LODGE_T)));
+      LRB.forEach(function (c, i) {
+        var lower = i >= 5, uu = -64 + ((c.s0 + (lower ? VB : V) * .5) % 1) * 128;
+        if (lower && pAt != null && uu < pAt + 7) return;              /* none behind or in the piece */
+        lr2 += '<path class="ar__lrb' + ((lower ? duskB : dusk) ? ' is-dusk' : '') + '" d="' + LPARA + '" transform="translate(' + n1(uu) + ' ' + n1(c.v) + ') rotate(' + n1(c.tilt * .4) + ')"/>';
       });
       lRbc.innerHTML = lr2;
-      var st3 = dead > .05 ? ['dead', 'is-dead'] : amp < .08 ? ['no oxygen: not contracting', 'is-stop'] : Q < .97 ? ['less blood: still contracting', 'is-less'] : ['contracting with every beat', 'is-ok'];
+      lPiece.innerHTML = pAt == null ? '' : '<path class="ar__frag" d="' + FRAG_D + '" fill="#6E1520" transform="translate(' + n1(pAt) + ' ' + n1((LCAP[1][0] + LCAP[1][1]) / 2) + ') rotate(' + n1(40 * (1 - ease(seg(t, LODGE_T - .9, LODGE_T)))) + ') scale(.6)"/>';
+      var st3 = Math.max(deadT, deadB) > .05 ? ['dead: the cells break down', 'is-dead'] : ampAll < .08 ? ['no oxygen: not contracting', 'is-stop'] :
+        t >= LODGE_T - .2 ? ['clot blocks a small vessel', 'is-stop'] : Q < .97 ? ['less blood: still contracting', 'is-less'] : ['contracting with every beat', 'is-ok'];
       if (lT[2].textContent !== st3[0]) lT[2].textContent = st3[0];
       lT[2].setAttribute('class', 'ar__lt3 ' + st3[1]);
       var lg = ease(seg(t, LODGE_T, LODGE_T + .8));
@@ -677,7 +735,7 @@
     fig.appendChild(sp.now);
     wrap.appendChild(left); wrap.appendChild(sp.list);
     box.appendChild(wrap);
-    box.appendChild(h('p', 'widget__note', 'Not to scale: the red blood cells are drawn hundreds of times larger than real, and far fewer. Time is squeezed: a deposit grows over years, a clot forms in minutes, and heart muscle cells die after 20 to 40 minutes without blood. Dead muscle is drawn grey; a real heart changes colour only over hours. Heart: Servier Medical Art, CC BY 4.0.'));
+    box.appendChild(h('p', 'widget__note', 'Not to scale: the red blood cells are drawn hundreds of times larger than real, and far fewer. Time is squeezed: a deposit grows over years, a clot forms in minutes, and heart muscle cells die after 20 to 40 minutes without blood. Dead muscle is drawn grey and breaking down; in a real heart this takes hours to days. Heart: Servier Medical Art, CC BY 4.0.'));
     box.appendChild(h('p', 'widget__note ar__fence', '<b>Not asked in 0610.</b> Step 5 is extension: in most heart attacks the clot blocks the artery where it forms, as in step 6. “Plaque” and “atheroma” are other names for the fatty deposit; the chest pain of step 3 is angina; a heart attack is also called a myocardial infarction.'));
 
     /* the layout: the heart above, the artery below; the artery turned on its side on a narrow screen;
