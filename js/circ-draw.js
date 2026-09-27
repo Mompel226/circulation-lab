@@ -217,7 +217,7 @@
     { id: 'head-artery', text: 'external carotid artery', at: [233.3, 98.1], lv: 'X', z: 1.6 },
     { id: 'head-artery', text: 'basilar artery', at: [212.5, 72.3], lv: 'X', z: 1.8 },
     { id: 'head-vein', text: 'venous sinus', at: [239.5, 64.4], lv: 'X', z: 1.6 },
-    { id: 'coeliac-artery', text: 'coeliac artery', at: [218.2, 286.2], lv: 'X', z: 1.6 },
+    { id: 'coeliac-artery', text: 'coeliac artery', at: [222.5, 281.2], lv: 'X', z: 1.6 },
     { id: 'gastric-artery', text: 'gastric artery', at: [225.2, 275.4], lv: 'X', z: 1.8 },
     { id: 'splenic-artery', text: 'splenic artery', at: [240.4, 293.3], lv: 'X', z: 1.6 },
     { id: 'mesenteric-artery', text: 'mesenteric artery', at: [221.1, 326.2], lv: 'X', z: 1.6 },
@@ -256,19 +256,20 @@
   /* Pieces the drawing's tracing gave to the wrong vessel, or that close a loop the vessel does not have: not lit,
      pressed or named with it (Daniel, 27 Sep, of the splenic artery: "a lot of circles ... it also seems to go to the
      kidney"; "fully audit each and every single one of the arteries and veins"). Each is [x0, y0, x1, y1], its two
-     ends. The splenic artery keeps one tortuous path from the coeliac trunk into the spleen: a second arc and a lower
-     path beside it closed two loops, and a branch ran down towards the left kidney. The gastric arteries lose a stub
-     below them, the coeliac trunk a hook above it (its name, at the artist's arrow on the hook, moves onto the
-     trunk), and the gonadal veins a stray piece in the pelvis. The aorta loses a spike towards the coeliac trunk (the
-     trunk has its own start on the aorta) and a stump on top of its arch (the left common carotid and subclavian
-     arteries start at the arch itself); the renal arteries a scrap beside the spleen; the mesenteric vein a stub
-     hanging from the splenic vein with nothing below it; the head veins the thin piece that joined the two sigmoid
-     sinuses under the brain into two rings (each internal jugular vein begins at its own side); the right gonadal
-     vein a zigzag, which BRIDGE replaces with a straight piece; the vena cava three short pieces that tied it to that
-     vein below the vein's own junction (lit, bumps on its side), and a spur beside the superior vena cava's opening
-     into the heart. */
+     ends. The splenic artery keeps the one path the drawing now has from the coeliac trunk into the spleen:
+     plate-build/build_art.py takes out of the drawing the ring its branch made over the top and round below it,
+     and the branches cut off square towards the left kidney and down from the hepatic artery, which go here too.
+     The coeliac trunk's traced top ran off to one side as a thin hook: BRIDGE draws it straight up to the aorta,
+     as the drawing has it. The aorta loses a spike towards the coeliac trunk (the trunk has its own start on the
+     aorta) and a stump on top of its arch (the left common carotid and subclavian arteries start at the arch
+     itself); the renal arteries a scrap beside the spleen; the mesenteric vein a stub hanging from the splenic
+     vein with nothing below it; the head veins the thin piece that joined the two sigmoid sinuses under the brain
+     into two rings (each internal jugular vein begins at its own side); the right gonadal vein a zigzag, which
+     BRIDGE replaces with a straight piece; the vena cava three short pieces that tied it to that vein below the
+     vein's own junction (lit, bumps on its side), and a spur beside the superior vena cava's opening into the
+     heart. */
   var DROP = {
-    'splenic-artery': [[234.1, 296.1, 220.6, 302.1], [235.6, 295.4, 234.2, 295.9], [220.8, 285.8, 233.9, 295.9], [250.8, 295.9, 255.9, 304.9], [214.1, 288.8, 220.4, 301.9]],
+    'splenic-artery': [[221.8, 284.2, 235.8, 295.2], [234.1, 296.1, 220.6, 302.1], [250.8, 295.9, 255.9, 304.9], [214.1, 288.8, 220.4, 301.9]],
     'gastric-artery': [[213.8, 288.8, 213.2, 296.8]],
     'coeliac-artery': [[224.6, 279.9, 221.8, 284.2]],
     vein: [[176.8, 396.9, 186.4, 402.9], [162.8, 384.1, 176.8, 396.9], [204.8, 364.8, 200.8, 360.8], [202.6, 369.1, 204.8, 364.9]],
@@ -278,7 +279,7 @@
     'head-vein': [[222.2, 74.2, 200.4, 73.9]],
     'vena-cava': [[202.8, 369.1, 209.1, 364.2], [204.9, 364.9, 208.1, 362.4], [200.9, 360.6, 207.8, 360.4], [202.8, 218.4, 209.6, 224.1]]
   };
-  var BRIDGE = { vein: [[202.6, 369.2, 1, 201.8, 364.9, 1, 200.8, 360.6, .9]] };
+  var BRIDGE = { vein: [[202.6, 369.2, 1, 201.8, 364.9, 1, 200.8, 360.6, .9]], 'coeliac-artery': [[222.5, 279.6, 2.4, 222.15, 282, 2.5, 221.8, 284.2, 2.4]] };
   function near(x, y, a, b) { return Math.abs(x - a) < .8 && Math.abs(y - b) < .8; }
   /* the part's box (what a press zooms to) from the pieces it keeps */
   function rebox(P) {
@@ -295,6 +296,15 @@
     /* its label points found in the drawing: only those still on it */
     if (AUTO[part]) AUTO[part] = AUTO[part].filter(function (q) {
       return P.e.some(function (e) { for (var i = 0; i < e.length; i += 3) if (Math.hypot(e[i] - q[0], e[i + 1] - q[1]) < 1.6) return true; return false; });
+    });
+  });
+  /* The artist's mesenteric vein and artery end square (y 332.6), and their traced centre lines ran on to a point
+     at one corner. js/circ-mesentery.js carries both on from inside their ends, so those points go. */
+  [['mesenteric-vein', 220.6, 332.9], ['mesenteric-artery', 224.2, 332.6]].forEach(function (t) {
+    var P = FLOW[t[0]]; if (!P) return;
+    P.e = P.e.map(function (e) {
+      var n = e.length;
+      return near(e[0], e[1], t[1], t[2]) ? e.slice(3) : near(e[n - 3], e[n - 2], t[1], t[2]) ? e.slice(0, n - 3) : e;
     });
   });
   /* The ascending aorta rises out of the heart. Its trace ran on, thin, behind the pulmonary trunk to the descending
@@ -329,10 +339,12 @@
       return Math.hypot(x - s[1] - t * dx, y - s[2] - t * dy) < s[3] + t * (s[6] - s[3]) + .5;
     });
   }
+  /* the mesentery's two trunks start inside the artist's vessels on purpose (js/circ-mesentery.js), at their width */
+  var OWN_START = global.CIRC_MESENTERY ? [global.CIRC_MESENTERY.vein[0], global.CIRC_MESENTERY.artery[0]] : [];
   Object.keys(FLOW).forEach(function (part) {
     FLOW[part].e.forEach(function (e) {
       var n = e.length / 3;
-      if (n < 3) return;
+      if (n < 3 || OWN_START.indexOf(e) >= 0) return;
       if (inWider(part, e[0], e[1])) JOIN.push([e, 0, 1]);
       if (inWider(part, e[e.length - 3], e[e.length - 2])) JOIN.push([e, n - 1, -1]);
     });
@@ -508,6 +520,8 @@
       Array.prototype.forEach.call(gut.querySelectorAll('[fill-opacity]'), function (c) { c.setAttribute('fill-opacity', .75); });   /* under the vessels, so it can be this solid */
       organs.gut = [gut];
     }
+    /* the artist's superior mesenteric artery and her portal veins, whose square ends the mesentery carries on */
+    var mesEnds = ['path3517', 'rect5392'].map(function (i) { return artG.querySelector('[id="' + i + '"]'); });
     Array.prototype.forEach.call(artG.querySelectorAll('[id]'), function (n) { n.removeAttribute('id'); });
 
     /* ----- the veil, and the lit parts above it ----- */
@@ -664,12 +678,14 @@
       if (lit) Object.keys(lit).forEach(function (p) { (CONNECT[p] || []).forEach(function (q) { if (!lit[q.part] && FLOW[q.part]) out[q.part] = q; }); });
       return out;
     }
-    function tubePaths(edges, c, parent) {        /* centre lines drawn as the drawing draws a vessel: a rim, then its fill */
+    function tubePaths(edges, c, parent, rimOf) { /* centre lines drawn as the drawing draws a vessel: a rim, then its fill;
+                                                     rimOf(edge number, y), if given, is the rim's thickness there */
       var rim = {}, core = {};
-      edges.forEach(function (e) {
+      edges.forEach(function (e, k) {
         for (var i = 0; i + 5 < e.length; i += 3) {
           var r = (e[i + 2] + e[i + 5]) / 2, seg = 'M' + e[i] + ' ' + e[i + 1] + 'L' + e[i + 3] + ' ' + e[i + 4];
-          var wr = Math.round((2 * r + .15) * 5) / 5, wc = Math.max(.3, Math.round((2 * r - .6) * 5) / 5);
+          var t = rimOf ? rimOf(k, (e[i + 1] + e[i + 4]) / 2) : .375;
+          var wr = Math.round((2 * r + .15) * 5) / 5, wc = Math.max(.3, Math.round((2 * r + .15 - 2 * t) * 5) / 5);
           rim[wr] = (rim[wr] || '') + seg; core[wc] = (core[wc] || '') + seg;
         }
       });
@@ -682,8 +698,16 @@
        see capillaries going from the small intestine into the mesenteric vein") */
     if (global.CIRC_MESENTERY) {
       var mesG = el('g', { 'class': 'cp__mesentery', fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, artG);
-      tubePaths(global.CIRC_MESENTERY.vein, 'po', el('g', {}, mesG));
-      tubePaths(global.CIRC_MESENTERY.artery, 'ag', el('g', {}, mesG));
+      /* the two trunks (the first edge of each) start inside the artist's vessels, at their width, and with her rim
+         (0.8 thick) until they are clear of her square ends; her vessels are drawn again over the join, down to just
+         above those ends, so each vessel runs on unbroken, with no rounded start and no line across it (Daniel,
+         27 Sep: "these junctions are horrible, not professional at all") */
+      var trunkRim = function (k, y) { return k ? .375 : y < 334 ? .8 : y > 341 ? .375 : .8 - .425 * (y - 334) / 7; };
+      tubePaths(global.CIRC_MESENTERY.artery, 'ag', el('g', {}, mesG), trunkRim);
+      tubePaths(global.CIRC_MESENTERY.vein, 'po', el('g', {}, mesG), trunkRim);      /* the vein over the artery, as she draws them */
+      el('rect', { x: 205, y: 316, width: 25, height: 15.8 }, el('clipPath', { id: U + 'mesjoin' }, defs));
+      var mesOver = el('g', { 'clip-path': 'url(#' + U + 'mesjoin)' }, mesG);
+      mesEnds.forEach(function (n) { if (n) copyOf(n, {}, mesOver); });
     }
     var BACK = ['a', 'pv', 'v'], FRONT = ['pa', 'po', 'ag'], backRims = [];
     function tubes(host, layers, heartLitNow) {
