@@ -1570,3 +1570,12 @@ picture{display:block;line-height:0}
 .sim > .cy__pack .cy__svg,.sim > .mx__pack .mx__svg{flex:0 1 auto;min-height:0;width:100%;height:auto;max-height:100%}
 .sim > .cy__pack .sp__now,.sim > .mx__pack .sp__now{display:none!important}
 .cy.cy--staged .cy__wrap,.mx.mx--staged .mx__wrap{grid-template-columns:minmax(0,1fr)}
+
+/* A station's Practise tab, on its second go or once something is answered: which go it is, how
+   the first go went, and Practise again (js/app.js paintGoLine). */
+.goline{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  background:var(--card-2);border:1px solid var(--edge);border-radius:var(--r-lg);
+  padding:9px 14px;margin:0 0 12px;font-size:14.5px;color:var(--ink)}
+.goline span:empty{display:none}
+.goline .btn{margin-left:auto}
+.goline--bare{background:none;border:0;padding:0}
