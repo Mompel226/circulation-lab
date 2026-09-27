@@ -769,6 +769,9 @@ picture{display:block;line-height:0}
 .widget__note{font-size:13px;color:var(--grey);margin:10px 0 0;line-height:1.45}
 .widget__done{margin:10px 0 0;font-size:13.5px;font-weight:600;color:var(--green-2)}
 .exam-list li .widget,.exam-list li .media,.exam-list li .photo,.exam-list li .ctable{margin-left:-26px}
+/* On a phone a picture that opens its point (a small or tall one, put first so it can float on a wide screen)
+   sits in the text column, not out in the bullet's gutter: there the bullet was painted on its corner. */
+@media (max-width:779px){ .exam-list > li > .photo--small:first-child,.exam-list > li > .photo--portrait:first-child{margin-left:0} }
 
 /* A tall, narrow diagram — a xylem vessel, a sieve tube, a root tip — set under its sentence
    left a column of empty paper 490px wide beside it. app.js puts a portrait figure first in its
@@ -798,6 +801,15 @@ picture{display:block;line-height:0}
   .exam-list li .photo--small:not(.photo--portrait) img{width:100%;height:auto}
   .exam-list li .photo--small:not(.photo--portrait) figcaption{font-size:11.5px;line-height:1.42}
   .exam-list li .media,.exam-list li .ctable,.exam-list li .photo:not(.photo--small):not(.photo--portrait){clear:both}
+  /* A small picture that is also tall, like the coronary cast, stands on the right like the other small ones.
+     The row it sits in, and the rows after it, are plain blocks here, not flow-root boxes: the picture hangs
+     below its own sentence and the next points run round it (Daniel, 27 Sep, of the cast: "the text could go
+     around ... a very big blank space that should not be there"). A widget still clears it, at full width.
+     flow-root is only there to hold a minifig, and this lab has none. */
+  .exam-list li .photo--small.photo--portrait{float:right;width:clamp(170px,26%,228px);margin:4px 0 8px 22px}
+  .exam-list li .photo--small.photo--portrait figcaption{font-size:11.5px;line-height:1.42}
+  .exam-list li:has(> .photo--small.photo--portrait)::after{content:none}
+  .exam-list > li:has(> .photo--small),.exam-list > li:has(> .photo--small) ~ li{display:block}
 }
 .wbtn{font:inherit;font-size:13px;font-weight:600;color:var(--green);background:#fff;border:1.5px solid var(--green);border-radius:var(--r-pill);padding:5px 12px;cursor:pointer;transition:.14s}
 .wbtn:hover{background:var(--green-tint)}

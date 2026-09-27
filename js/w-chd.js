@@ -1,16 +1,18 @@
 /* ============================================================
    w-chd.js — coronary heart disease: the two widgets of the station `chd` (0610 9.2).
 
-     artery    "Inside a coronary artery". One coronary artery, cut along its length, lying on
-               the patch of heart muscle it supplies. Six steps, each held until "Next step":
-               a healthy artery; fatty material builds up in the wall, under the lining; the
-               deposit grows and the lumen narrows; its surface breaks and a blood clot forms on
-               it; the clot blocks the artery; the heart muscle beyond the blockage dies. Red
-               blood cells move with the blood: fewer pass each second as the lumen narrows,
-               they move faster through the narrow part (the same blood through a smaller gap),
-               and they stop when the artery is blocked. The colour of the heart muscle shows
-               how well it is supplied. Drive it with the lab's step player (js/w-common.js):
-               Play, Next step, Play all; box.__seek(t) draws any moment.
+     artery    "Inside a coronary artery". Above, the heart from the front with its coronary arteries
+               (Servier Medical Art, CC BY 4.0: js/data/chd-heart.js), a yellow ring on the left
+               coronary artery's anterior descending branch; below, the part inside the ring cut along
+               its length, in a yellow frame. Six steps, each held until "Next step": a healthy artery;
+               fatty material builds up in the wall, under the lining; the deposit grows and the lumen
+               narrows; its surface breaks and a blood clot forms on it; the clot blocks the artery; the
+               heart muscle beyond the blockage dies. Red blood cells, drawn as biconcave discs, move
+               with the blood: fewer pass each second as the lumen narrows, they move faster through the
+               narrow part (the same blood through a smaller gap), and they stop when the artery is
+               blocked. On the heart, the patch of muscle beyond the ring darkens as its supply fails and
+               turns grey when its cells die, on the same clock. Drive it with the lab's step player
+               (js/w-common.js): Play, Next step, Play all; box.__seek(t) draws any moment.
      profiles  "Who is most at risk?". The six people of the 9.2 worksheet. The reader puts
                them in order, highest risk first (drag a card by its handle, or use its arrow
                buttons). "Check" marks the 0610 risk factors on every card, counts them and
@@ -99,29 +101,56 @@
   /* ================================================================
      artery — inside a coronary artery
      ================================================================ */
-  /* The model, in its own units (about 34 units to the millimetre for the artery):
-     the artery runs left to right across the top, blood entering from the aorta on the left;
-     the heart muscle lies below it. On a narrow screen the whole model is turned on its side
-     (x and y swapped), so the artery runs down the page and the labels have room either side. */
+  /* Two drawings, one above the other, driven by one clock (Daniel, 27 Sep: "draw a little heart. And as
+     the fatty deposit grows, you see a section of the heart ... going grey ... clearly in sync").
+     Above, the heart from the front with its coronary arteries (Servier Medical Art, js/data/chd-heart.js);
+     a yellow ring marks one place on the left coronary artery's anterior descending branch. Below, that
+     place cut along its length, in a frame of the same yellow. The patch of heart muscle the artery
+     supplies beyond the ring darkens as its blood supply fails and turns grey when its cells die.
+
+     The artery's model, in its own units (about 34 to the millimetre): it runs left to right, blood
+     entering from the aorta on the left. On a narrow screen the artery is turned on its side (x and y
+     swapped), so it runs down the page under the heart, as the artery itself runs down the heart. */
   var AR = {
-    W: 660, H: 440,
+    W: 660,
     yOut: 46, yMed: 58, yIel: 86, yLum: 90,           /* upper wall, outside in: adventitia, media, internal elastic lamina, lining */
     yLum2: 206, yIel2: 210, yMed2: 238, yOut2: 250,    /* lower wall, inside out, before any deposit */
-    yFat: 262,                                          /* the heart muscle starts here */
     xc: 190, hw: 92,                                    /* the fatty deposit: centre and half-length */
-    xk: 196, hk: 64                                     /* the clot: centre and half-length */
+    xk: 196, hk: 64,                                    /* the clot: centre and half-length */
+    yA: 36, yB: 260                                     /* the strip of the model that is drawn */
   };
   var LUM0 = AR.yLum2 - AR.yLum;                        /* 116: the lumen of the healthy artery */
   function bump(u) { return u <= -1 || u >= 1 ? 0 : (1 - u * u) * (1 - u * u); }
   function bumpFlat(u) { if (u <= -1 || u >= 1) return 0; var q = 1 - u * u * u * u; return q * q; }
 
+  /* The heart, in its own units (points of the Servier slide, 275 × 348). BLK: where the ring sits, on the
+     anterior descending branch below the circumflex branch and above its first branch to the septum, so
+     the artery beyond it is most of that branch. TERR: the muscle it supplies beyond that point — the front
+     of the left ventricle, the front of the septum and the apex (the territory of the left anterior
+     descending artery: Kumar V, Abbas AK, Aster JC, Robbins and Cotran Pathologic Basis of Disease, 10th
+     ed., 2021, ch. 12) — drawn soft-edged and kept inside the ventricles' outline. */
+  var BLK = [189.2, 196], BLK_R = 11;
+  var TERR = [[189, 201], [206, 206], [229, 222], [248, 242], [259, 268], [262, 298], [250, 322], [232, 336], [210, 344],
+              [184, 340], [164, 324], [152, 298], [148, 268], [152, 240], [163, 217], [177, 205]];
+  function closedCurve(P) {         /* a smooth closed path through the points (Catmull-Rom as cubic Béziers) */
+    var n = P.length, d = 'M' + P[0][0] + ' ' + P[0][1];
+    for (var i = 0; i < n; i++) {
+      var p0 = P[(i - 1 + n) % n], p1 = P[i], p2 = P[(i + 1) % n], p3 = P[(i + 2) % n];
+      d += ' C' + n1(p1[0] + (p2[0] - p0[0]) / 6) + ' ' + n1(p1[1] + (p2[1] - p0[1]) / 6) + ' ' +
+           n1(p2[0] - (p3[0] - p1[0]) / 6) + ' ' + n1(p2[1] - (p3[1] - p1[1]) / 6) + ' ' + p2[0] + ' ' + p2[1];
+    }
+    return d + 'Z';
+  }
+  /* the heart muscle beyond the ring: supplied (no tint), short of oxygen (dusky), dead (grey) */
+  var MUS = { isch: '#5E3F7E', dead: '#8C8A90' };
+
   var AR_STEPS = [
-    { t: 0,  h: 'A healthy coronary artery', p: 'You are looking at a coronary artery, cut along its length. It lies on the surface of the heart. Its lining is smooth and its lumen is wide, so blood flows freely. The blood brings oxygen and glucose to the heart muscle.' },
+    { t: 0,  h: 'A healthy coronary artery', p: 'Above: the heart from the front, with its coronary arteries on its surface. Below: the part of one coronary artery inside the yellow ring, cut open along its length. Its lining is smooth and its lumen is wide, so blood flows freely. The blood brings oxygen and glucose to the heart muscle.' },
     { t: 12, h: 'Fatty material builds up in the wall', p: 'Over many years, fatty material containing cholesterol builds up in the wall of the artery, under the lining. At first the fatty deposit is small, and blood still flows freely.' },
     { t: 22, h: 'The lumen becomes narrower', p: 'The fatty deposit grows over more years. It bulges into the lumen, so the lumen becomes narrower and less blood can flow through it. The wall there is less elastic. During exercise, the heart muscle beyond the narrow part may not receive enough oxygen.' },
     { t: 35, h: 'A blood clot forms', p: 'The surface of the fatty deposit becomes rough and breaks. Platelets stick to the rough surface, and a blood clot forms on it.' },
-    { t: 43, h: 'The clot blocks the artery', p: 'The clot grows until it blocks the artery completely. No blood can flow past it. The heart muscle beyond the blockage receives no oxygen and no glucose.' },
-    { t: 52, h: 'Heart muscle cells die: a heart attack', p: 'Without oxygen, the heart muscle beyond the blockage cannot respire aerobically, so it cannot contract. Its cells die. This is a heart attack. The muscle before the blockage still receives blood.' }
+    { t: 43, h: 'The clot blocks the artery', p: 'The clot grows until it blocks the artery completely. No blood can flow past it. The heart muscle beyond the blockage receives no oxygen and no glucose: on the heart, its patch darkens.' },
+    { t: 52, h: 'Heart muscle cells die: a heart attack', p: 'Without oxygen, the heart muscle beyond the blockage cannot respire aerobically, so it cannot contract. Its cells die, and its patch turns grey. This is a heart attack. The muscle before the blockage still receives blood.' }
   ];
   var AR_END = 63;
 
@@ -155,97 +184,43 @@
     return v;
   }
 
-  /* branches of the artery that dive into the heart muscle: A before the deposit, B beyond it */
-  var BR = [
-    { k: 'A', main: [[26, 198], [27, 232], [31, 262], [40, 296]], subs: [[[40, 296], [22, 330], [10, 366], [2, 404]], [[40, 296], [66, 334], [92, 370], [112, 410]]] },
-    { k: 'B', main: [[340, 198], [341, 232], [338, 262], [330, 296]], subs: [[[330, 296], [296, 322], [262, 350], [226, 388]], [[330, 296], [356, 336], [380, 376], [396, 418]]] },
-    { k: 'B', main: [[452, 198], [453, 232], [456, 262], [462, 298]], subs: [[[462, 298], [440, 338], [428, 380], [430, 424]], [[462, 298], [492, 334], [520, 372], [540, 414]]] },
-    { k: 'B', main: [[564, 198], [565, 232], [568, 262], [576, 296]], subs: [[[576, 296], [556, 340], [540, 384], [530, 426]], [[576, 296], [606, 332], [634, 366], [664, 398]]] }
-  ];
-  function ptsD(p) { return 'M' + p.map(function (q) { return n1(q[0]) + ' ' + n1(q[1]); }).join(' L'); }
-  function sample(pts) {
-    var out = [[pts[0][0], pts[0][1]]], len = [0];
-    for (var i = 1; i < pts.length; i++) {
-      var a = pts[i - 1], b = pts[i], d = Math.sqrt((b[0] - a[0]) * (b[0] - a[0]) + (b[1] - a[1]) * (b[1] - a[1])), n = Math.max(1, Math.ceil(d / 4));
-      for (var k = 1; k <= n; k++) { out.push([a[0] + (b[0] - a[0]) * k / n, a[1] + (b[1] - a[1]) * k / n]); len.push(len[len.length - 1] + d / n); }
+  /* A red blood cell is a biconcave disc, about 7.5 µm across, 2 to 2.5 µm thick at its rim and about 1 µm at
+     its centre (Guyton & Hall, Textbook of Medical Physiology, 14th ed., ch. 33). Face on it is a disc whose
+     thin centre is paler; edge on, a flattened dumbbell; in between, the disc foreshortened. Lit from the top
+     left: the rim bulges towards the light, the dimple is a hollow, so its lit side is the lower right.
+     Two sets: oxygenated (bright) and, for blood trapped beyond the clot, dusky. */
+  var RB = 1.22;                   /* the cells' size, as drawn: 17 units across */
+  function rbcDefs(u) {
+    function set(k, c) {
+      return '<radialGradient id="' + u + 'rb' + k + 'o" cx=".4" cy=".36" r=".72"><stop offset="0" stop-color="' + c[0] + '"/><stop offset=".56" stop-color="' + c[1] + '"/><stop offset=".86" stop-color="' + c[2] + '"/><stop offset="1" stop-color="' + c[3] + '"/></radialGradient>' +
+        '<linearGradient id="' + u + 'rb' + k + 'i" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + c[3] + '"/><stop offset=".55" stop-color="' + c[2] + '"/><stop offset="1" stop-color="' + c[0] + '"/></linearGradient>' +
+        '<linearGradient id="' + u + 'rb' + k + 'e" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + c[0] + '"/><stop offset=".5" stop-color="' + c[1] + '"/><stop offset="1" stop-color="' + c[3] + '"/></linearGradient>' +
+        '<g id="' + u + 'rb' + k + 'F"><circle r="7" fill="url(#' + u + 'rb' + k + 'o)" stroke="' + c[4] + '" stroke-width=".7"/>' +
+          '<circle r="3.5" fill="url(#' + u + 'rb' + k + 'i)" opacity=".85"/><circle r="3.5" fill="none" stroke="' + c[2] + '" stroke-width=".9" stroke-opacity=".55"/></g>' +
+        '<path id="' + u + 'rb' + k + 'S" d="M-7 0C-7-2.35-5.6-2.4-4.1-1.8C-2.5-1.1-1.2-.95 0-.95C1.2-.95 2.5-1.1 4.1-1.8C5.6-2.4 7-2.35 7 0C7 2.35 5.6 2.4 4.1 1.8C2.5 1.1 1.2 .95 0 .95C-1.2 .95-2.5 1.1-4.1 1.8C-5.6 2.4-7 2.35-7 0Z" fill="url(#' + u + 'rb' + k + 'e)" stroke="' + c[4] + '" stroke-width=".7"/>';
     }
-    return { pts: out, len: len, total: len[len.length - 1] };
+    return set('', ['#FF9C8C', '#E5483F', '#BC262D', '#8E1A21', '#5E0F15']) + set('D', ['#B77684', '#8E4453', '#6E2E3D', '#4F1E2B', '#35121C']);
   }
-  function at(P, s) {
-    var lo = 0, hi = P.len.length - 1;
-    if (s <= 0) return P.pts[0]; if (s >= P.total) return P.pts[hi];
-    while (hi - lo > 1) { var m = (lo + hi) >> 1; if (P.len[m] < s) lo = m; else hi = m; }
-    var u = (s - P.len[lo]) / ((P.len[hi] - P.len[lo]) || 1);
-    return [P.pts[lo][0] + (P.pts[hi][0] - P.pts[lo][0]) * u, P.pts[lo][1] + (P.pts[hi][1] - P.pts[lo][1]) * u];
-  }
-  var BR_PATHS = [];
-  BR.forEach(function (b) { b.subs.forEach(function (s) { BR_PATHS.push({ k: b.k, s: sample(b.main.concat(s.slice(1))) }); }); });
 
-  var MUS = { ok: '#B4453F', isch: '#6B3A4E', dead: '#A99583' };
-
-  /* everything that never moves: built once */
+  /* everything in the artery that never moves: built once */
   function arStatic(u) {
-    var W = AR.W, H = AR.H, r = rng(7), s = '', i, x, y, d;
+    var W = AR.W, r = rng(7), s = '', i, x, y;
     s += '<defs>' +
-      '<linearGradient id="' + u + 'mg" gradientUnits="userSpaceOnUse" x1="120" y1="0" x2="200" y2="0"><stop offset="0" class="ar__ma" stop-color="' + MUS.ok + '"/><stop offset="1" class="ar__mb" stop-color="' + MUS.ok + '"/></linearGradient>' +
-      '<linearGradient id="' + u + 'ms" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".3"/></linearGradient>' +
-      '<linearGradient id="' + u + 'lu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9C2229"/><stop offset=".5" stop-color="#B92F33"/><stop offset="1" stop-color="#9C2229"/></linearGradient>' +
+      /* plasma, pale and straw-tinted, as it is between the cells: the blood's red is its cells */
+      '<linearGradient id="' + u + 'lu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C98C7C"/><stop offset=".5" stop-color="#E8BFA6"/><stop offset="1" stop-color="#C98C7C"/></linearGradient>' +
       '<linearGradient id="' + u + 'dp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F1D47E"/><stop offset="1" stop-color="#D3A244"/></linearGradient>' +
       '<linearGradient id="' + u + 'cl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8E1E2A"/><stop offset="1" stop-color="#5C111A"/></linearGradient>' +
       '<linearGradient id="' + u + 'sf" gradientUnits="userSpaceOnUse" x1="' + (AR.xc - AR.hw) + '" y1="0" x2="' + (AR.xc + AR.hw) + '" y2="0"><stop offset="0" stop-color="#B7675D" stop-opacity="0"/><stop offset=".28" stop-color="#B7675D"/><stop offset=".72" stop-color="#B7675D"/><stop offset="1" stop-color="#B7675D" stop-opacity="0"/></linearGradient>' +
       '<linearGradient id="' + u + 'm1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#A9564C"/><stop offset="1" stop-color="#C7766A"/></linearGradient>' +
       '<linearGradient id="' + u + 'm2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C7766A"/><stop offset="1" stop-color="#A9564C"/></linearGradient>' +
-      '<clipPath id="' + u + 'cp"><rect class="ar__cr" x="0" y="0" width="' + W + '" height="' + H + '"/></clipPath>' +
+      '<clipPath id="' + u + 'cp"><rect class="ar__cr" x="-4" y="' + AR.yA + '" width="' + (W + 8) + '" height="' + (AR.yB - AR.yA) + '" rx="12"/></clipPath>' +
+      rbcDefs(u) +
       '</defs>';
-    /* the heart muscle: its colour shows its supply; fibres run across, striated, with central nuclei */
-    s += '<rect class="ar__mus" x="-4" y="' + AR.yFat + '" width="' + (W + 8) + '" height="' + (H - AR.yFat + 4) + '" fill="url(#' + u + 'mg)"/>';
-    var fib = '';
-    for (y = AR.yFat + 7; y < H + 4; y += 7.5) {
-      d = 'M-6 ' + n1(y);
-      for (x = 0; x <= W + 40; x += 30) d += ' L' + x + ' ' + n1(y + 1.4 * Math.sin(x / 55 + y * .9));
-      fib += '<path d="' + d + '"/>';
-    }
-    s += '<g class="ar__fib">' + fib + '</g><g class="ar__str">' + fib + '</g>';
-    var nuc = '';
-    for (i = 0; i < 70; i++) {
-      y = AR.yFat + 11 + Math.floor(r() * 23) * 7.5; x = r() * W;
-      nuc += '<ellipse cx="' + n1(x) + '" cy="' + n1(y + 1.4 * Math.sin(x / 55 + y * .9)) + '" rx="4.6" ry="1.7"/>';
-    }
-    s += '<g class="ar__mnuc">' + nuc + '</g>';
-    s += '<rect x="-4" y="' + AR.yFat + '" width="' + (W + 8) + '" height="' + (H - AR.yFat + 4) + '" fill="url(#' + u + 'ms)"/>';
-    /* the finest vessels in the muscle, from the ends of each branch */
-    var capA = '', capB = '';
-    BR.forEach(function (b, bi) {
-      b.subs.forEach(function (sb, si) {
-        var e = sb[sb.length - 1], p0 = sb[sb.length - 2], ang = Math.atan2(e[1] - p0[1], e[0] - p0[0]);
-        for (var k = -1; k <= 1; k++) {
-          var a2 = ang + k * .55, L1 = 16 + 8 * r(), x1 = e[0] + Math.cos(a2) * L1, y1 = e[1] + Math.sin(a2) * L1;
-          var dd = 'M' + n1(e[0]) + ' ' + n1(e[1]) + ' Q' + n1(x1 + 6 * (r() - .5)) + ' ' + n1(y1 + 6 * (r() - .5)) + ' ' + n1(x1 + Math.cos(a2) * 12) + ' ' + n1(y1 + Math.sin(a2) * 12);
-          if (b.k === 'A') capA += '<path d="' + dd + '"/>'; else capB += '<path d="' + dd + '"/>';
-        }
-        /* the smallest vessels also branch off along the way */
-        for (var j = 1; j < sb.length - 1; j++) {
-          var q = sb[j], side = (j + si + bi) % 2 ? 1 : -1, x2 = q[0] + side * (12 + 6 * r()), y2 = q[1] + 14 + 6 * r();
-          var d2 = 'M' + n1(q[0]) + ' ' + n1(q[1]) + ' Q' + n1((q[0] + x2) / 2 + side * 4) + ' ' + n1((q[1] + y2) / 2) + ' ' + n1(x2) + ' ' + n1(y2);
-          if (b.k === 'A') capA += '<path d="' + d2 + '"/>'; else capB += '<path d="' + d2 + '"/>';
-        }
-      });
-    });
-    s += '<g class="ar__cap">' + capA + '</g><g class="ar__cap ar__capB">' + capB + '</g>';
-    /* the fat and connective tissue the artery lies on */
-    s += '<rect class="ar__fat" x="-4" y="' + AR.yOut2 + '" width="' + (W + 8) + '" height="' + (AR.yFat - AR.yOut2) + '"/>';
-    var fat = '';
-    [[AR.yOut2, AR.yOut2 + 6.5, 0], [AR.yOut2 + 6.5, AR.yFat, 6]].forEach(function (row) {
-      for (x = -8 + row[2]; x < W + 8; x += 10 + 5 * r()) {
-        var w2 = 9 + 4 * r();
-        fat += '<path d="M' + n1(x + 1.2) + ' ' + n1(row[0] + .6) + ' L' + n1(x + w2 - 1) + ' ' + n1(row[0] + .9 + r()) + ' Q' + n1(x + w2 + .6) + ' ' + n1((row[0] + row[1]) / 2) + ' ' + n1(x + w2 - 1.2) + ' ' + n1(row[1] - .6) +
-          ' L' + n1(x + 1) + ' ' + n1(row[1] - .8) + ' Q' + n1(x - .6) + ' ' + n1((row[0] + row[1]) / 2) + ' ' + n1(x + 1.2) + ' ' + n1(row[0] + .6) + 'Z"/>';
-      }
-    });
-    s += '<g class="ar__fatc">' + fat + '</g>';
+    s += '<g clip-path="url(#' + u + 'cp)">';
+    s += '<rect class="ar__void" x="-4" y="' + AR.yA + '" width="' + (W + 8) + '" height="' + (AR.yB - AR.yA) + '"/>';
     /* the blood in the lumen */
     s += '<rect x="-4" y="' + AR.yLum + '" width="' + (W + 8) + '" height="' + LUM0 + '" fill="url(#' + u + 'lu)"/>';
-    /* the upper wall: adventitia, media with elastic fibres, the internal elastic lamina, the lining */
+    /* the two walls: adventitia, media with elastic fibres, the internal elastic lamina, the lining */
     s += '<rect class="ar__adv" x="-4" y="' + AR.yOut + '" width="' + (W + 8) + '" height="' + (AR.yMed - AR.yOut) + '"/>';
     s += '<rect class="ar__med" x="-4" y="' + AR.yMed + '" width="' + (W + 8) + '" height="' + (AR.yIel - AR.yMed) + '" fill="url(#' + u + 'm1)"/>';
     s += '<rect class="ar__adv" x="-4" y="' + AR.yMed2 + '" width="' + (W + 8) + '" height="' + (AR.yOut2 - AR.yMed2) + '"/>';
@@ -268,20 +243,30 @@
     var en = '';
     for (x = 8; x < W; x += 24) en += '<ellipse cx="' + x + '" cy="' + (AR.yLum - 2.2) + '" rx="4.4" ry="1.2"/>';
     s += '<g class="ar__enuc">' + en + '</g>';
-    /* the parts that change: the deposit, the lower lining, then the branches, the clot and the cells */
-    s += '<g class="ar__dep"></g><g class="ar__lin2"></g>';
-    var bo = '', bi2 = '', biB = '';
-    BR.forEach(function (b) {
-      var m0 = [[b.main[0][0], AR.yIel2]].concat(b.main.slice(1));
-      bo += '<path class="ar__bw" d="' + ptsD(m0) + '"/>' + b.subs.map(function (sb) { return '<path class="ar__bw ar__bw--s" d="' + ptsD(sb) + '"/>'; }).join('');
-      var inner = '<path class="ar__bl" d="' + ptsD(b.main) + '"/>' + b.subs.map(function (sb) { return '<path class="ar__bl ar__bl--s" d="' + ptsD(sb) + '"/>'; }).join('');
-      if (b.k === 'A') bi2 += inner; else biB += inner;
-    });
-    s += '<g class="ar__brw">' + bo + '</g><g class="ar__brl">' + bi2 + '</g><g class="ar__brl ar__brlB">' + biB + '</g>';
-    s += '<g class="ar__clot"></g><g class="ar__cells"></g>';
+    /* the parts that change: the deposit, the lower lining, the clot and the cells */
+    s += '<g class="ar__dep"></g><g class="ar__lin2"></g><g class="ar__clot"></g><g class="ar__cells"></g>';
     /* which way the blood flows: from the aorta, on the left */
     s += '<g class="ar__dir"><path d="M626 136 L635 148 L626 160"/><path d="M636 136 L645 148 L636 160"/></g>';
+    s += '</g>';
+    /* the frame, in the ring's yellow: this is the part inside the ring on the heart */
+    s += '<rect class="ar__frame" x="-4" y="' + AR.yA + '" width="' + (W + 8) + '" height="' + (AR.yB - AR.yA) + '" rx="12"/>';
     return s;
+  }
+
+  /* the heart: Servier's drawing, the patch beyond the ring, the artery beyond the ring darkening, the ring */
+  function heartStatic(u) {
+    var HT = global.CHD_HEART; if (!HT) return '';
+    return '<defs>' +
+        '<clipPath id="' + u + 'vc"><path d="' + HT.vent + '"/></clipPath>' +
+        '<clipPath id="' + u + 'dc"><path d="M120 ' + (BLK[1] + 2) + ' H290 V360 H120 Z"/></clipPath>' +
+        '<filter id="' + u + 'soft" x="-25%" y="-25%" width="150%" height="150%"><feGaussianBlur stdDeviation="5"/></filter>' +
+      '</defs>' +
+      HT.a +
+      '<g clip-path="url(#' + u + 'vc)"><path class="ar__terr" d="' + closedCurve(TERR) + '" filter="url(#' + u + 'soft)" opacity="0"/></g>' +
+      HT.b +
+      '<g clip-path="url(#' + u + 'dc)"><path class="ar__ladD" d="' + HT.lad + '" opacity="0"/></g>' +
+      '<circle class="ar__ringH" cx="' + BLK[0] + '" cy="' + BLK[1] + '" r="' + BLK_R + '"/>' +
+      '<circle class="ar__ring" cx="' + BLK[0] + '" cy="' + BLK[1] + '" r="' + BLK_R + '"/>';
   }
 
   /* the deposit's cholesterol crystals and fat droplets, placed in its own proportions */
@@ -308,38 +293,42 @@
     var fig = h('figure', 'ar__fig');
     var svg = document.createElementNS(NS, 'svg');
     svg.setAttribute('class', 'ar__svg'); svg.setAttribute('role', 'img');
-    svg.setAttribute('aria-label', 'A coronary artery cut along its length, lying on the heart muscle it supplies. Step by step, fatty material builds up in its wall, the lumen narrows, a blood clot forms and blocks the artery, and the heart muscle beyond the blockage dies.');
-    svg.innerHTML = '<rect class="ar__bg"/><g class="ar__model" clip-path="url(#' + u + 'cp)">' + arStatic(u) + '</g><g class="ar__labs"></g>';
+    svg.setAttribute('aria-label', 'Above, the heart from the front with its coronary arteries; a yellow ring marks one place on a coronary artery. Below, that place cut along its length. Step by step, fatty material builds up in the wall of the artery, the lumen narrows, a blood clot forms and blocks the artery, and the patch of heart muscle beyond the blockage darkens and then turns grey as its cells die.');
+    svg.innerHTML = '<rect class="ar__bg"/><g class="ar__heart">' + heartStatic(u) + '</g><g class="ar__model">' + arStatic(u) + '</g><g class="ar__labs"></g>';
     fig.appendChild(svg);
-    var bg = svg.querySelector('.ar__bg'), model = svg.querySelector('.ar__model'), gLab = svg.querySelector('.ar__labs');
+    var bg = svg.querySelector('.ar__bg'), model = svg.querySelector('.ar__model'), gHeart = svg.querySelector('.ar__heart'), gLab = svg.querySelector('.ar__labs');
     var gDep = svg.querySelector('.ar__dep'), gLin = svg.querySelector('.ar__lin2'), gClot = svg.querySelector('.ar__clot'), gCells = svg.querySelector('.ar__cells');
-    var stopA = svg.querySelector('.ar__ma'), stopB = svg.querySelector('.ar__mb'), stiff = svg.querySelector('.ar__stiff');
-    var capB = svg.querySelector('.ar__capB'), brlB = svg.querySelector('.ar__brlB');
+    var stiff = svg.querySelector('.ar__stiff'), terr = svg.querySelector('.ar__terr'), ladD = svg.querySelector('.ar__ladD');
 
-    /* red blood cells: five lanes across the lumen, and a few in every branch */
+    /* red blood cells: five lanes across the lumen; each keeps its own tilt, from face on to edge on */
     var r = rng(5), TRUNK = [], LANES = [.12, .3, .5, .7, .88];
     LANES.forEach(function (lane, j) {
-      var n = 15;
-      for (var i = 0; i < n; i++) TRUNK.push({ lane: lane, g: 1.25 * (1 - .55 * (2 * lane - 1) * (2 * lane - 1)), s0: (i + [0, .55, .2, .8, .38][j] + .24 * (r() - .5)) / n, tilt: 14 * (r() - .5) });
+      var n = 17;
+      for (var i = 0; i < n; i++) {
+        var o = r();
+        TRUNK.push({ lane: lane, g: 1.25 * (1 - .55 * (2 * lane - 1) * (2 * lane - 1)), s0: (i + [0, .55, .2, .8, .38][j] + .24 * (r() - .5)) / n,
+                     tilt: 40 * (r() - .5), k: o < .38 ? 1 - .25 * r() : o < .76 ? .45 + .3 * r() : 0, spin: (r() - .5) * 26 });
+      }
     });
-    var BCELLS = [];
-    BR_PATHS.forEach(function (P, pi) { var n = Math.round(P.s.total / 30); for (var i = 0; i < n; i++) BCELLS.push({ p: pi, s0: (i + .4 * r()) / n }); });
 
-    var lay = { tall: false, yA: 30, f: 17, mL: 146, mR: 96 };
-    /* model → screen: on its side on a narrow screen; the empty strip above the artery is cut off */
-    function toScreen(x, y) { return lay.tall ? [y - lay.yA, x] : [x, y - lay.yA]; }
+    /* where things are on screen: set by setLayout */
+    var lay = { tall: false, f: 17, mL: 146, mR: 150, sH: .92, hx: 0, hy: 0, ySec: 0, vb: null };
+    function toScreen(x, y) { return lay.tall ? [y - AR.yA, x + lay.ySec] : [x, y - AR.yA + lay.ySec]; }
+    function heartPt(x, y) { return [lay.hx + x * lay.sH, lay.hy + y * lay.sH]; }
 
     function render(t) {
       var P = depAt(t), C = clotAt(t), Q = flowAt(t), V = volumeAt(t);
       var crack = ease(seg(t, 36, 37.6)), stf = ease(seg(t, 25, 33)), dead = ease(seg(t, 53.5, 60.5));
       var sB = Math.sqrt(Q);
-      var i, x, s;
-      /* the muscle's colour: A is always supplied, B is beyond the deposit */
-      var colB = mixc(mixc(MUS.isch, MUS.ok, sB), MUS.dead, dead);
-      stopA.setAttribute('stop-color', MUS.ok); stopB.setAttribute('stop-color', colB);
-      capB.setAttribute('opacity', n1((.3 + .7 * sB) * (1 - .7 * dead)));
-      brlB.setAttribute('stroke', mixc('#5E2230', '#B92F33', sB));
+      var i, x;
       stiff.setAttribute('opacity', n1(stf * .92));
+
+      /* the heart: the patch beyond the ring darkens as its supply fails, then turns grey as its cells die;
+         the artery beyond the ring darkens as the blood in it stops */
+      var isch = clamp01((1 - Q) * 1.05);
+      terr.setAttribute('fill', mixc(MUS.isch, MUS.dead, dead));
+      terr.setAttribute('opacity', n1(Math.max(.62 * isch, .8 * dead)));
+      ladD.setAttribute('opacity', n1(.85 * (1 - sB)));
 
       /* the deposit, under the lining; its surface tears in step 4 */
       var xn = AR.xc + 4;
@@ -419,7 +408,9 @@
       gClot.innerHTML = clot;
 
       /* the red blood cells. Each lane carries the same blood per second along its whole length, so
-         a cell moves faster where the lumen is narrow; when the lumen closes, every cell stops. */
+         a cell moves faster where the lumen is narrow; when the lumen closes, every cell stops. Once the
+         clot closes the artery, the blood trapped beyond it no longer flows: it gives up its oxygen to the
+         muscle around it and is drawn dusky. */
       var NT = 111, dx = AR.W / (NT - 1), TX = [], TT = [0], TW = [];
       for (i = 0; i < NT; i++) { TX.push(i * dx); TW.push(lumenW(i * dx, P, C)); }
       for (i = 1; i < NT; i++) TT.push(TT[i - 1] + (TW[i - 1] + TW[i]) / 2 / LUM0 * dx);
@@ -430,44 +421,41 @@
         while (hi - lo > 1) { var m = (lo + hi) >> 1; if (TT[m] < tau) lo = m; else hi = m; }
         return TX[lo] + (tau - TT[lo]) / ((TT[hi] - TT[lo]) || 1) * dx;
       }
-      var cells = '', v0 = 72 / AR.W;
-      /* once the clot closes the artery, the blood trapped beyond it no longer flows: it gives up its
-         oxygen to the muscle around it and is drawn dusky, like the branches beyond it */
-      var fillT = mixc('#8E4452', '#FF8A7E', clamp01(Q / .02)), past = AR.xk + AR.hk * .5;
+      var cells = '', v0 = 72 / AR.W, past = AR.xk + AR.hk * .5, trapped = Q < .02;
       TRUNK.forEach(function (c) {
         var sN = (c.s0 + c.g * V * v0) % 1, xx = xOfTau(sN * TOT), w = lumenW(xx, P, C);
         if (w < 4) return;
         var yy = AR.yLum + w * c.lane, slope = (lumenW(xx + 2, P, C) - lumenW(xx - 2, P, C)) / 4 * c.lane;
         var room = c.lane === .5 ? clamp01((w - 6) / 4) : (c.lane === .3 || c.lane === .7) ? clamp01((w - 24) / 10) : clamp01((w - 44) / 14);
         var op = Math.min(1, xx / 20, (AR.W - xx) / 20, room); if (op <= .02) return;
-        var ang = Math.atan(slope) * 57.3 + c.tilt * (1 - clamp01((LUM0 - w) / 60));
-        cells += '<ellipse class="ar__rbc" cx="' + n1(xx) + '" cy="' + n1(yy) + '" rx="6.5" ry="3.6" transform="rotate(' + n1(ang) + ' ' + n1(xx) + ' ' + n1(yy) + ')" opacity="' + n1(op) + '"' + (xx > past && Q < .02 ? ' style="fill:' + fillT + '"' : '') + '/>';
-      });
-      var fillB = mixc('#A6505A', '#FF8A7E', sB);
-      BCELLS.forEach(function (c) {
-        var B = BR_PATHS[c.p], dist = B.k === 'A' ? t * 46 : V * 46, sN = (c.s0 + dist / B.s.total) % 1;
-        var q = at(B.s, sN * B.s.total), q2 = at(B.s, Math.min(B.s.total, sN * B.s.total + 3));
-        var op = Math.min(1, sN * B.s.total / 14, (1 - sN) * B.s.total / 18); if (op <= .02) return;
-        var ang = Math.atan2(q2[1] - q[1], q2[0] - q[0]) * 57.3;
-        cells += '<ellipse class="ar__rbc ar__rbc--br" cx="' + n1(q[0]) + '" cy="' + n1(q[1]) + '" rx="5.2" ry="2.9" transform="rotate(' + n1(ang) + ' ' + n1(q[0]) + ' ' + n1(q[1]) + ')" opacity="' + n1(op) + '"' + (B.k === 'B' ? ' style="fill:' + fillB + '"' : '') + '/>';
+        var ang = Math.atan(slope) * 57.3 + (c.tilt + c.spin * sN) * (1 - clamp01((LUM0 - w) / 60));
+        var set = trapped && xx > past ? 'D' : '';
+        cells += '<use href="#' + u + 'rb' + set + (c.k ? 'F' : 'S') + '" transform="translate(' + n1(xx) + ' ' + n1(yy) + ') rotate(' + n1(ang) + ') scale(' + RB + ' ' + n1(RB * (c.k || 1)) + ')" opacity="' + n1(op) + '"/>';
       });
       gCells.innerHTML = cells;
 
-      /* labels, in the margins, leaders ruled level */
-      var items = [], xp = AR.xc + (lay.tall ? 26 : 24), xk = AR.xc + (lay.tall ? -20 : 2);
-      function add(id, text, mx, my, side, op) { var p = toScreen(mx, my); items.push({ id: id, text: text, x: p[0], y: p[1], side: side, op: op == null ? 1 : op }); }
-      add('wall', 'wall of artery', lay.tall ? 24 : 60, (AR.yMed + AR.yIel) / 2, 'L');
-      add('lining', 'lining', lay.tall ? 64 : 60, AR.yLum - 2, 'L');
-      add('lumen', 'lumen', lay.tall ? 104 : 60, 148, 'L');
-      var pth = P_(xp, P); if (pth > 5) add('dep', 'fatty deposit (plaque)', xp, AR.yIel2 - pth / 2 + 1, 'L', clamp01((pth - 5) / 6));
+      /* labels, in the margins, leaders ruled level: the heart's first, then the artery's */
+      var hItems = [], aItems = [], vb = lay.vb, f = lay.f;
+      function addA(id, text, mx, my, side, op) { var p = toScreen(mx, my); aItems.push({ id: id, text: text, x: p[0], y: p[1], side: side, op: op == null ? 1 : op }); }
+      function addH(id, text, hxp, hyp, side, op) { var p = heartPt(hxp, hyp); hItems.push({ id: id, text: text, x: p[0], y: p[1], side: side, op: op == null ? 1 : op }); }
+      addH('aorta', 'aorta', 86, 62, 'L');
+      addH('cor', 'coronary artery', 181, 171, 'L');
+      addH('ring', 'cut open below', BLK[0] + BLK_R, BLK[1], 'R');
+      var tOp = clamp01(Math.max(isch * 2.5, dead));
+      if (tOp > .02) addH('terr', 'heart muscle beyond the blockage', 222, 292, 'R', tOp);
+      var xp = AR.xc + (lay.tall ? 26 : 24), xk = AR.xc + (lay.tall ? -20 : 2);
+      addA('wall', 'wall of artery', lay.tall ? 24 : 60, (AR.yMed + AR.yIel) / 2, 'L');
+      addA('lining', 'lining', lay.tall ? 64 : 60, AR.yLum - 2, 'L');
+      addA('lumen', 'lumen', lay.tall ? 104 : 60, 148, 'L');
+      var pth = P_(xp, P); if (pth > 5) addA('dep', 'fatty deposit (plaque)', xp, AR.yIel2 - pth / 2 + 1, lay.tall ? 'R' : 'L', clamp01((pth - 5) / 6));
       var cth = Math.min(C_(xk, C), lumenW(xk, P, 0)), cbot = top(xk) - 4;
-      if (cth > 5) add('clot', 'blood clot', xk, cbot - cth / 2, 'L', clamp01((cth - 5) / 5));
-      add('mus', 'heart muscle', lay.tall ? 470 : 560, lay.tall ? 380 : 372, 'R');
-      add('br', 'branch of the artery', lay.tall ? 566 : 575, lay.tall ? 318 : 300, 'R');
-      var f = lay.f, vb = lay.vb;
+      if (cth > 5) addA('clot', 'blood clot', xk, cbot - cth / 2, lay.tall ? 'R' : 'L', clamp01((cth - 5) / 5));
+      var hTop = vb.y + 6, hBot = lay.ySec - 8, aTop = lay.ySec + 4, aBot = vb.y + vb.h - 6;
       gLab.innerHTML =
-        L.labels({ items: items.filter(function (q) { return q.side === 'L'; }), left: -8, right: vb.bw + 8, font: f, width: lay.mL - 26, top: vb.y + 6, bottom: vb.y + vb.h - 6, gap: 5 }) +
-        L.labels({ items: items.filter(function (q) { return q.side === 'R'; }), left: -8, right: vb.bw + 8, font: f, width: lay.mR - 26, top: vb.y + 6, bottom: vb.y + vb.h - 6, gap: 5 });
+        L.labels({ items: hItems.filter(function (q) { return q.side === 'L'; }), left: -8, right: vb.bw + 8, font: f, width: lay.mL - 26, top: hTop, bottom: hBot, gap: 5 }) +
+        L.labels({ items: hItems.filter(function (q) { return q.side === 'R'; }), left: -8, right: vb.bw + 8, font: f, width: lay.mR - 26, top: hTop, bottom: hBot, gap: 5 }) +
+        L.labels({ items: aItems.filter(function (q) { return q.side === 'L'; }), left: -8, right: vb.bw + 8, font: f, width: lay.mL - 26, top: aTop, bottom: aBot, gap: 5 }) +
+        L.labels({ items: aItems.filter(function (q) { return q.side === 'R'; }), left: -8, right: vb.bw + 8, font: f, width: lay.mR - 26, top: aTop, bottom: aBot, gap: 5 });
 
       /* the read-outs above the drawing */
       var when = t < 12 ? 'at the start' : t < 22 ? 'over many years' : t < 35 ? 'over more years' : t < 43 ? 'suddenly' : t < 52 ? 'within minutes' : '20 to 40 minutes later';
@@ -481,7 +469,7 @@
       p.className = 'ar__pill is-' + cls;
     }
 
-    var R = [0, 14.5, 26.5, 41.5, 50, 60, 72], M = [0, 12, 22, 35, 43, 52, AR_END], clock = readerClock(R, M);
+    var R = [0, 16, 28, 43.5, 52.5, 63, 75], M = [0, 12, 22, 35, 43, 52, AR_END], clock = readerClock(R, M);
     var sp = L.stepper({ steps: readerSteps(AR_STEPS, R), end: R[R.length - 1], render: function (t) { render(clock(t)); } });
     box.appendChild(sp.bar);
     var wrap = h('div', 'ar__wrap');
@@ -493,22 +481,26 @@
     fig.appendChild(sp.now);
     wrap.appendChild(left); wrap.appendChild(sp.list);
     box.appendChild(wrap);
-    box.appendChild(h('p', 'widget__note', 'The blood in a coronary artery is oxygenated, so it is drawn red. The red blood cells are drawn several hundred times larger than real, and far fewer. As the lumen narrows, fewer cells pass each second; in the narrow part itself they move faster, as water does through the narrow end of a hose. Time is squeezed: a fatty deposit grows over many years, but a clot can block the artery within minutes, and heart muscle cells die after 20 to 40 minutes without blood.'));
-    box.appendChild(h('p', 'widget__note ar__fence', '<b>Not asked in 0610.</b> “Plaque” and “atheroma” are other names for the fatty deposit; mark schemes accept them. The chest pain of step 3 is called angina. A heart attack is also called a myocardial infarction.'));
+    box.appendChild(h('p', 'widget__note', 'The blood in a coronary artery is oxygenated, so its red blood cells are drawn bright red; the plasma between them is pale. Each red blood cell is drawn as the disc it is, thinner in the middle than at the edge: face on its centre looks paler, edge on it looks like a flattened dumbbell. The cells are drawn several hundred times larger than real, and far fewer. As the lumen narrows, fewer cells pass each second; in the narrow part itself they move faster, as water does through the narrow end of a hose. Time is squeezed: a fatty deposit grows over many years, but a clot can block the artery within minutes, and heart muscle cells die after 20 to 40 minutes without blood. The dead patch is drawn grey to show where the cells have died; in a real heart its colour changes over hours and days. Heart drawing: Servier Medical Art, CC BY 4.0, adapted.'));
+    box.appendChild(h('p', 'widget__note ar__fence', '<b>Not asked in 0610.</b> “Plaque” and “atheroma” are other names for the fatty deposit; mark schemes accept them. The ringed artery is the left coronary artery’s anterior descending branch. The chest pain of step 3 is called angina. A heart attack is also called a myocardial infarction.'));
 
-    /* the layout: turned on its side on a narrow screen; lettering at least 13 px on screen */
-    var cr = svg.querySelector('.ar__cr');
+    /* the layout: the heart above, the artery below; the artery turned on its side on a narrow screen;
+       lettering at least 13 px on screen */
+    var HT = global.CHD_HEART || { w: 275, h: 348 };
     function setLayout(D, ww) {
-      var tall = (ww || D) < 440, yA = tall ? 36 : 30, yB = tall ? 410 : AR.H;
-      var bw = tall ? yB - yA : AR.W, bh = tall ? AR.W : yB - yA;
-      var ft = fitType(D, bw, 8, 6, tall ? 108 : 146, tall ? 90 : 96, 13);
-      var padT = 14, padB = 14;
+      var tall = (ww || D) < 440;
+      var aw = tall ? AR.yB - AR.yA : AR.W, ah = tall ? AR.W : AR.yB - AR.yA;
+      var sH = tall ? Math.min(.9, (aw + 40) / HT.w) : 1.45;      /* wide: the heart as tall as the column allows */
+      var hw = HT.w * sH, hh = HT.h * sH;
+      var ft = fitType(D, aw, 8, 9, tall ? 104 : 146, tall ? 104 : 150, 13);
+      var ySec = hh + 24, bw = aw, bh = ySec + ah;
+      var padT = 12, padB = 14;
       var vb = { x: -ft.mL, y: -padT, w: bw + ft.mL + ft.mR, h: bh + padT + padB, bw: bw, bh: bh };
-      lay = { tall: tall, yA: yA, f: ft.f, mL: ft.mL, mR: ft.mR, vb: vb };
+      lay = { tall: tall, f: ft.f, mL: ft.mL, mR: ft.mR, sH: sH, hx: bw / 2 - hw / 2, hy: 0, ySec: ySec, vb: vb };
       svg.setAttribute('viewBox', n1(vb.x) + ' ' + n1(vb.y) + ' ' + n1(vb.w) + ' ' + n1(vb.h));
       bg.setAttribute('x', n1(vb.x)); bg.setAttribute('y', n1(vb.y)); bg.setAttribute('width', n1(vb.w)); bg.setAttribute('height', n1(vb.h)); bg.setAttribute('rx', 18);
-      cr.setAttribute('y', yA); cr.setAttribute('height', yB - yA);
-      model.setAttribute('transform', tall ? 'matrix(0 1 1 0 ' + (-yA) + ' 0)' : 'translate(0 ' + (-yA) + ')');
+      gHeart.setAttribute('transform', 'translate(' + n1(lay.hx) + ' ' + n1(lay.hy) + ') scale(' + n1(sH * 1000) / 1000 + ')');
+      model.setAttribute('transform', tall ? 'matrix(0 1 1 0 ' + (-AR.yA) + ' ' + n1(ySec) + ')' : 'translate(0 ' + n1(ySec - AR.yA) + ')');
       box.classList.toggle('ar--tall', tall);
     }
     var lastD = 0;
