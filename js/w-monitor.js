@@ -873,23 +873,47 @@
   var PU_ART = 'M176 145.8C199 144 222 141 245 138.5C268 136 290 134 311.8 132' +     /* the forearm, up to the index finger */
                'M407.8 131.2C430 127 452 121 474 110.5C488 103 499 95.5 504 90';       /* past the middle finger, towards the thumb */
   var PU_TIPS = [359.7, 128.5];                  /* between the two fingertips, over the artery */
+  /* Two places to feel it (Daniel, 27 Sep: "can the count a pulse not be done also with the carotid artery? ... a
+     toggle"). The 0610 syllabus says only "pulse rate" (9.2.3), naming no artery; the lab's revision notes give the
+     radial artery as an example, and the station names both. The neck: a US Navy photograph (public domain) of a
+     nurse showing two nursing students where to feel the carotid pulse, the tips of her own index and middle
+     fingers pressed into the side of her neck just below the jaw; a student's hand rests along her jaw. Her fingers
+     lie over the artery's course, so it is not drawn: the pulse shows as a glow under her fingertips. */
+  var PU_SITES = {
+    radial: { key: 'radial', btn: 'Wrist: radial artery', img: PU_IMG, art: PU_ART, tips: PU_TIPS, ring: [40, 16, 62, 24], throb: [54, 22],
+      labels: [
+        { id: 'idx', text: 'index finger', x: 326, y: 189, side: 'L' },
+        { id: 'thumb', text: 'thumb', x: 619, y: 66, side: 'R' },
+        { id: 'art', text: 'radial artery', x: 441.7, y: 123.8, side: 'R' },
+        { id: 'mid', text: 'middle finger', x: 380, y: 197, side: 'R' }],
+      aria: 'A photograph of a left forearm on a table, the hand turned with its thumb up. The tips of the index and middle fingers of another hand rest on the inside of the wrist, on the thumb side, just above the wrist crease. The radial artery is drawn in red where it runs under the skin, beneath the fingertips, and throbs with each beat.',
+      note: 'The radial artery runs close to the skin on the thumb side of the wrist. ' },
+    carotid: { key: 'carotid', btn: 'Neck: carotid artery', img: { href: 'assets/photos/pulse-neck-1140.jpg', x: 176, y: 16, w: 570, h: 308 }, art: null, tips: [409, 206], ring: [22, 20, 40, 34], throb: [34, 30],
+      labels: [
+        { id: 'fing', text: 'two fingertips', x: 399, y: 236, side: 'L' },
+        { id: 'art', text: 'carotid artery', x: 421, y: 207, side: 'R' },
+        { id: 'jaw', text: 'jaw', x: 436, y: 190, side: 'R' }],
+      aria: 'A photograph of a nurse feeling her own carotid pulse: the tips of her index and middle fingers are pressed into the side of her neck, just below the jaw. A student\u2019s hand rests along her jaw. A red glow under her fingertips throbs with each beat.',
+      note: 'The carotid artery runs up the side of the neck, beside the windpipe; you feel it just below the angle of the jaw. Press gently, on one side only. ' }
+  };
 
-  function puArt(u) {
+  function puArt(u, S) {
+    var I = S.img;
     return '<defs>' +
-      '<clipPath id="' + u + 'clip"><rect x="' + PU_IMG.x + '" y="' + PU_IMG.y + '" width="' + PU_IMG.w + '" height="' + PU_IMG.h + '" rx="14"/></clipPath>' +
+      '<clipPath id="' + u + 'clip"><rect x="' + I.x + '" y="' + I.y + '" width="' + I.w + '" height="' + I.h + '" rx="14"/></clipPath>' +
       '<filter id="' + u + 'soft" x="-20%" y="-60%" width="140%" height="220%"><feGaussianBlur stdDeviation="1.6"/></filter>' +
       '<filter id="' + u + 'blur" x="-20%" y="-60%" width="140%" height="220%"><feGaussianBlur stdDeviation="4"/></filter>' +
       '<radialGradient id="' + u + 'throb"><stop offset="0" stop-color="#FF6B5B" stop-opacity=".75"/><stop offset=".6" stop-color="#FF6B5B" stop-opacity=".25"/><stop offset="1" stop-color="#FF6B5B" stop-opacity="0"/></radialGradient>' +
       '</defs>' +
       '<rect class="pu__bg" x="0" y="0" width="' + PU_W + '" height="' + PU_H + '" rx="18"/>' +
-      '<image href="' + PU_IMG.href + '" x="' + PU_IMG.x + '" y="' + PU_IMG.y + '" width="' + PU_IMG.w + '" height="' + PU_IMG.h + '" preserveAspectRatio="xMidYMid slice" clip-path="url(#' + u + 'clip)"/>' +
-      '<rect x="' + PU_IMG.x + '" y="' + PU_IMG.y + '" width="' + PU_IMG.w + '" height="' + PU_IMG.h + '" rx="14" fill="none" stroke="#FFFFFF" stroke-opacity=".18"/>' +
-      /* the radial artery under the skin; it throbs with each beat */
-      '<g clip-path="url(#' + u + 'clip)">' +
-        '<path class="pu__art-wide" d="' + PU_ART + '" filter="url(#' + u + 'blur)"/>' +
-        '<path class="pu__art" d="' + PU_ART + '" filter="url(#' + u + 'soft)"/>' +
-      '</g>' +
-      '<ellipse class="pu__throb" cx="' + PU_TIPS[0] + '" cy="' + PU_TIPS[1] + '" rx="54" ry="22" fill="url(#' + u + 'throb)"/>' +
+      '<image href="' + I.href + '" x="' + I.x + '" y="' + I.y + '" width="' + I.w + '" height="' + I.h + '" preserveAspectRatio="xMidYMid slice" clip-path="url(#' + u + 'clip)"/>' +
+      '<rect x="' + I.x + '" y="' + I.y + '" width="' + I.w + '" height="' + I.h + '" rx="14" fill="none" stroke="#FFFFFF" stroke-opacity=".18"/>' +
+      /* the artery under the skin, where it can be seen; it throbs with each beat */
+      (S.art ? '<g clip-path="url(#' + u + 'clip)">' +
+        '<path class="pu__art-wide" d="' + S.art + '" filter="url(#' + u + 'blur)"/>' +
+        '<path class="pu__art" d="' + S.art + '" filter="url(#' + u + 'soft)"/>' +
+      '</g>' : '') +
+      '<ellipse class="pu__throb" cx="' + S.tips[0] + '" cy="' + S.tips[1] + '" rx="' + S.throb[0] + '" ry="' + S.throb[1] + '" fill="url(#' + u + 'throb)"/>' +
       '<g class="pu__rings"></g>';
   }
   /* the hidden heart: a mean rate that swings a few per cent with breathing (faster breathing in) */
@@ -929,17 +953,33 @@
     box.appendChild(L.head(spec.title || 'Count a pulse', spec.ask || PU_ASK, 'Press Start'));
     var wrap = h('div', 'pu__wrap');
     var fig = h('figure', 'pu__fig');
+    var site = PU_SITES[spec.site === 'carotid' ? 'carotid' : 'radial'];
     var svg = sv('svg', { viewBox: '0 0 ' + PU_W + ' ' + PU_H, 'class': 'pu__svg', role: 'img',
       'aria-label': 'A photograph of a left forearm on a table, the hand turned with its thumb up. The tips of the index and middle fingers of another hand rest on the inside of the wrist, on the thumb side, just above the wrist crease. The radial artery is drawn in red where it runs under the skin, beneath the fingertips, and throbs with each beat.' });
     var u = 'pu' + (++UID);
-    svg.innerHTML = puArt(u) + '<g class="pu__labels"></g>';
     fig.appendChild(svg);
     var pack = h('div', 'pu__pack');
     var packT = h('p', 'stg__title', esc(spec.title || 'Count a pulse')); packT.hidden = true;
     pack.appendChild(packT); pack.appendChild(fig);
     wrap.appendChild(pack);
-    var gLab = svg.querySelector('.pu__labels'), art = svg.querySelector('.pu__art'), artW = svg.querySelector('.pu__art-wide'),
-        throb = svg.querySelector('.pu__throb'), rings = svg.querySelector('.pu__rings');
+    var gLab, art, artW, throb, rings;
+    function paintSite() {
+      svg.innerHTML = puArt(u, site) + '<g class="pu__labels"></g>';
+      svg.setAttribute('aria-label', site.aria);
+      gLab = svg.querySelector('.pu__labels'); art = svg.querySelector('.pu__art'); artW = svg.querySelector('.pu__art-wide');
+      throb = svg.querySelector('.pu__throb'); rings = svg.querySelector('.pu__rings');
+      if (noteEl) noteEl.innerHTML = esc(site.note) + NOTE_REST;
+      Object.keys(siteBtn).forEach(function (k) { siteBtn[k].setAttribute('aria-pressed', k === site.key ? 'true' : 'false'); siteBtn[k].classList.toggle('is-on', k === site.key); });
+    }
+    /* where to feel it: the wrist or the neck */
+    var siteBox = h('div', 'pu__sites'), siteBtn = {}, noteEl = null;
+    siteBox.setAttribute('role', 'group'); siteBox.setAttribute('aria-label', 'Where to feel the pulse');
+    siteBox.appendChild(h('span', 'pu__siteh', 'Feel it at the'));
+    Object.keys(PU_SITES).forEach(function (k) {
+      var b = button('wbtn pu__site', esc(PU_SITES[k].btn));
+      b.addEventListener('click', function () { if (stateNow === 'count' || site.key === k) return; site = PU_SITES[k]; paintSite(); labels(); drawPulse(nowS() - clock0); });
+      siteBtn[k] = b; siteBox.appendChild(b);
+    });
 
     var panel = h('div', 'pu__panel');
     var dials = h('div', 'pu__dials',
@@ -952,13 +992,15 @@
     var msg = h('p', 'pu__msg'); msg.setAttribute('aria-live', 'polite');
     var result = h('div', 'pu__result'); result.setAttribute('aria-live', 'polite'); result.tabIndex = -1;
     var again = button('wbtn pu__again', 'Count another pulse');
-    panel.appendChild(dials); panel.appendChild(start); panel.appendChild(beat); panel.appendChild(hint); panel.appendChild(msg); panel.appendChild(result); panel.appendChild(again);
+    panel.appendChild(siteBox); panel.appendChild(dials); panel.appendChild(start); panel.appendChild(beat); panel.appendChild(hint); panel.appendChild(msg); panel.appendChild(result); panel.appendChild(again);
     wrap.appendChild(panel);
     box.appendChild(wrap);
-    box.appendChild(h('p', 'widget__note',
-      'The radial artery runs close to the skin on the thumb side of the wrist. Each time the left ventricle contracts, a surge of blood stretches the artery: that surge is the pulse. ' +
+    var NOTE_REST = 'Each time the left ventricle contracts, a surge of blood stretches the artery: that surge is the pulse. ' +
       'Use the tips of your index and middle fingers. Never use your thumb: it has its own pulse. ' +
-      'You cannot feel a screen, so here each beat shows as a glow under the fingertips.'));
+      'You cannot feel a screen, so here each beat shows as a glow under the fingertips.';
+    noteEl = h('p', 'widget__note', '');
+    box.appendChild(noteEl);
+    paintSite();
     var tEl = dials.querySelector('.pu__time'), nEl = dials.querySelector('.pu__n'), barEl = dials.querySelector('.pu__bar i');
 
     function randRate(avoid) { var r; do { r = 60 + Math.floor(Math.random() * 41); } while (avoid && Math.abs(r - avoid) < 6); return r; }
@@ -967,24 +1009,21 @@
 
     function drawPulse(t) {
       var w = heart.wave(t), calm = still();
-      art.setAttribute('stroke-opacity', n2(.3 + .62 * w));
-      art.setAttribute('stroke-width', n2(calm ? 5 : 4.5 + 3.5 * w));
-      artW.setAttribute('stroke-opacity', n2(.12 + .58 * w));
+      if (art) {
+        art.setAttribute('stroke-opacity', n2(.3 + .62 * w));
+        art.setAttribute('stroke-width', n2(calm ? 5 : 4.5 + 3.5 * w));
+        artW.setAttribute('stroke-opacity', n2(.12 + .58 * w));
+      }
       throb.setAttribute('opacity', n2(w));
       var ts = heart.since(t), rs = '';
-      if (!calm && ts < .7) { var k = ts / .7; rs = '<ellipse cx="' + PU_TIPS[0] + '" cy="' + PU_TIPS[1] + '" rx="' + n2(40 + 62 * k) + '" ry="' + n2(16 + 24 * k) + '" class="pu__ring" opacity="' + n2(.95 * (1 - k)) + '"/>'; }
+      if (!calm && ts < .7) { var k = ts / .7, G2 = site.ring; rs = '<ellipse cx="' + site.tips[0] + '" cy="' + site.tips[1] + '" rx="' + n2(G2[0] + G2[2] * k) + '" ry="' + n2(G2[1] + G2[3] * k) + '" class="pu__ring" opacity="' + n2(.95 * (1 - k)) + '"/>'; }
       rings.innerHTML = rs;
     }
     /* each dot on its own part of the photograph; the artery's is past the fingertips, where the
        artery turns towards the thumb, so its leader never runs along the artery */
     var NARROW = false;
     function labels() {
-      var items = [
-        { id: 'idx', text: 'index finger', x: 326, y: 189, side: 'L' },
-        { id: 'thumb', text: 'thumb', x: 619, y: 66, side: 'R' },
-        { id: 'art', text: 'radial artery', x: 441.7, y: 123.8, side: 'R' },
-        { id: 'mid', text: 'middle finger', x: 380, y: 197, side: 'R' }
-      ];
+      var items = site.labels.slice();
       if (!NARROW) {
         svg.setAttribute('viewBox', '0 0 ' + PU_W + ' ' + PU_H);
         gLab.innerHTML = L.labels({ items: items, left: 176, right: 746, font: fontPx, width: 140, top: 8, bottom: PU_H - 8, gap: 6 });
@@ -1004,6 +1043,7 @@
       barEl.style.width = ((1 - left / COUNT_S) * 100).toFixed(1) + '%';
       nEl.textContent = String(presses);
       start.hidden = stateNow !== 'idle';
+      Object.keys(siteBtn).forEach(function (k) { siteBtn[k].disabled = stateNow === 'count'; });
       beat.hidden = stateNow !== 'count';
       hint.hidden = stateNow !== 'count';
       again.hidden = stateNow !== 'done';
