@@ -115,8 +115,8 @@
     W: 660,
     yOut: 46, yMed: 58, yIel: 86, yLum: 90,           /* upper wall, outside in: adventitia, media, internal elastic lamina, lining */
     yLum2: 206, yIel2: 210, yMed2: 238, yOut2: 250,    /* lower wall, inside out, before any deposit */
-    xc: 190, hw: 92,                                    /* the fatty deposit: centre and half-length */
-    xk: 196, hk: 64,                                    /* the clot: centre and half-length */
+    xc: 250, hw: 150,                                   /* the fatty deposit: centre and half-length */
+    xk: 256, hk: 64,                                    /* the clot: centre and half-length */
     yA: 36, yB: 260                                     /* the strip of the model that is drawn */
   };
   var LUM0 = AR.yLum2 - AR.yLum;                        /* 116: the lumen of the healthy artery */
@@ -148,7 +148,7 @@
     { t: 0,  h: 'A healthy coronary artery', p: 'Above: the heart from the front, with its coronary arteries on its surface. Below: the part of one coronary artery inside the yellow ring, cut open along its length. Its lining is smooth and its lumen is wide, so blood flows freely. The blood brings oxygen and glucose to the heart muscle.' },
     { t: 12, h: 'Fatty material builds up in the wall', p: 'Over many years, fatty material containing cholesterol builds up in the wall of the artery, under the lining. At first the fatty deposit is small, and blood still flows freely.' },
     { t: 22, h: 'The lumen becomes narrower', p: 'The fatty deposit grows over more years. It bulges into the lumen, so the lumen becomes narrower and less blood can flow through it. The wall there is less elastic. During exercise, the heart muscle beyond the narrow part may not receive enough oxygen.' },
-    { t: 35, h: 'A blood clot forms', p: 'The surface of the fatty deposit becomes rough and breaks. Platelets stick to the rough surface, and a blood clot forms on it.' },
+    { t: 35, h: 'A blood clot forms', p: 'The surface of the fatty deposit becomes rough and breaks. Platelets stick to the rough surface, and a blood clot forms on it. Pieces can break off the clot and be carried away in the blood until they block a smaller artery further along.' },
     { t: 43, h: 'The clot blocks the artery', p: 'The clot grows until it blocks the artery completely. No blood can flow past it. The heart muscle beyond the blockage receives no oxygen and no glucose: on the heart, its patch darkens.' },
     { t: 52, h: 'Heart muscle cells die: a heart attack', p: 'Without oxygen, the heart muscle beyond the blockage cannot respire aerobically, so it cannot contract. Its cells die, and its patch turns grey. This is a heart attack. The muscle before the blockage still receives blood.' }
   ];
@@ -165,11 +165,15 @@
     if (t < 43.2) return 16 * ease(seg(t, 38.4, 42.4));
     return 16 + 54 * ease(seg(t, 43.6, 49.5));
   }
-  function P_(x, P) { return P * bump((x - AR.xc) / AR.hw); }
+  /* A deposit is long and low, not a peak: several times longer than it is thick, thickest along a broad
+     stretch in its middle, thinning gently at its ends (Daniel, 27 Sep: "it kind of looks like a mountain";
+     Kumar V et al., Robbins and Cotran Pathologic Basis of Disease, 10th ed., 2021, ch. 11) */
+  function plateau(u) { var g = 1 - Math.abs(u); if (g <= 0) return 0; if (g >= .72) return 1; var k = g / .72; return k * k * (3 - 2 * k); }
+  function P_(x, P) { return P * plateau((x - AR.xc) / AR.hw); }
   function clotHalf(C) { return 16 + (AR.hk - 16) * clamp01(C / 40); }
   function C_(x, C) { return C * bumpFlat((x - AR.xk) / clotHalf(C)); }
   function lumenW(x, P, C) { return Math.max(0, AR.yLum2 - P_(x, P) - C_(x, C) - AR.yLum); }
-  function narrowest(P, C) { var m = LUM0; for (var x = 150; x <= 240; x += 5) m = Math.min(m, lumenW(x, P, C)); return m; }
+  function narrowest(P, C) { var m = LUM0; for (var x = AR.xc - 90; x <= AR.xc + 90; x += 5) m = Math.min(m, lumenW(x, P, C)); return m; }
   /* flow through the artery, 1 = healthy. Unchanged until the lumen is half closed, then falling to
      nothing as it closes (a simplification of Gould et al. 1974). */
   function flowOf(w) { var r = w / LUM0; return r >= .5 ? 1 : Math.pow(r / .5, .75); }
@@ -265,6 +269,8 @@
       '<g clip-path="url(#' + u + 'vc)"><path class="ar__terr" d="' + closedCurve(TERR) + '" filter="url(#' + u + 'soft)" opacity="0"/></g>' +
       HT.b +
       '<g clip-path="url(#' + u + 'dc)"><path class="ar__ladD" d="' + HT.lad + '" opacity="0"/></g>' +
+      '<g clip-path="url(#' + u + 'vc)"><circle class="ar__lodgeS" cx="' + LODGE[0] + '" cy="' + LODGE[1] + '" r="13" filter="url(#' + u + 'soft)" opacity="0"/></g>' +
+      '<circle class="ar__lodge" cx="' + LODGE[0] + '" cy="' + LODGE[1] + '" r="2.6" opacity="0"/>' +
       '<circle class="ar__ringH" cx="' + BLK[0] + '" cy="' + BLK[1] + '" r="' + BLK_R + '"/>' +
       '<circle class="ar__ring" cx="' + BLK[0] + '" cy="' + BLK[1] + '" r="' + BLK_R + '"/>';
   }
@@ -280,6 +286,14 @@
     for (var i = 0; i < 26; i++) out.push({ u: (r() * 2 - 1) * .85, v: .1 + r() * .8, a: r() * Math.PI, cell: i % 2 === 0 });
     return out;
   })();
+  /* Pieces of the clot break off while it grows, and the blood carries them away; one lodges in a smaller
+     branch further along and blocks it (a microembolus: Falk E et al. 2013, Eur Heart J 34: 719–728). The
+     clot itself still blocks the artery where it formed, on the deposit: in most heart attacks the artery
+     is found blocked at that spot (DeWood MA et al. 1980, N Engl J Med 303: 897–902). tb: when each piece
+     breaks off; lane: its height in the lumen as it goes. On the heart, the first lodges at LODGE. */
+  var FRAGS = [{ tb: 39.6, lane: .42, rot: 1 }, { tb: 41.2, lane: .6, rot: -1 }];
+  var LODGE = [231, 253], LODGE_T = 41.9;
+  var FRAG_D = 'M-6.5 -2.8C-4 -6.2 2.6 -6.4 6.2 -2.6C8.6 .4 6 4.8 1.4 5.2C-3 6 -8.4 2.8 -6.5 -2.8Z';
   var PLT = (function () { var r = rng(44), out = []; for (var i = 0; i < 14; i++) out.push({ x: -15 + 30 * (i / 13) + 2 * (r() - .5), t0: 37.4 + r() * 1.6, dy: r() * 2.5 }); return out; })();
 
   function artery(spec) {
@@ -299,6 +313,7 @@
     var bg = svg.querySelector('.ar__bg'), model = svg.querySelector('.ar__model'), gHeart = svg.querySelector('.ar__heart'), gLab = svg.querySelector('.ar__labs');
     var gDep = svg.querySelector('.ar__dep'), gLin = svg.querySelector('.ar__lin2'), gClot = svg.querySelector('.ar__clot'), gCells = svg.querySelector('.ar__cells');
     var stiff = svg.querySelector('.ar__stiff'), terr = svg.querySelector('.ar__terr'), ladD = svg.querySelector('.ar__ladD');
+    var lodge = svg.querySelector('.ar__lodge'), lodgeS = svg.querySelector('.ar__lodgeS');
 
     /* red blood cells: five lanes across the lumen; each keeps its own tilt, from face on to edge on */
     var r = rng(5), TRUNK = [], LANES = [.12, .3, .5, .7, .88];
@@ -329,6 +344,8 @@
       terr.setAttribute('fill', mixc(MUS.isch, MUS.dead, dead));
       terr.setAttribute('opacity', n1(Math.max(.62 * isch, .8 * dead)));
       ladD.setAttribute('opacity', n1(.85 * (1 - sB)));
+      var lg = ease(seg(t, LODGE_T, LODGE_T + .8));
+      lodge.setAttribute('opacity', n1(lg)); lodgeS.setAttribute('fill', MUS.isch); lodgeS.setAttribute('opacity', n1(.6 * lg * (1 - dead)));
 
       /* the deposit, under the lining; its surface tears in step 4 */
       var xn = AR.xc + 4;
@@ -405,6 +422,13 @@
           else clot += '<path class="ar__fibr" d="M' + n1(bx - 9 * Math.cos(bit.a)) + ' ' + n1(by - 4 * Math.sin(bit.a)) + ' Q' + n1(bx) + ' ' + n1(by + 3) + ' ' + n1(bx + 9 * Math.cos(bit.a)) + ' ' + n1(by + 4 * Math.sin(bit.a)) + '"/>';
         });
       }
+      FRAGS.forEach(function (fr) {
+        var sN = t - fr.tb; if (sN <= 0) return;
+        var x0 = AR.xk + clotHalf(clotAt(fr.tb)) * .72, xf = x0 + 90 * sN + 32 * sN * sN; if (xf > AR.W + 12) return;
+        var yC = top(x0) - 8, yL = AR.yLum + lumenW(xf, P, C) * fr.lane, k = clamp01(sN / .35), yf = yC + (yL - yC) * k;
+        var op = Math.min(1, sN / .15, (AR.W + 12 - xf) / 30);
+        clot += '<path class="ar__frag" d="' + FRAG_D + '" fill="url(#' + u + 'cl)" transform="translate(' + n1(xf) + ' ' + n1(yf) + ') rotate(' + n1(fr.rot * 55 * sN) + ')" opacity="' + n1(op) + '"/>';
+      });
       gClot.innerHTML = clot;
 
       /* the red blood cells. Each lane carries the same blood per second along its whole length, so
@@ -441,12 +465,16 @@
       addH('aorta', 'aorta', 86, 62, 'L');
       addH('cor', 'coronary artery', 181, 171, 'L');
       addH('ring', 'cut open below', BLK[0] + BLK_R, BLK[1], 'R');
+      if (lg > .05 && t < 45.5) addH('lodge', 'a piece of clot blocks a small branch', LODGE[0] + 2, LODGE[1], 'R', Math.min(lg, clamp01((45.5 - t) / 1.5)));
       var tOp = clamp01(Math.max(isch * 2.5, dead));
       if (tOp > .02) addH('terr', 'heart muscle beyond the blockage', 222, 292, 'R', tOp);
-      var xp = AR.xc + (lay.tall ? 26 : 24), xk = AR.xc + (lay.tall ? -20 : 2);
-      addA('wall', 'wall of artery', lay.tall ? 24 : 60, (AR.yMed + AR.yIel) / 2, 'L');
-      addA('lining', 'lining', lay.tall ? 64 : 60, AR.yLum - 2, 'L');
-      addA('lumen', 'lumen', lay.tall ? 104 : 60, 148, 'L');
+      /* the wall, the lining and the lumen are the same all along: named on the right, near the end; the deposit
+         and the clot on the left (Daniel, 27 Sep: every name on the left side was cluttered). A phone keeps
+         its own sides. */
+      var xp = AR.xc + (lay.tall ? 26 : -62), xk = AR.xc + (lay.tall ? -20 : -28);
+      addA('wall', 'wall of artery', lay.tall ? 24 : 610, (AR.yMed + AR.yIel) / 2, lay.tall ? 'L' : 'R');
+      addA('lining', 'lining', lay.tall ? 64 : 610, AR.yLum - 2, lay.tall ? 'L' : 'R');
+      addA('lumen', 'lumen', lay.tall ? 104 : 610, lay.tall ? 148 : 124, lay.tall ? 'L' : 'R');
       var pth = P_(xp, P); if (pth > 5) addA('dep', 'fatty deposit (plaque)', xp, AR.yIel2 - pth / 2 + 1, lay.tall ? 'R' : 'L', clamp01((pth - 5) / 6));
       var cth = Math.min(C_(xk, C), lumenW(xk, P, 0)), cbot = top(xk) - 4;
       if (cth > 5) addA('clot', 'blood clot', xk, cbot - cth / 2, lay.tall ? 'R' : 'L', clamp01((cth - 5) / 5));
@@ -469,7 +497,7 @@
       p.className = 'ar__pill is-' + cls;
     }
 
-    var R = [0, 16, 28, 43.5, 52.5, 63, 75], M = [0, 12, 22, 35, 43, 52, AR_END], clock = readerClock(R, M);
+    var R = [0, 16, 28, 43.5, 56, 66.5, 78], M = [0, 12, 22, 35, 43, 52, AR_END], clock = readerClock(R, M);
     var sp = L.stepper({ steps: readerSteps(AR_STEPS, R), end: R[R.length - 1], render: function (t) { render(clock(t)); } });
     box.appendChild(sp.bar);
     var wrap = h('div', 'ar__wrap');
@@ -481,8 +509,8 @@
     fig.appendChild(sp.now);
     wrap.appendChild(left); wrap.appendChild(sp.list);
     box.appendChild(wrap);
-    box.appendChild(h('p', 'widget__note', 'The blood in a coronary artery is oxygenated, so its red blood cells are drawn bright red; the plasma between them is pale. Each red blood cell is drawn as the disc it is, thinner in the middle than at the edge: face on its centre looks paler, edge on it looks like a flattened dumbbell. The cells are drawn several hundred times larger than real, and far fewer. As the lumen narrows, fewer cells pass each second; in the narrow part itself they move faster, as water does through the narrow end of a hose. Time is squeezed: a fatty deposit grows over many years, but a clot can block the artery within minutes, and heart muscle cells die after 20 to 40 minutes without blood. The dead patch is drawn grey to show where the cells have died; in a real heart its colour changes over hours and days. Heart drawing: Servier Medical Art, CC BY 4.0, adapted.'));
-    box.appendChild(h('p', 'widget__note ar__fence', '<b>Not asked in 0610.</b> “Plaque” and “atheroma” are other names for the fatty deposit; mark schemes accept them. The ringed artery is the left coronary artery’s anterior descending branch. The chest pain of step 3 is called angina. A heart attack is also called a myocardial infarction.'));
+    box.appendChild(h('p', 'widget__note', 'Not to scale: the red blood cells are drawn hundreds of times larger than real, and far fewer. Time is squeezed: a deposit grows over years, a clot forms in minutes, and heart muscle cells die after 20 to 40 minutes without blood. Heart: Servier Medical Art, CC BY 4.0.'));
+    box.appendChild(h('p', 'widget__note ar__fence', '<b>Not asked in 0610.</b> “Plaque” and “atheroma” are other names for the fatty deposit. The chest pain of step 3 is called angina; a heart attack is also called a myocardial infarction.'));
 
     /* the layout: the heart above, the artery below; the artery turned on its side on a narrow screen;
        lettering at least 13 px on screen */
@@ -555,7 +583,12 @@
   var FACTORS = ['age', 'sex', 'diet', 'exercise', 'smoking', 'stress', 'genetics'];
   var CAN = { diet: 1, exercise: 1, smoking: 1, stress: 1 };
   var NAMEOF = { age: 'age', sex: 'sex', diet: 'diet', exercise: 'lack of exercise', smoking: 'smoking', stress: 'stress', genetics: 'genetics' };
-  var AVATAR = '<svg class="pf__av" viewBox="0 0 40 40" aria-hidden="true" focusable="false"><circle cx="20" cy="20" r="20" class="pf__avbg"/><circle cx="20" cy="15.2" r="6.8" class="pf__avfg"/><path class="pf__avfg" d="M6.4 34.7C8 28.3 13.4 24.4 20 24.4S32 28.3 33.6 34.7A20 20 0 0 1 6.4 34.7Z"/></svg>';
+  /* each person's picture from the 9.2 worksheet (AI-made for the lesson; Daniel, 27 Sep: "the images helped a
+     lot identifying who was who") */
+  function portrait(id) {
+    var b = 'assets/photos/chd-' + id + '-900';
+    return '<picture><source type="image/webp" srcset="' + b + '.webp"><img class="pf__av pf__av--ph" src="' + b + '.jpg" width="240" height="240" alt="" loading="lazy" decoding="async"></picture>';
+  }
 
   function countOf(p) { var n = 0; FACTORS.forEach(function (k) { if (p.risk[k]) n++; }); return n; }
   function nth(n) { return n + (n % 10 === 1 && n !== 11 ? 'st' : n % 10 === 2 && n !== 12 ? 'nd' : n % 10 === 3 && n !== 13 ? 'rd' : 'th'); }
@@ -582,7 +615,7 @@
         '<span class="pf__num" aria-hidden="true"></span>' +
         '<button type="button" class="pf__mv" data-d="1" aria-label="Move ' + p.name + ' down">▼</button></div>' +
         '<div class="pf__grip" aria-hidden="true"><i></i></div>' +
-        '<div class="pf__who">' + AVATAR + '<div class="pf__id"><b class="pf__name">' + p.name + '</b></div></div>' +
+        '<div class="pf__who">' + portrait(p.id) + '<div class="pf__id"><b class="pf__name">' + p.name + '</b></div></div>' +
         '<dl class="pf__facts">' + facts + '</dl>' +
         '<div class="pf__out" hidden></div>';
       byId[p.id] = { p: p, li: li };

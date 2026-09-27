@@ -30,6 +30,9 @@
 .ar__ringH{fill:none;stroke:#0D1A22;stroke-opacity:.45;stroke-width:5.5}
 .ar__ring{fill:none;stroke:#F6C453;stroke-width:2.6}
 .ar__ladD{fill:#4B1826}
+/* a piece of the clot that has lodged in a small branch further along, and the dusky patch round it */
+.ar__lodge{fill:#2B0E17;stroke:#FBE3D6;stroke-width:.9}
+.ar__frag{stroke:#4B0C13;stroke-width:.8}
 /* the artery below, cut open, in the ring's yellow frame */
 .ar__void{fill:#0A141B}
 .ar__frame{fill:none;stroke:#F6C453;stroke-width:2.6;stroke-opacity:.9}
@@ -71,8 +74,7 @@
 .pf__grip i{display:block;width:9px;height:24px;background-image:radial-gradient(circle,#7E8B87 1.3px,transparent 1.6px);background-size:4.5px 6px}
 .pf__who{display:flex;flex-direction:column;gap:5px;align-items:flex-start;min-width:0}
 .pf__av{width:44px;height:44px;flex:none}
-.pf__avbg{fill:#E3ECE9}
-.pf__avfg{fill:#98ADA8}
+.pf__av--ph{width:96px;height:96px;border-radius:12px;object-fit:cover;display:block;background:#E3ECE9;box-shadow:0 1px 3px rgba(40,30,20,.18)}
 .pf__id{min-width:0}
 .pf__name{display:block;font-size:16px;line-height:1.25}
 .pf__facts{margin:0;columns:2;column-gap:14px;min-width:0}
@@ -118,6 +120,7 @@
 /* a narrow card: the controls and the person on one row, the facts beneath, one to a line */
 .pf.pf--narrow .pf__card{grid-template-columns:38px 16px minmax(0,1fr);padding-right:10px}
 .pf.pf--narrow .pf__who{flex-direction:row;align-items:center;gap:10px;align-self:center}
+.pf.pf--narrow .pf__av--ph{width:60px;height:60px;border-radius:10px}
 .pf.pf--narrow .pf__facts{grid-column:1 / -1;columns:1;margin-top:8px}
 @media (prefers-reduced-motion:reduce){.pf__list.is-dragging .pf__card{transition:none}}
 
