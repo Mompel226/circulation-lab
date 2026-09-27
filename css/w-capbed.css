@@ -1,0 +1,33 @@
+/* ============================================================
+   w-capbed.css — "How arteries, capillaries and veins join" (js/w-capbed.js). On a wide screen the drawing
+   stands in the plate's column (the station's bench); on a phone it stays in the widget.
+   ============================================================ */
+.cb__where{margin:0 0 10px;font-size:14px;line-height:1.5;color:#3C3C3C}
+.cb__where[hidden]{display:none}
+.cb__ctl{display:flex;gap:8px;margin-top:10px}
+.cb__stage{margin:0;background:#0D1A22;border-radius:var(--r-lg,16px);padding:12px 12px 10px;color:#DCE7ED}
+.bench .cb__stage{flex:1;min-height:0;display:flex;flex-direction:column}
+.cb__title{margin:0 0 4px!important}
+.cb__title[hidden]{display:none}
+.cb__svg{display:block;width:100%;height:auto;max-height:100%}
+.bench .cb__svg{flex:1;min-height:0}
+.cb__tissue{fill:#E8C9BD;opacity:.28}
+.cb__cell{stroke:#C99E8F;stroke-width:.8}
+.cb__nuc{fill:#8E5A7A;opacity:.75}
+.cb__wall{fill:none;stroke-linecap:round;stroke-linejoin:round}
+.cb__wall--c{stroke:#F4E4DB}
+.cb__wall--ao{stroke:#C4655D}
+.cb__wall--vo{stroke:#9DB2DD}
+.cb__blood{fill:none;stroke-linecap:round;stroke-linejoin:round}
+.cb__smc{stroke:#8F2F2A;stroke-width:1.6;stroke-linecap:round;opacity:.8}
+.cb__flow path{fill:none;stroke:#FFFFFF;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;opacity:.85}
+.cb__end{font-family:var(--sans,Inter,system-ui,sans-serif);font-size:12px;font-weight:600;fill:#A9BDC7}
+.cb__o2,.cb__co2{fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.cb__o2{stroke:#FF9270}
+.cb__co2{stroke:#9CC6DC}
+.cb__c{stroke:#5E0F15;stroke-width:.6;stroke-opacity:.7}
+.cb .lb.is-ext .lb__txt{font-style:italic;fill:#C9D6DD}
+.cb__key{margin:6px 2px 0;font-size:12px;line-height:1.45;color:#A9BDC7}
+.cb__sw{display:inline-block;width:10px;height:10px;border-radius:50%;margin:0 4px 0 2px;vertical-align:-1px}
+.cb__sw--o{background:#D63C3B}.cb__sw--d{background:#3B62B5}
+.cb__arr{font-weight:700}.cb__arr--o{color:#FF9270}.cb__arr--c{color:#9CC6DC}

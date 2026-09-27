@@ -1775,7 +1775,10 @@
     }
     function watchSize() {
       if (ro || !global.ResizeObserver) return;
-      ro = new ResizeObserver(function () { if (!box.isConnected) { ro.disconnect(); ro = null; return; } fit(); });
+      /* laid out a frame later: a layout changed inside the observer's own callback makes the browser report a
+         "ResizeObserver loop" */
+      var roF = 0;
+      ro = new ResizeObserver(function () { if (!box.isConnected) { ro.disconnect(); ro = null; return; } if (!roF) roF = global.requestAnimationFrame(function () { roF = 0; fit(); }); });
       ro.observe(plate);
     }
     if (global.ResizeObserver) watchSize(); else global.addEventListener('resize', fit);

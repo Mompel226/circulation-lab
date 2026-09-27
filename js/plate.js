@@ -137,11 +137,13 @@
 
   /* a Learn-tab widget standing in the column in place of the body (CircLearn.stage): the body rests */
   function stageSim(on) {
+    /* on a bench station the bench comes back when the widget leaves the column, and the body stays at rest */
+    var onBench = !!(current && spec(current).bench);
     if (col) col.classList.toggle('is-sim', !!on);
     if (sim) sim.hidden = !on;
-    if (on && bench) bench.hidden = true;
+    if (bench) { if (on) bench.hidden = true; else if (onBench) bench.hidden = false; }
     if (on && tag) tag.classList.remove('on');
-    if (draw) { if (on) draw.stop(); else draw.start(); }
+    if (draw) { if (on || onBench) draw.stop(); else draw.start(); }
     if (global.PlateFold) global.PlateFold.lend(!!on);
   }
   function showSim(on) {
