@@ -32,6 +32,11 @@
   function clamp01(k) { return k < 0 ? 0 : k > 1 ? 1 : k; }
   function still() { return !!(global.matchMedia && global.matchMedia('(prefers-reduced-motion: reduce)').matches); }
 
+  /* A step's words: **word** is an exam keyword, in bold (Daniel, 27 Sep: "bolden the keywords required for any
+     IGCSE explanations"); the rest is marked as every sentence in the lab is (syllabus underlines, glossary). */
+  function stepText(t) {
+    return String(t).split(/\*\*([^*]+)\*\*/).map(function (seg, i) { return i % 2 ? '<b class="sp__kw">' + esc(seg) + '</b>' : L.mk(seg); }).join('');
+  }
   function stepper(opts) {
     var STEPS = opts.steps, END = opts.end, render = opts.render;
     var bar = h('div', 'sp__bar');
@@ -52,7 +57,7 @@
     STEPS.forEach(function (st, i) {
       var li = h('li', 'sp__step');
       var b = h('button', 'sp__stepb', '<span class="sp__num">' + (i + 1) + '</span><span class="sp__txt"><b>' + esc(st.h) + '</b>' +
-        (st.tag ? ' <span class="sp__tag">' + esc(st.tag) + '</span>' : '') + '<span class="sp__p">' + L.mk(st.p) + '</span></span>');
+        (st.tag ? ' <span class="sp__tag">' + esc(st.tag) + '</span>' : '') + '<span class="sp__p">' + stepText(st.p) + '</span></span>');
       b.type = 'button';
       b.addEventListener('click', function () { goStep(i); });
       li.appendChild(b); list.appendChild(li);
@@ -79,7 +84,7 @@
       /* the step's words under the drawing: read aloud to a screen reader, and shown when the
          step list is stacked below the drawing (a narrow widget), so they are never a scroll away */
       var nt = started ? '<b class="sp__nowh">Step ' + (k + 1) + ' of ' + STEPS.length + ' · ' + esc(STEPS[k].h) + '</b>' +
-        (STEPS[k].tag ? '<span class="sp__tag sp__nowtag">' + esc(STEPS[k].tag) + '</span> ' : ' ') + L.mk(STEPS[k].p) : '<b class="sp__nowh">Press Play</b> to start. Each step stops until you press Next step.';
+        (STEPS[k].tag ? '<span class="sp__tag sp__nowtag">' + esc(STEPS[k].tag) + '</span> ' : ' ') + stepText(STEPS[k].p) : '<b class="sp__nowh">Press Play</b> to start. Each step stops until you press Next step.';
       if (now.getAttribute('data-k') !== String(started ? k : -1)) { now.innerHTML = nt; now.setAttribute('data-k', String(started ? k : -1)); }
       sync();
     }
