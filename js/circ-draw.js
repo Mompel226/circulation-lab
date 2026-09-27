@@ -174,7 +174,9 @@
     { id: 'hepatic-vein', text: 'hepatic vein', at: [195, 266], alt: [[187.2, 271.2]], lv: 'B' },
     { id: 'hepatic-artery', text: 'hepatic artery', at: [196, 290.5], alt: [[188.1, 295.6]], lv: 'B' },
     /* on its trunk, just after the mesenteric and splenic veins join, before it branches in the liver (Daniel, 27 Sep) */
-    { id: 'hepatic-portal-vein', text: 'hepatic portal vein', at: [205.9, 303.9], alt: [[198.5, 301.9]], lv: 'B' },
+    /* named at every zoom, and placed before any other name (Daniel, 27 Sep: "the hepatic portal vein is one of
+       the veins that has priority and I don't see it when I see the whole body") */
+    { id: 'hepatic-portal-vein', text: 'hepatic portal vein', at: [205.9, 303.9], alt: [[198.5, 301.9]], lv: 'A' },
     { id: 'mesenteric-vein', text: 'mesenteric vein', at: [215.9, 321.1], alt: [[217.3, 328.5], [212.6, 311.8]], lv: 'B' },
     { id: 'splenic-vein', text: 'splenic vein', at: [236.9, 300.2], alt: [[215.8, 305.4]], lv: 'B' },
     { id: 'spleen', text: 'spleen', at: [272.3, 301.2], alt: [[268.8, 288.7], [270.3, 314.7]], lv: 'B' },
@@ -240,6 +242,27 @@
   var LV_ZOOM = { A: 0, B: 1.15, G: 1.2, X: 1.3 };
   /* the points found in the drawing for every part (plate-build/label-points.js → js/circ-labelpts.js) */
   var AUTO = global.CIRC_LABELPTS || {};
+  /* the names placed first of their kind, lit or not */
+  var FIRST = { 'hepatic-portal-vein': 1 };
+  /* the hepatic veins lit as one system: the artist's short stubs joining the vena cava below the main hepatic
+     veins are not lit, pressed or named with them (Daniel, 27 Sep: lit, "it looks like there are two hepatic veins
+     instead of just one") */
+  function hepStub(x, y) { return y > 275.5 && x > 188 && x < 216; }
+  if (FLOW['hepatic-vein']) FLOW['hepatic-vein'].e = FLOW['hepatic-vein'].e.filter(function (e) {
+    for (var i = 0; i < e.length; i += 3) if (!hepStub(e[i], e[i + 1])) return true;
+    return false;
+  });
+  if (AUTO['hepatic-vein']) AUTO['hepatic-vein'] = AUTO['hepatic-vein'].filter(function (q) { return !hepStub(q[0], q[1]); });
+  /* where a branch joins a wider vessel, its traced centre line takes that vessel's width for its last few units:
+     lit on its own, the branch ended in a blob (the hepatic veins at the vena cava). These are drawn no wider than
+     their own width: a quarter over the widest tenth of their middle points */
+  var CAPK = { 'hepatic-vein': 1.25, 'renal-vein': 1.02, 'renal-artery': 1.08, 'leg-artery': 1.25 };
+  Object.keys(CAPK).forEach(function (k) {
+    var P = FLOW[k], rs = []; if (!P) return;
+    P.e.forEach(function (e) { var n = e.length / 3; for (var i = 0; i < n - 2; i++) rs.push(e[i * 3 + 2]); });
+    rs.sort(function (a, b) { return a - b; });
+    if (rs.length) P.cap = CAPK[k] * rs[Math.floor(rs.length * .9)];
+  });
   /* one name per word: the entries that say the same thing are one name, with all their points, then
      the points found in the drawing, nearest to its first point first. A beyond-syllabus name stays at
      the tip of the artist's own arrow: its words name one stretch of a vessel, not all of it. */
@@ -582,7 +605,7 @@
           P.e.forEach(function (e) {
             for (var i = 0; i + 5 < e.length; i += 3) {
               if (keep && !keep(e[i], e[i + 1], e[i + 3], e[i + 4])) continue;
-              var r = (e[i + 2] + e[i + 5]) / 2, seg = 'M' + e[i] + ' ' + e[i + 1] + 'L' + e[i + 3] + ' ' + e[i + 4];
+              var r = Math.min((e[i + 2] + e[i + 5]) / 2, P.cap || 1e9), seg = 'M' + e[i] + ' ' + e[i + 1] + 'L' + e[i + 3] + ' ' + e[i + 4];
               var wr = Math.round((2 * r + .15) * 5) / 5, wc = Math.max(.3, Math.round((2 * r - .6) * 5) / 5);
               rim[wr] = (rim[wr] || '') + seg; core[wc] = (core[wc] || '') + seg;
               if (c === 'po') { var wh = Math.round((wr + 1.5) * 5) / 5; halo[wh] = (halo[wh] || '') + seg; }
@@ -1049,10 +1072,11 @@
           var room = 0; for (var k = 0; k < N.pts.length; k++) if (inView(scr(N.pts[k]))) room++;
           if (!room) return;
           cand.push({ key: N.key, id: N.id, text: N.text, lv: N.lv, on: on, dim: !!lit && !on, room: room,
-                      rank: lit && on ? (N.lv === 'X' ? 3 : extra(N.id) ? 1 : 0) : (on ? 0 : 10) + LV_RANK[N.lv], i: N.i, pts: N.pts, w: N.text.length * fs * .56 + 16 });
+                      rank: (lit && on ? (N.lv === 'X' ? 3 : extra(N.id) ? 1 : 0) : (on ? 0 : 10) + LV_RANK[N.lv]) - (FIRST[N.id] ? .5 : 0),
+                      i: N.i, pts: N.pts, w: N.text.length * fs * .56 + 16 });
         });
-        cand.sort(function (x, y) { return x.rank - y.rank || (x.rank < 10 && lit ? x.room - y.room : 0) || x.i - y.i; });
-        var litC = cand.filter(function (c) { return c.rank < 10; }), dimC = cand.filter(function (c) { return c.rank >= 10; });
+        cand.sort(function (x, y) { return x.rank - y.rank || (!x.dim && lit ? x.room - y.room : 0) || x.i - y.i; });
+        var litC = cand.filter(function (c) { return !c.dim; }), dimC = cand.filter(function (c) { return c.dim; });
         var missed = litC.filter(function (c) { return !place(c); });
         /* a lit part that no name reaches, in view: name it at a point found in the drawing */
         if (lit) Object.keys(lit).forEach(function (part) {
