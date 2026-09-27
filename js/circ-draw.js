@@ -253,21 +253,26 @@
     return false;
   });
   if (AUTO['hepatic-vein']) AUTO['hepatic-vein'] = AUTO['hepatic-vein'].filter(function (q) { return !hepStub(q[0], q[1]); });
-  /* Pieces the drawing's tracing gave to the wrong vessel, or that close a loop the vessel does not have: not lit,
-     pressed or named with it (Daniel, 27 Sep, of the splenic artery: "a lot of circles ... it also seems to go to the
-     kidney"; "fully audit each and every single one of the arteries and veins"). Each is [x0, y0, x1, y1], its two
-     ends. The splenic artery keeps the one path the drawing now has from the coeliac trunk into the spleen:
-     plate-build/build_art.py takes out of the drawing the ring its branch made over the top and round below it,
-     and the branches cut off square towards the left kidney and down from the hepatic artery, which go here too.
-     The coeliac trunk's traced top ran off to one side as a thin hook: BRIDGE draws it straight up to the aorta,
-     as the drawing has it. The aorta loses a spike towards the coeliac trunk (the trunk has its own start on the
-     aorta) and a stump on top of its arch (the left common carotid and subclavian arteries start at the arch
-     itself); the renal arteries a scrap beside the spleen; the mesenteric vein a stub hanging from the splenic
-     vein with nothing below it; the head veins the thin piece that joined the two sigmoid sinuses under the brain
-     into two rings (each internal jugular vein begins at its own side); the right gonadal vein a zigzag, which
-     BRIDGE replaces with a straight piece; the vena cava three short pieces that tied it to that vein below the
-     vein's own junction (lit, bumps on its side), and a spur beside the superior vena cava's opening into the
-     heart. */
+  /* Pieces of the traced centre lines that are not lit, pressed or named with their part, each [x0, y0, x1, y1],
+     its two ends (Daniel, 27 Sep: the splenic artery's "circles ... it also seems to go to the kidney"; "fully audit
+     each and every single one of the arteries and veins"; "you have not fully audited seriously everything").
+     Where plate-build/build_art.py takes a piece out of the drawing, its traced line goes here too:
+     - splenic artery: the ring it made over the top and round below it, and a branch towards the left kidney (it
+       keeps the one path the drawing now has, from the coeliac trunk into the spleen); gastric arteries: a stub
+       below them; coeliac trunk: a thin hook at its top (BRIDGE draws the trunk straight up to the aorta);
+     - aorta: a spike towards the coeliac trunk (the trunk has its own start on the aorta) and a stump on top of the
+       arch (the left common carotid and subclavian arteries start at the arch itself);
+     - renal arteries: a scrap beside the spleen; mesenteric artery: the inferior mesenteric artery's stub;
+       mesenteric vein: a stub hanging from the splenic vein with nothing below it; hepatic portal vein: a fork
+       that rose from it and ended on top of the vena cava (lit, it seemed to branch into the vena cava);
+     - vena cava: three short pieces that tied it to the right gonadal vein below that vein's own junction, a spur
+       beside the superior vena cava's opening into the heart, and a bump where a second set of hepatic veins,
+       drawn in the portal veins' colours, joined it; gonadal veins: a zigzag (BRIDGE puts a straight piece in its
+       place);
+     - veins of the head: the piece that closed the two sigmoid sinuses into rings under the brain;
+     - vessels of the legs: the internal iliac arteries and veins (short hooks into the pelvis, cut off square in
+       the drawing) and the vessels at the brim of the pelvis that joined nothing;
+     - arteries of the arm: the vertebral arteries' first stretch (see MOVE). */
   var DROP = {
     'splenic-artery': [[221.8, 284.2, 235.8, 295.2], [234.1, 296.1, 220.6, 302.1], [250.8, 295.9, 255.9, 304.9], [214.1, 288.8, 220.4, 301.9]],
     'gastric-artery': [[213.8, 288.8, 213.2, 296.8]],
@@ -276,10 +281,28 @@
     aorta: [[220.8, 290.9, 214.2, 285.9], [219.8, 195.1, 221.6, 189.8]],
     'renal-artery': [[234.4, 296.8, 235.8, 294.1]],
     'mesenteric-vein': [[227.6, 310.6, 225.4, 303.4]],
+    'mesenteric-artery': [[226.9, 359.1, 229.8, 358.2], [218.8, 348.2, 226.8, 359.1], [226.9, 359.2, 227.8, 361.9]],
+    'leg-artery': [[240.9, 403.2, 257.9, 393.9], [188.6, 400.6, 178.8, 393.8], [258.1, 393.8, 263.4, 384.8], [178.4, 393.8, 165.6, 400.4],
+      [178.6, 393.6, 172.2, 382.1], [258.1, 393.9, 268.9, 399.6],
+      [202.1, 412.4, 200.6, 415.8], [204.2, 406.9, 202.2, 412.2], [202.2, 412.4, 209.9, 417.2], [204.1, 406.8, 199.4, 406.9],
+      [204.9, 395.4, 204.2, 406.8], [226.4, 412.4, 218.8, 417.6], [225.1, 406.6, 226.6, 412.2], [226.8, 412.4, 228.8, 416.1],
+      [228.1, 396.2, 225.1, 406.2], [225.2, 406.4, 229.1, 407.6]],
+    'leg-vein': [[264.6, 388.8, 255.1, 399.4], [255.1, 399.4, 244.1, 406.8], [263.1, 408.2, 255.1, 399.4], [163.4, 412.2, 176.8, 396.9],
+      [203.4, 407.6, 205.1, 398.9], [195.8, 422.9, 199.8, 416.8], [199.9, 416.6, 203.4, 407.6], [196.4, 407.9, 203.4, 407.6],
+      [204.4, 423.8, 200.1, 416.8], [228.2, 418.6, 226.9, 415.6], [226.8, 415.4, 224.6, 408.8], [222.2, 423.8, 226.6, 415.6],
+      [229.8, 410.9, 224.8, 408.6], [224.6, 408.4, 224.2, 397.6]],
+    'arm-artery': [[190.4, 161.9, 199.4, 151.6], [234.9, 165.6, 225.2, 151.9]],
+    'hepatic-portal-vein': [[203.9, 302.8, 205.1, 295.1], [205.1, 294.8, 206.8, 291.4], [205.2, 294.9, 211.4, 293.1]],
     'head-vein': [[222.2, 74.2, 200.4, 73.9]],
-    'vena-cava': [[202.8, 369.1, 209.1, 364.2], [204.9, 364.9, 208.1, 362.4], [200.9, 360.6, 207.8, 360.4], [202.8, 218.4, 209.6, 224.1]]
+    'vena-cava': [[202.8, 369.1, 209.1, 364.2], [204.9, 364.9, 208.1, 362.4], [200.9, 360.6, 207.8, 360.4], [202.8, 218.4, 209.6, 224.1],
+      [203.8, 278.8, 205.9, 277.4]]
   };
-  var BRIDGE = { vein: [[202.6, 369.2, 1, 201.8, 364.9, 1, 200.8, 360.6, .9]], 'coeliac-artery': [[222.5, 279.6, 2.4, 222.15, 282, 2.5, 221.8, 284.2, 2.4]] };
+  var BRIDGE = {
+    'coeliac-artery': [[222.5, 279.6, 2.4, 222.15, 282, 2.5, 221.8, 284.2, 2.4]],
+    artery: [[185.2, 415.1, 1, 185.2, 417.9, 1]],
+    vein: [[202.6, 369.2, 1, 201.8, 364.9, 1, 200.8, 360.6, .9], [188.2, 419.6, 1.3, 188.1, 418.4, 1.3]],
+    'head-artery': [[190.4, 161.9, 1.5, 191.4, 161.2, 1.3, 192.9, 158.1, 1.3, 196.1, 153.4, 1.3], [234.9, 165.6, 1.8, 233.8, 164.9, 1.5, 228.8, 154.8, 1.1]]
+  };
   function near(x, y, a, b) { return Math.abs(x - a) < .8 && Math.abs(y - b) < .8; }
   /* the part's box (what a press zooms to) from the pieces it keeps */
   function rebox(P) {
@@ -289,11 +312,56 @@
   }
   if (FLOW['hepatic-vein']) rebox(FLOW['hepatic-vein']);
   function ends(e, d) { var n = e.length; return (near(e[0], e[1], d[0], d[1]) && near(e[n - 3], e[n - 2], d[2], d[3])) || (near(e[0], e[1], d[2], d[3]) && near(e[n - 3], e[n - 2], d[0], d[1])); }
-  Object.keys(DROP).forEach(function (part) {
+  Object.keys(DROP).concat(Object.keys(BRIDGE).filter(function (k) { return !DROP[k]; })).forEach(function (part) {
     var P = FLOW[part]; if (!P) return;
-    P.e = P.e.filter(function (e) { return !DROP[part].some(function (d) { return ends(e, d); }); }).concat(BRIDGE[part] || []);
+    P.e = P.e.filter(function (e) { return !(DROP[part] || []).some(function (d) { return ends(e, d); }); }).concat(BRIDGE[part] || []);
     rebox(P);
     /* its label points found in the drawing: only those still on it */
+    if (AUTO[part]) AUTO[part] = AUTO[part].filter(function (q) {
+      return P.e.some(function (e) { for (var i = 0; i < e.length; i += 3) if (Math.hypot(e[i] - q[0], e[i + 1] - q[1]) < 1.6) return true; return false; });
+    });
+  });
+  /* Pieces the tracing gave to the wrong vessel (Daniel, 27 Sep: "you have not fully audited seriously everything").
+     The gonadal arteries and veins cross in front of the iliac vessels at the brim of the pelvis and run on down to
+     the genitals: that stretch was traced as vessels of the leg, so lit, the leg's vessels ran to the genitals and
+     the gonadal vessels stopped on the iliac ones as if they joined them. The vertebral arteries rise from the
+     subclavian arteries and pass behind the common carotids to the brain: their first stretch was traced as an
+     artery of the arm joined to the carotid, so lit, the arm's artery ran up into the carotid (BRIDGE draws that
+     stretch as an artery of the head instead, stopping short of the carotid, and TRIM starts the rest clear of it,
+     so a gap shows where the carotid lies in front). Each is [from, to, x0, y0, x1, y1, how]: how 'copy' leaves a shared stem in both, 'back'
+     turns a piece round to the way its blood flows. */
+  var MOVE = [
+    ['leg-artery', 'artery', 185.2, 417.9, 205.1, 439.2], ['leg-artery', 'artery', 204.9, 439.4, 204.4, 441.6],
+    ['leg-artery', 'artery', 205.2, 439.4, 210.1, 447.9], ['leg-artery', 'artery', 204.2, 441.8, 208.8, 458.4],
+    ['leg-artery', 'artery', 204.4, 441.8, 208.6, 454.9], ['leg-artery', 'artery', 240.6, 417.1, 219.9, 437.6],
+    ['leg-artery', 'artery', 219.8, 437.8, 219.1, 439.1], ['leg-artery', 'artery', 220.1, 437.8, 218.6, 457.6],
+    ['leg-artery', 'artery', 218.9, 439.2, 214.8, 448.2], ['leg-artery', 'artery', 219.1, 439.2, 217.9, 451.9],
+    ['leg-vein', 'vein', 188.2, 419.6, 195.6, 423.1, 'back'],
+    ['leg-vein', 'vein', 205.6, 437.6, 195.8, 423.2], ['leg-vein', 'vein', 206.6, 455.2, 205.4, 437.8],
+    ['leg-vein', 'vein', 211.2, 453.8, 205.8, 437.8], ['leg-vein', 'vein', 222.1, 435.8, 237.1, 417.9],
+    ['leg-vein', 'vein', 215.1, 451.9, 221.9, 435.9], ['leg-vein', 'vein', 218.1, 456.2, 222.1, 435.9],
+    ['arm-artery', 'head-artery', 187.6, 169.8, 190.2, 162.1, 'copy'], ['arm-artery', 'head-artery', 237.1, 173.1, 234.9, 165.8, 'copy']
+  ];
+  var TRIM = [['head-artery', 199.6, 147.2, 211.1, 78.2, 2], ['head-artery', 224.8, 147.9, 211.4, 78.2, 2]];
+  var touched = {};
+  MOVE.forEach(function (m) {
+    var A = FLOW[m[0]], B = FLOW[m[1]]; if (!A || !B) return;
+    A.e = A.e.filter(function (e) {
+      if (!ends(e, m.slice(2, 6))) return true;
+      var c = e.slice();
+      if (m[6] === 'back') for (var i = 0, n = c.length; i < n; i += 3) c.splice(i, 3, e[n - 3 - i], e[n - 2 - i], e[n - 1 - i]);
+      B.e.push(c);
+      return m[6] === 'copy';
+    });
+    touched[m[0]] = touched[m[1]] = 1;
+  });
+  TRIM.forEach(function (t) {
+    var P = FLOW[t[0]]; if (!P) return;
+    P.e = P.e.map(function (e) { return ends(e, t.slice(1, 5)) && near(e[0], e[1], t[1], t[2]) ? e.slice(t[5] * 3) : e; });
+    touched[t[0]] = 1;
+  });
+  Object.keys(touched).forEach(function (part) {
+    var P = FLOW[part]; rebox(P);
     if (AUTO[part]) AUTO[part] = AUTO[part].filter(function (q) {
       return P.e.some(function (e) { for (var i = 0; i < e.length; i += 3) if (Math.hypot(e[i] - q[0], e[i + 1] - q[1]) < 1.6) return true; return false; });
     });
@@ -367,6 +435,152 @@
   }).forEach(function (c) {
     /* every width measured before any is narrowed */
     if (c) for (var k = c[1]; k !== c[3]; k += c[2]) if (c[0][k * 3 + 2] > c[4]) c[0][k * 3 + 2] = c[4];
+  });
+  /* Where three or more pieces of one vessel meet, the traced line is widest at the branch point itself (the widest
+     circle that fits where two vessels merge), and the short pieces the tracing left between two close branch
+     points carry that width all along: lit, every branch point was a knot (the arteries and veins of the arms at
+     the shoulder and the hand, of the legs at the knee and the foot, the coeliac trunk where a branch had been).
+     At each branch point, and at a point where two pieces meet and the line swells, each piece's last few units are
+     narrowed to a little over its own width (the middle of its width, measured before any is narrowed), and a piece
+     too short to have a middle to the widest own width of the pieces it meets there. */
+  function ownWidth(e) {
+    var n = e.length / 3, L = [0], i, r = [];
+    for (i = 1; i < n; i++) L.push(L[i - 1] + Math.hypot(e[i * 3] - e[i * 3 - 3], e[i * 3 + 1] - e[i * 3 - 2]));
+    for (i = 0; i < n; i++) if (L[i] >= 3 && L[n - 1] - L[i] >= 3) r.push(e[i * 3 + 2]);
+    if (!r.length) return null;
+    r.sort(function (p, q) { return p - q; });
+    return r[Math.floor(r.length / 2)];
+  }
+  var KNOTS = [];
+  Object.keys(FLOW).forEach(function (part) {
+    var nodes = [], own = new Map();
+    FLOW[part].e.forEach(function (e) {
+      own.set(e, ownWidth(e));
+      var n = e.length / 3;
+      [[0, 1], [n - 1, -1]].forEach(function (d) {
+        var x = e[d[0] * 3], y = e[d[0] * 3 + 1], hit = null;
+        for (var i = 0; i < nodes.length && !hit; i++) if (Math.abs(nodes[i].x - x) < .8 && Math.abs(nodes[i].y - y) < .8) hit = nodes[i];
+        if (!hit) nodes.push(hit = { x: x, y: y, ends: [] });
+        hit.ends.push([e, d[0], d[1]]);
+      });
+    });
+    nodes.forEach(function (N) {
+      if (N.ends.length < 2) return;
+      var wide = null, at = 0;
+      N.ends.forEach(function (j) { var w = own.get(j[0]); if (w != null && (wide == null || w > wide)) wide = w; at = Math.max(at, j[0][j[1] * 3 + 2]); });
+      if (wide == null) return;
+      /* where only two pieces meet, only a swelling: wider there than either piece's own width */
+      if (N.ends.length === 2 && at <= wide * 1.3 + .2) return;
+      N.ends.forEach(function (j) {
+        if (OWN_START.indexOf(j[0]) >= 0) return;
+        var w = own.get(j[0]);
+        KNOTS.push([j[0], j[1], j[2], (w != null ? w : wide) * 1.15 + .1, w == null]);
+      });
+    });
+  });
+  KNOTS.forEach(function (c) {
+    var e = c[0], n = e.length / 3, L = 0, k = c[1];
+    for (; k >= 0 && k < n; k += c[2]) {
+      if (k !== c[1]) L += Math.hypot(e[k * 3] - e[(k - c[2]) * 3], e[k * 3 + 1] - e[(k - c[2]) * 3 + 1]);
+      if (!c[4] && L > 4) break;
+      if (e[k * 3 + 2] > c[3]) e[k * 3 + 2] = c[3];
+    }
+  });
+  /* A branch that leaves or joins a wider vessel of the same kind running past it was traced to that vessel's centre
+     line: lit on its own, two branches on opposite sides met in the middle of the unlit vessel and read as one vessel
+     crossing it (the renal arteries at the aorta, the renal and hepatic veins at the vena cava, the two gonadal
+     arteries). Such an end now stops just inside the wider vessel's wall: lit alone, a branch shows where it leaves
+     or joins; lit with the wider vessel, it still overlaps it. Not where vessels meet at one point (the three veins
+     of the portal confluence), and not a vessel drawn in front of another (the gut's arteries over the aorta). */
+  function nearestIn(part, x, y) {            /* the vessel of the same kind whose centre line passes nearest, running past */
+    var cls = FLOW[part].c, best = null;
+    (GRID[Math.floor(x / CELL) + ',' + Math.floor(y / CELL)] || []).forEach(function (s) {
+      if (s[0] === part || FLOW[s[0]].c !== cls) return;
+      var dx = s[4] - s[1], dy = s[5] - s[2], L2 = dx * dx + dy * dy, t = L2 ? Math.max(0, Math.min(1, ((x - s[1]) * dx + (y - s[2]) * dy) / L2)) : 0;
+      var d = Math.hypot(x - s[1] - t * dx, y - s[2] - t * dy), r = s[3] + t * (s[6] - s[3]);
+      if (d < r - .3 && (!best || d < best.d)) best = { part: s[0], r: r, d: d, ux: dx / (Math.sqrt(L2) || 1), uy: dy / (Math.sqrt(L2) || 1) };
+    });
+    if (!best) return null;
+    /* running past: its centre line reaches well beyond the point on both sides */
+    var R = best.r + 4, lo = 0, hi = 0;
+    FLOW[best.part].e.forEach(function (e) {
+      for (var i = 0; i + 5 < e.length; i += 3) {
+        var sl = Math.hypot(e[i + 3] - e[i], e[i + 4] - e[i + 1]), m = Math.max(1, Math.ceil(sl));
+        for (var j = 0; j <= m; j++) {
+          var qx = e[i] + (e[i + 3] - e[i]) * j / m - x, qy = e[i + 1] + (e[i + 4] - e[i + 1]) * j / m - y;
+          if (qx * qx + qy * qy > R * R) continue;
+          var t = qx * best.ux + qy * best.uy;
+          lo = Math.min(lo, t); hi = Math.max(hi, t);
+        }
+      }
+    });
+    return lo < -(best.r * .5 + 1) && hi > best.r * .5 + 1 ? best : null;
+  }
+  function centreDist(part, x, y) {
+    var m = Infinity;
+    (GRID[Math.floor(x / CELL) + ',' + Math.floor(y / CELL)] || []).forEach(function (s) {
+      if (s[0] !== part) return;
+      var dx = s[4] - s[1], dy = s[5] - s[2], L2 = dx * dx + dy * dy, t = L2 ? Math.max(0, Math.min(1, ((x - s[1]) * dx + (y - s[2]) * dy) / L2)) : 0;
+      m = Math.min(m, Math.hypot(x - s[1] - t * dx, y - s[2] - t * dy));
+    });
+    return m;
+  }
+  var WALLED = {}, WALL_LOG = [];
+  Object.keys(FLOW).forEach(function (part) {
+    /* an end another piece of the same vessel carries on from is not where the vessel leaves or joins another */
+    var endsAt = function (x, y, self) {
+      return FLOW[part].e.some(function (q) {
+        if (q === self) return false;
+        var m = q.length;
+        return (Math.abs(q[0] - x) < .8 && Math.abs(q[1] - y) < .8) || (Math.abs(q[m - 3] - x) < .8 && Math.abs(q[m - 2] - y) < .8);
+      });
+    };
+    FLOW[part].e = FLOW[part].e.map(function (e) {
+      if (OWN_START.indexOf(e) >= 0) return e;
+      var self = e;
+      [0, 1].forEach(function (atEnd) {
+        var n = e.length / 3; if (n < 3) return;
+        var k0 = atEnd ? n - 1 : 0, st = atEnd ? -1 : 1;
+        if (endsAt(e[k0 * 3], e[k0 * 3 + 1], self)) return;
+        var W = nearestIn(part, e[k0 * 3], e[k0 * 3 + 1]), w = ownWidth(e);
+        if (!W || W.r < w * 1.2 + .2) {
+          /* where vessels meet at one point (the jugular and subclavian veins forming the brachiocephalic vein), no
+             more than its own width there, like a branch point */
+          if (w != null && Object.keys(FLOW).some(function (q) { return q !== part && FLOW[q].c === FLOW[part].c && centreDist(q, e[k0 * 3], e[k0 * 3 + 1]) < 1; })) {
+            var cap = w * 1.15 + .1, LL = 0;
+            for (var kk = k0; kk >= 0 && kk < n; kk += st) {
+              if (kk !== k0) LL += Math.hypot(e[kk * 3] - e[(kk - st) * 3], e[kk * 3 + 1] - e[(kk - st) * 3 + 1]);
+              if (LL > 4) break;
+              if (e[kk * 3 + 2] > cap) e[kk * 3 + 2] = cap;
+            }
+          }
+          return;
+        }
+        var wall = W.r - .6, L = 0, tot = 0, i, k, prev = k0;
+        for (i = 1; i < n; i++) tot += Math.hypot(e[i * 3] - e[i * 3 - 3], e[i * 3 + 1] - e[i * 3 - 2]);
+        for (k = k0 + st; k >= 0 && k < n; k += st) {
+          if (L > Math.min(9, tot * .45)) return;              /* it runs along the wider vessel: leave it */
+          L += Math.hypot(e[k * 3] - e[prev * 3], e[k * 3 + 1] - e[prev * 3 + 1]);
+          var d0 = centreDist(W.part, e[prev * 3], e[prev * 3 + 1]), d1 = centreDist(W.part, e[k * 3], e[k * 3 + 1]);
+          if (d1 >= wall) {
+            var f = d1 > d0 ? Math.max(0, Math.min(1, (wall - d0) / (d1 - d0))) : 1;
+            var cut = [e[prev * 3] + f * (e[k * 3] - e[prev * 3]), e[prev * 3 + 1] + f * (e[k * 3 + 1] - e[prev * 3 + 1]), e[prev * 3 + 2] + f * (e[k * 3 + 2] - e[prev * 3 + 2])];
+            WALL_LOG.push([part, atEnd ? 'end' : 'start', e[k0 * 3], e[k0 * 3 + 1], W.part, cut[0], cut[1]]);
+            e = atEnd ? e.slice(0, (k + 1) * 3).concat(cut) : cut.concat(e.slice(k * 3));
+            WALLED[part] = 1;
+            return;
+          }
+          prev = k;
+        }
+      });
+      return e;
+    });
+  });
+  Object.keys(WALLED).forEach(function (part) {
+    var P = FLOW[part]; rebox(P);
+    if (AUTO[part]) AUTO[part] = AUTO[part].filter(function (q) {
+      return P.e.some(function (e) { for (var i = 0; i < e.length; i += 3) if (Math.hypot(e[i] - q[0], e[i + 1] - q[1]) < 1.6) return true; return false; });
+    });
   });
   /* one name per word: the entries that say the same thing are one name, with all their points, then
      the points found in the drawing, nearest to its first point first. A beyond-syllabus name stays at
