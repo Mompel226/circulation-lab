@@ -214,7 +214,7 @@
              cap: 'A real artery, cut across and stained (×40). It keeps its round shape. Its wall is thick.',
              credit: 'Андрюша Романов (Andryusha Romanov), Wikimedia Commons, CC BY 4.0 · labels added',
              url: 'https://commons.wikimedia.org/wiki/File:%D0%90%D1%80%D1%82%D0%B5%D1%80%D0%B8%D1%8F_%D0%BC%D1%8B%D1%88%D0%B5%D1%87%D0%BD%D0%BE_-_%D1%8D%D0%BB%D0%B0%D1%81%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%BE%D0%B3%D0%BE_%D1%82%D0%B8%D0%BF%D0%B0,_%D0%B3%D0%B5%D0%BC%D0%B0%D1%82%D0%BE%D0%BA%D1%81%D0%B8%D0%BB%D0%B8%D0%BD_-_%D1%8D%D0%BE%D0%B7%D0%B8%D0%BD,_%D1%83%D0%B2%D0%B5%D0%BB%D0%B8%D1%87%D0%B5%D0%BD%D0%B8%D0%B5_40.jpg' } },
-    { key: 'arteriole', name: 'Arteriole', t: 12, dur: 13, ext: 'arteriole',
+    { key: 'arteriole', name: 'Arteriole', t: 12, dur: 14.4, ext: 'arteriole',
       inside: 'Inside an arteriole', dir: 'To the capillaries',
       text: [['Arteries divide into narrower arterioles.'],
              ['The muscle in their wall contracts to narrow them, or relaxes to widen them.'],
@@ -226,7 +226,7 @@
              cap: 'A real arteriole, cut across. Its small round lumen, with red blood cells in it, lies inside several layers of smooth muscle. Beside it: a venule and a capillary.',
              credit: 'Rollroboter, Wikimedia Commons, CC BY-SA 3.0 · numbers replaced by labels, shared under the same licence',
              url: 'https://commons.wikimedia.org/wiki/File:Blutgef%C3%A4%C3%9Fe_(1).jpg' } },
-    { key: 'capillary', name: 'Capillary', t: 25, dur: 14,
+    { key: 'capillary', name: 'Capillary', t: 26.4, dur: 14.6,
       inside: 'Inside a capillary', dir: 'To the venules',
       text: [['Capillaries exchange substances with the tissue cells.'],
              ['Oxygen and glucose diffuse out; carbon dioxide diffuses in.'],
@@ -238,23 +238,23 @@
              cap: 'A real capillary in the pancreas, cut across and seen with an electron microscope. One red blood cell almost fills the lumen. Its wall is one cell thick. Scale bar: 1 µm.',
              credit: 'Louisa Howard, Dartmouth Electron Microscope Facility, public domain · labels added',
              url: 'https://commons.wikimedia.org/wiki/File:A_red_blood_cell_in_a_capillary,_pancreatic_tissue_-_TEM.jpg' } },
-    { key: 'venule', name: 'Venule', t: 39, dur: 12, ext: 'venule',
+    { key: 'venule', name: 'Venule', t: 41, dur: 12.6, ext: 'venule',
       inside: 'Inside a venule', dir: 'To the veins',
       text: [['Capillaries join to form venules.'],
              ['The blood is now deoxygenated, and its pressure is low.'],
-             ['The wall is thin.']],
-      beyond: 'A venule is about 8–100 µm across. White blood cells mostly leave the blood from venules, by squeezing between the wall cells.',
+             ['The wall is thin, and a venule like this has no valves: valves are in the veins.']],
+      beyond: 'A venule is about 8–100 µm across. White blood cells mostly leave the blood from venules, by squeezing between the wall cells. Valves are found in veins, and in some of the largest venules.',
       note: '',
       pic: { img: 'jn-venule', w: 900, h: 621, big: 1,
              alt: 'The same stained section: on the right a venule, a wide lumen full of red blood cells inside a thin wall, with a capillary joining it below; on the left the arteriole. Labelled.',
              cap: 'The same slide: a real venule, cut across. Its wall is thin and its lumen wide, full of red blood cells. A capillary joins it. Compare it with the arteriole beside it.',
              credit: 'Rollroboter, Wikimedia Commons, CC BY-SA 3.0 · numbers replaced by labels, shared under the same licence',
              url: 'https://commons.wikimedia.org/wiki/File:Blutgef%C3%A4%C3%9Fe_(1).jpg' } },
-    { key: 'vein', name: 'Vein', t: 51, dur: 15,
+    { key: 'vein', name: 'Vein', t: 53.6, dur: 16.4,
       inside: 'Inside a vein', dir: 'Towards the heart',
       text: [['A vein returns blood to the heart, at low pressure.'],
              ['Its wall is thin and its lumen is wide.'],
-             ['Muscles around the vein squeeze it; its valves prevent backflow.', 1]],
+             ['The leg muscles around the vein squeeze it from outside; its valves prevent backflow.', 1]],
       beyond: 'At any moment about 64% of the blood is in the veins. Pressure falls to about 0 mmHg at the heart.',
       note: 'Blood cells are drawn larger than scale, and the valves closer together than in a real vein.',
       pic: { img: 'jn-artery-vein', w: 600, h: 400, big: 0,
@@ -262,7 +262,12 @@
              cap: 'A real vein beside a real artery, cut across (×40). The vein has a thinner wall and a wider, flattened lumen. The artery keeps its round shape.',
              credit: 'From the 9.3 lesson slides', url: '' } }
   ];
-  var END = 66;
+  var END = 70;
+  /* Daniel, 27 Sep: the zooms between stages should be slow and smooth enough to follow. Each transition is
+     longer by LEAD[i] seconds; everything else in the stage keeps its own clock, which starts LEAD[i] later
+     (stageT). */
+  var LEAD = [0, 1.4, .6, .6, 1.4];
+  function stageT(t, i) { return Math.max(0, t - STAGES[i].t - LEAD[i]); }
   var WEBP = (function () {
     try { var c = document.createElement('canvas'); c.width = c.height = 1; return c.toDataURL('image/webp').indexOf('data:image/webp') === 0; }
     catch (e) { return false; }
@@ -301,35 +306,119 @@
   /* keys: the camera on its way, [u, x, y, zoom relative to the old stage], so it follows the
      branches instead of cutting the corner */
   var TR = [null,
-    { d: 2.8, fA: [12600, -4890], fB: [0, 0], dir: 1, keys: [[.3, 10800, -3900, 1.6]] },            /* into a branch, ×100 */
-    { d: 1.6, fA: [300, 0], fB: [0, 0], dir: 1 },                                                   /* into a capillary, ×2 */
-    { d: 1.8, fA: [160, 0], fB: [-60, 0], dir: -1 },                                                /* out, as capillaries join, ÷2 */
-    { d: 3.0, fA: [300, 0], fB: [-6750, 6000], dir: -1, keys: [[.42, 900, -150, .1], [.74, 2600, -2000, .025]] }   /* out, as venules join veins, ÷100 */
+    /* fo, fi: when the old stage's drawing fades out and the new one's fades in (fractions of the move): a drawing
+       is only a rectangle of tissue, so it fades in once the view is inside it and out before its edges show */
+    { d: 4.2, fA: [12600, -4890], fB: [0, 0], dir: 1, keys: [[.3, 10800, -3900, 1.6]], fo: [.8, .96], fi: [.78, .94] },     /* into a branch, ×100 */
+    { d: 2.2, fA: [300, 0], fB: [0, 0], dir: 1, fo: [.72, .93], fi: [.6, .86] },                                              /* into a capillary, ×2 */
+    { d: 2.4, fA: [160, 0], fB: [-60, 0], dir: -1, fo: [.12, .42], fi: [.04, .3] },                                           /* out, as capillaries join, ÷2 */
+    { d: 4.4, fA: [300, 0], fB: [-6750, 6000], dir: -1, keys: [[.42, 900, -150, .1], [.74, 2600, -2000, .025]], fo: [.1, .26], fi: [.02, .2] }   /* out, as venules join veins, ÷100 */
   ];
 
-  /* ---------- the artery's branches: it divides until a branch is an arteriole ---------- */
+  /* ---------- the artery's branches: it divides until a branch is an arteriole ----------
+     Daniel, 27 Sep: the drawings leading to the arteriole were "very awkward ... a bit ugly": tubes of one width
+     joined by round blobs, with no blood moving in them. Now each vessel is one smooth tube whose width changes
+     gradually along it, and the tree is drawn as one tissue (every wall, then every lumen, so a branch opens into
+     the vessel it leaves with no wall across the opening); blood flows along every branch (buildCells, moveTree).
+     Each vessel: its centre line in the direction the blood flows, starting on its parent's centre line; its
+     lumen radius at each point; k, its outer radius over its lumen; mf, how much of its wall is muscle. A side
+     branch is much narrower than the trunk it leaves, whose width hardly changes (Murray's law: the cube of a
+     parent's radius is the sum of its daughters' cubes), and every trunk carries on off the picture. The last
+     vessel is the arteriole itself, lined up with the arteriole stage's drawing, so one fades into the other. */
   var ATREE = [
-    { p: [[8200, -1650], [8900, -2500], [9800, -3350], [10700, -4000], [11350, -4420]], ro: 700, ri: 470 },
-    { p: [[11350, -4420], [11750, -4640], [12050, -4770]], ro: 230, ri: 150 },
-    { p: [[12050, -4770], [12250, -4850], [12420, -4885], [12520, -4890]], ro: 80, ri: 52 },
-    { p: [[12520, -4890], [12620, -4890]], ro: AOL.ro, ri: AOL.ri },
-    { p: [[11350, -4420], [11520, -4900], [11600, -5500], [11650, -6400]], ro: 520, ri: 350 },
-    { p: [[12050, -4770], [12230, -4520], [12420, -4280]], ro: 180, ri: 118 },
-    { p: [[12520, -4890], [12600, -4990], [12700, -5090]], ro: 55, ri: 36 }
+    { p: [[8200, -1650], [8900, -2500], [9800, -3350], [10700, -4000], [11350, -4420], [11520, -4900], [11600, -5500], [11650, -6400], [11700, -8400]],
+      ri: [470, 465, 458, 450, 440, 425, 412, 400, 390], k: 1.49, mf: .7 },
+    { p: [[11350, -4420], [11750, -4640], [12050, -4770], [12230, -4520], [12420, -4280], [12640, -3990]],
+      ri: [150, 147, 143, 134, 125, 118], k: 1.53, mf: .7 },
+    { p: [[12050, -4770], [12170, -4845], [12280, -4890], [12420, -5000], [12560, -5150], [12740, -5340]],
+      ri: [52, 50, 48, 43, 39, 36], k: 1.54, mf: .7 },
+    { p: [[12280, -4890], [12420, -4890], [12620, -4890], [12805, -4890]],
+      ri: [AOL.ri, AOL.ri, AOL.ri, AOL.ri], k: AOL.ro / AOL.ri, mf: .77 }
   ];
-  /* ...and the vein's tributaries: venules join into veins, which join the vein */
-  var VTREE = [
-    { p: [[-6750, 6000], [-6440, 6000]], ro: VNL.ro, ri: VNL.ri },
-    { p: [[-6440, 6000], [-6150, 5950], [-5900, 5880]], ro: 70, ri: 62 },
-    { p: [[-5900, 5880], [-5400, 5720], [-4800, 5480]], ro: 250, ri: 225 },
-    { p: [[-4800, 5480], [-3800, 4700], [-2800, 3700], [-2100, 2950], [-1750, 2400], [-1650, 1900]], ro: 780, ri: 700 },
-    { p: [[-6150, 5950], [-6060, 6180], [-5960, 6450]], ro: 55, ri: 48 },
-    { p: [[-5400, 5720], [-5320, 6120], [-5260, 6650]], ro: 190, ri: 170 },
-    { p: [[-3800, 4700], [-3520, 5350], [-3300, 6300]], ro: 560, ri: 500 }
+  /* the capillaries that join to form the venule, in the venule stage's drawing */
+  var VCAPS = [
+    [[-190, -1], [-90, -.5], [-40, 0], [-6, 0]],
+    [[-190, -44], [-100, -34], [-44, -12.5], [-8, -5.8]],
+    [[-190, 46], [-100, 35], [-44, 13], [-8, 5.8]],
+    [[-80, -86], [-30, -52], [8, -30], [24, -17.5]]
   ];
+  /* ...and the vein's tributaries, in the direction the blood flows: those capillaries (so they stay as the venule
+     stage fades), then the venule, lined up with the venule stage's drawing, which widens where each tributary
+     joins it, on to the vein; each tributary comes in from off the picture */
+  var VTREE = VCAPS.map(function (P) {
+    return { p: P.map(function (q) { return [q[0] + TR[4].fB[0] - TR[4].fA[0], q[1] + TR[4].fB[1] - TR[4].fA[1]]; }),
+             ri: [CAP.ri, CAP.ri, CAP.ri, CAP.ri], k: CAP.bm / CAP.ri, mf: 0, cap: 1 };
+  }).concat([
+    { p: [[-7056, 6000], [-7006, 6000], [-6750, 6000], [-6440, 6000], [-6150, 5950], [-5900, 5880], [-5400, 5720], [-4800, 5480], [-3800, 4700], [-2800, 3700], [-2100, 2950], [-1750, 2400], [-1650, 1900]],
+      ri: [10.5, VNL.ri, VNL.ri, VNL.ri, VNL.ri, 50, 54, 172, 185, 520, 545, 565, 580], k: 1.12, mf: .36 },
+    { p: [[-5880, 6900], [-5960, 6450], [-6060, 6180], [-6150, 5950]], ri: [44, 45, 46, 47], k: 1.12, mf: .36 },
+    { p: [[-5160, 7500], [-5260, 6650], [-5320, 6120], [-5400, 5720]], ri: [158, 162, 166, 168], k: 1.12, mf: .36 },
+    { p: [[-3000, 7900], [-3300, 6300], [-3520, 5350], [-3800, 4700]], ri: [470, 482, 492, 500], k: 1.12, mf: .36 }
+  ]);
+  /* the blood in the trees. The stages draw their cells at different scales: in the artery and the vein about 14
+     times too large (or they would not show at all), in the arteriole and the venule at their real size, 7.5 µm
+     across. In a tree every cell in view is drawn the same size, as real cells are all one size, and that size
+     follows the zoom (z: 0 at the big stage's zoom, 1 at the small stage's), shrinking smoothly (on a log scale)
+     from the big stage's size to the real size just before the small stage appears. As the cells shrink, more of
+     them show, so the blood looks as full at every zoom. Blood slows as the vessels narrow (its speed follows the
+     width of the vessel), and the pulse fades: the widest branches surge with each heartbeat, as the artery does,
+     and the arteriole's flow is almost steady. */
+  function logLaw(P) {                        /* P: [[r, y], ...], from the widest vessel to the narrowest */
+    return function (r) {
+      var i = 0; while (i < P.length - 2 && r < P[i + 1][0]) i++;
+      var a = P[i], b = P[i + 1];
+      return a[1] * Math.pow(b[1] / a[1], Math.log(r / a[0]) / Math.log(b[0] / a[0]));
+    };
+  }
+  var ALAW = { rx: [52, 3.75], f: [.02, .18], v: logLaw([[ART.ri, 1900], [470, 1000], [AOL.ri, 41]]), pulse: 1 };
+  var VLAW = { rx: [58, 3.75], f: [.022, .18], v: logLaw([[VEIN.r0, 1100], [550, 560], [VNL.ri, 21]]), pulse: 0 };
+  function zShrink(z) { return clamp01(z / .85); }
+  function cellRx(law, z) { return law.rx[0] * Math.pow(law.rx[1] / law.rx[0], zShrink(z)); }
+  /* how many cells per µm of vessel, at zoom z, where the lumen radius is r: a set share of the lumen covered */
+  function cellsPerUm(law, z, r) { var c = cellRx(law, z); return law.f[0] * Math.pow(law.f[1] / law.f[0], zShrink(z)) * 1.6 * r / (Math.PI * c * c * .69); }
+  /* a vessel's centre line sampled, with at each sample its lumen radius, the normal, and the time blood takes to
+     get there from the start (tau). Its cells sit on a fine lattice in tau, dt apart, and move along it; at each
+     zoom only a share of the lattice shows (moveTree). dt is fine enough for the highest zoom at which each part
+     of the vessel is still no more than about three views wide. */
+  function treeGeom(tree, law) {
+    return tree.map(function (v) {
+      var per = 12, S = sampled(v.p, per), n = S.pts.length, r = [], nx = [], ny = [], tau = [0], most = 0, j;
+      for (j = 0; j < n; j++) {
+        var sgi = Math.min(v.ri.length - 2, Math.floor(j / per)), f = clamp01((j - sgi * per) / per);
+        r.push(lerp(v.ri[sgi], v.ri[sgi + 1], smooth(f)));
+        var a = S.pts[Math.max(0, j - 1)], b = S.pts[Math.min(n - 1, j + 1)], dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1;
+        nx.push(-dy / l); ny.push(dx / l);
+        if (j) {
+          var rj = (r[j] + r[j - 1]) / 2, vj = law.v(rj);
+          tau.push(tau[j - 1] + (S.len[j] - S.len[j - 1]) / vj);
+          most = Math.max(most, cellsPerUm(law, Math.log(10500 / rj) / Math.log(100), rj) * vj);
+        }
+      }
+      var T = tau[n - 1], N = Math.max(8, Math.ceil(T * most * 1.05)), rm = (v.ri[0] + v.ri[v.ri.length - 1]) / 2;
+      return { v: v, S: S, r: r, nx: nx, ny: ny, tau: tau, T: T, N: N, dt: T / N,
+               pulse: law.pulse * clamp01(Math.log(rm / AOL.ri) / Math.log(ART.ri / AOL.ri)) };
+    });
+  }
+  function hsh(i, sd) {                        /* a fixed random number in [0, 1) for lattice point i */
+    var x = Math.imul(i ^ Math.imul(sd, 0x9E3779B9), 0x85EBCA6B); x ^= x >>> 13; x = Math.imul(x, 0xC2B2AE35); x ^= x >>> 16;
+    return (x >>> 0) / 4294967296;
+  }
+  /* the vessel's outline at radius f(lumen radius) */
+  function tubeOutline(g, f) {
+    var P = g.S.pts, L = '', R2 = [];
+    for (var j = 0; j < P.length; j++) {
+      var rr = f(g.r[j]);
+      L += (j ? 'L' : 'M') + n1(P[j][0] + g.nx[j] * rr) + ' ' + n1(P[j][1] + g.ny[j] * rr);
+      R2.push(n1(P[j][0] - g.nx[j] * rr) + ' ' + n1(P[j][1] - g.ny[j] * rr));
+    }
+    return L + 'L' + R2.reverse().join('L') + 'Z';
+  }
+  var AG = treeGeom(ATREE, ALAW), VG = treeGeom(VTREE, VLAW);
 
   /* ---------- the vein's pump: skeletal muscle around the vein, and two valves ---------- */
   var PUMP = { xA: 700, xB: 7000, xm: 3850, w: 2500, beta: .5, starts: [6.4, 9.4, 12.4], TC: .75, TR: 1.2, last: 3.0 };
+  /* the leg muscle lies a band of connective tissue (gap, µm) outside the vein's wall: wide enough to read as a
+     separate organ, narrow enough that the muscle stays in view while it is relaxed */
+  var LEG = { gap: 300 };
   var A0 = Math.PI * VEIN.r0 * VEIN.r0;
   function bump(x) { var d = (x - PUMP.xm) / PUMP.w; return Math.abs(d) >= 1 ? 0 : Math.pow(Math.cos(d * Math.PI / 2), 2); }
   /* ∫ b and ∫ b², from the start of the squeezed stretch to x (closed forms of cos² and cos⁴) */
@@ -518,17 +607,64 @@
     var CELLS = {};  /* per-scene moving things */
     var SCN = [];    /* the scene objects */
 
-    function tubeMarkup(tree, cols, walls) {
-      return tree.map(function (tb) {
-        var d = smoothPath(tb.p);
-        if (walls) return '<path d="' + d + '" fill="none" stroke="' + cols[0] + '" stroke-width="' + n2(tb.ro * 2) + '" stroke-linecap="round" stroke-linejoin="round"/>' +
-          '<path d="' + d + '" fill="none" stroke="' + cols[1] + '" stroke-width="' + n2((tb.ri + (tb.ro - tb.ri) * .55) * 2) + '" stroke-linecap="round" stroke-linejoin="round"/>';
-        return '<path d="' + d + '" fill="none" stroke="' + cols[2] + '" stroke-width="' + n2(tb.ri * 2) + '" stroke-linecap="round" stroke-linejoin="round"/>';
-      }).join('');
+    /* a tree's walls, outside in: the outer layer, then its muscle, then the lining; every vessel's layer before the
+       next layer, so the layers of a branch and of the vessel it leaves join into one */
+    function treeWalls(G2, cols) {
+      var o = '';
+      G2.forEach(function (g) { o += '<path d="' + tubeOutline(g, function (r) { return r * g.v.k; }) + '" fill="' + (g.v.cap ? cols.endo : cols.adv) + '"/>'; });
+      G2.forEach(function (g) { o += '<path d="' + tubeOutline(g, function (r) { return r + (g.v.k - 1) * r * g.v.mf; }) + '" fill="' + cols.med + '"/>'; });
+      G2.forEach(function (g) { o += '<path d="' + tubeOutline(g, function (r) { return r + Math.max(.6, (g.v.k - 1) * r * .08); }) + '" fill="' + cols.endo + '"/>'; });
+      return o;
+    }
+    function treeLumens(G2, col) { return G2.map(function (g) { return '<path d="' + tubeOutline(g, function (r) { return r; }) + '" fill="' + col + '"/>'; }).join(''); }
+    /* blood in a tree: for each vessel, the stretch of its lattice that is in view; each lattice point is a cell
+       with its own lane across the lumen, size and tilt, shown when its fixed random number is under the share
+       this zoom needs there (so, zooming in, new cells grow in between the others and none jumps). A cell fades in
+       where its vessel leaves the parent, and out where it joins the next; it is never wider than its vessel
+       allows, and fades out where the vessel is too narrow to show it. The cells are drawn from a pool. */
+    function moveTree(G2, CT, law, kBig, time, V) {
+      var half = G.T.VW / 2 / V.k, hh = G.T.VH / 2 / V.k, z = clamp01(Math.log(V.k / kBig) / Math.log(100));
+      var rxz = cellRx(law, z), W = surgeD(time, 1450, 8400) / 2562, els = CT.els, used = 0;
+      for (var gi = 0; gi < G2.length && used < els.length; gi++) {
+        var g = G2[gi], S = g.S, P = S.pts, tau = g.tau, lo = Infinity, hi = -Infinity, j;
+        if (g.v.cap) continue;
+        for (j = 0; j < P.length; j++) {
+          var mg = g.r[j] + 2 * rxz;
+          if (Math.abs(P[j][0] - V.cx) < half + mg && Math.abs(P[j][1] - V.cy) < hh + mg) {
+            lo = Math.min(lo, tau[Math.max(0, j - 1)]); hi = Math.max(hi, tau[Math.min(P.length - 1, j + 1)]);
+          }
+        }
+        if (lo > hi) continue;
+        var sh = lerp(time, W, g.pulse), q1 = Math.ceil((hi - sh) / g.dt);
+        for (var q = Math.floor((lo - sh) / g.dt) - 1; q <= q1 && used < els.length; q++) {
+          var qq = mod(q, g.N), ta = (q + .8 * hsh(qq, 1)) * g.dt + sh;
+          if (ta < lo || ta > hi) continue;
+          var a = 0, b = tau.length - 1;
+          while (b - a > 1) { var m = (a + b) >> 1; if (tau[m] < ta) a = m; else b = m; }
+          var f = (ta - tau[a]) / ((tau[b] - tau[a]) || 1), rr = lerp(g.r[a], g.r[b], f);
+          var share = cellsPerUm(law, z, rr) * law.v(rr) * g.dt, h2 = hsh(qq, 2);
+          if (h2 >= share) continue;
+          var x = lerp(P[a][0], P[b][0], f), y = lerp(P[a][1], P[b][1], f);
+          if (Math.abs(x - V.cx) > half + rr + 2 * rxz || Math.abs(y - V.cy) > hh + rr + 2 * rxz) continue;
+          var sl = lerp(S.len[a], S.len[b], f), rx = Math.min(.4 * rr, rxz) * (.9 + .2 * hsh(qq, 3)) * Math.sqrt(clamp01((share - h2) / (.15 * share)));
+          var off = (hsh(qq, 4) * 2 - 1) * Math.max(0, .95 * rr - .9 * rx);
+          var el = els[used++];
+          show(el, Math.min(1, sl / rr, (S.total - sl) / (.7 * rr), (.4 * rr / rxz - .3) / .4));
+          el.setAttribute('transform', 'translate(' + n1(x + lerp(g.nx[a], g.nx[b], f) * off) + ' ' + n1(y + lerp(g.ny[a], g.ny[b], f) * off) + ') rotate(' +
+            n1(Math.atan2(P[b][1] - P[a][1], P[b][0] - P[a][0]) * 180 / Math.PI + (hsh(qq, 5) - .5) * 24) + ') scale(' + n4(rx) + ')');
+        }
+      }
+      for (var k = used; k < CT.last; k++) show(els[k], 0);
+      CT.last = used;
     }
     function wavy(x0, x1, y, amp, per) {
-      var d = 'M' + x0 + ' ' + y, n = Math.ceil((x1 - x0) / per * 4);
-      for (var i = 1; i <= n; i++) { var x = x0 + i * per / 4; d += 'L' + n2(x) + ' ' + n2(y + amp * Math.sin(i * Math.PI / 2)); }
+      /* a smooth wave, one curved arch each half period (it ran straight between quarter points: a zigzag) */
+      var d = 'M' + x0 + ' ' + y, hp = per / 2, sg = 1;
+      for (var x = x0; x < x1 - 1e-6; x += hp) {
+        var a = n2(y + sg * amp * 4 / 3);
+        d += 'C' + n2(x + hp / 3) + ' ' + a + ' ' + n2(x + 2 * hp / 3) + ' ' + a + ' ' + n2(x + hp) + ' ' + y;
+        sg = -sg;
+      }
       return d;
     }
     function ringPath(r, n, wob, seed, rx, ry) {       /* a closed ring, a little irregular */
@@ -575,10 +711,11 @@
       var top = wallTop();
       var s = '<g data-r="aS">' +
         '<rect x="' + X0 + '" y="-12000" width="' + (X1 - X0) + '" height="24000" fill="url(#' + id('ct') + ')"/>' +
+        '<rect data-r="aFine" x="' + X0 + '" y="-12000" width="' + (X1 - X0) + '" height="24000" fill="url(#' + id('ctsA') + ')" style="display:none"/>' +
         '<rect x="' + X0 + '" y="-2300" width="' + (X1 - X0) + '" height="4600" fill="' + C.plasmaA + '"/>' +
-        '<g clip-path="url(#' + id('aclip') + ')">' + tubeMarkup(ATREE, [C.adv, C.muscleLo, C.plasmaA], 1) + '</g>' +
+        '<g clip-path="url(#' + id('aclip') + ')">' + treeWalls(AG, { adv: C.adv, med: C.muscleLo, endo: C.endo }) + '</g>' +
         '<g data-r="aWt">' + top + '</g><g data-r="aWb"><g transform="scale(1 -1)">' + top + '</g></g>' +
-        tubeMarkup(ATREE, [C.adv, C.muscleLo, C.plasmaA], 0) +
+        treeLumens(AG, C.plasmaA) + '<g data-r="aTree"></g>' +
         '<g data-r="aCells"></g></g>';
       /* the cross-section: every layer is a ring; each keeps its area as the artery stretches */
       var R3 = rng(11), sm = '', col = '';
@@ -716,19 +853,17 @@
     var VNLP = null;
     function venule() {
       var v = VNL, s = '';
-      var CAPS = [
-        [[-190, -1], [-90, -.5], [-40, 0], [-6, 0]],
-        [[-190, -44], [-100, -34], [-44, -12.5], [-8, -5.8]],
-        [[-190, 46], [-100, 35], [-44, 13], [-8, 5.8]],
-        [[-80, -86], [-30, -52], [8, -30], [24, -17.5]]
-      ];
+      var CAPS = VCAPS;
       function rin(x) { return x < -6 ? 10.5 : x > 44 ? v.ri : lerp(10.5, v.ri, smooth((x + 6) / 50)); }
       var top = [], bot = [], xs = [];
       for (var x = -6; x <= 360; x += 3) xs.push(x);
       xs.forEach(function (x2) { top.push([x2, -rin(x2)]); bot.push([x2, rin(x2)]); });
       function edge(list, off) { return list.map(function (p, i) { return (i ? 'L' : 'M') + n1(p[0]) + ' ' + n1(p[1] + off); }).join(''); }
-      function band(list, sg, o1, o2) {
-        var a2 = list.map(function (p) { return [p[0], p[1] + sg * o1]; }), b2 = list.slice().reverse().map(function (p) { return [p[0], p[1] + sg * o2]; });
+      /* a band along the venule's wall; its outer layers grow from nothing where the capillaries join it (from
+         x -8 to x 40), so the capillaries' walls run on into the venule's with no edge across the join */
+      function band(list, sg, o1, o2, grow) {
+        var gf = function (x) { return grow ? smooth((x + 8) / 48) : 1; };
+        var a2 = list.map(function (p) { return [p[0], p[1] + sg * o1 * gf(p[0])]; }), b2 = list.slice().reverse().map(function (p) { return [p[0], p[1] + sg * o2 * gf(p[0])]; });
         return a2.concat(b2).map(function (p, i) { return (i ? 'L' : 'M') + n1(p[0]) + ' ' + n1(p[1]); }).join('') + 'Z';
       }
       s += '<rect x="-300" y="-160" width="800" height="320" fill="url(#' + id('cts') + ')"/>';
@@ -739,9 +874,9 @@
         return false;
       });
       s += CAPS.map(function (P) { return '<path d="' + smoothPath(P) + '" fill="none" stroke="' + C.fluid + '" stroke-width="' + n1(CAP.fluid * 2) + '" stroke-linecap="round"/>'; }).join('');
-      s += '<path d="' + band(top, -1, 0, v.ro - v.ri + 3) + '" fill="' + C.fluid + '"/><path d="' + band(bot, 1, 0, v.ro - v.ri + 3) + '" fill="' + C.fluid + '"/>';
+      s += '<path d="' + band(top, -1, 0, v.ro - v.ri + 3, 1) + '" fill="' + C.fluid + '"/><path d="' + band(bot, 1, 0, v.ro - v.ri + 3, 1) + '" fill="' + C.fluid + '"/>';
       s += CAPS.map(function (P) { return '<path d="' + smoothPath(P) + '" fill="none" stroke="' + C.endo + '" stroke-width="7.4" stroke-linecap="round"/>'; }).join('');
-      s += '<path d="' + band(top, -1, 0, v.ro - v.ri) + '" fill="' + C.adv + '"/><path d="' + band(bot, 1, 0, v.ro - v.ri) + '" fill="' + C.adv + '"/>';
+      s += '<path d="' + band(top, -1, 0, v.ro - v.ri, 1) + '" fill="' + C.adv + '"/><path d="' + band(bot, 1, 0, v.ro - v.ri, 1) + '" fill="' + C.adv + '"/>';
       s += '<path d="' + band(top, -1, 0, v.endo - v.ri) + '" fill="' + C.endo + '"/><path d="' + band(bot, 1, 0, v.endo - v.ri) + '" fill="' + C.endo + '"/>';
       /* pericytes and a few muscle cells, outside the endothelium */
       [[70, -1], [132, 1], [196, -1], [250, 1], [300, -1]].forEach(function (p) {
@@ -771,15 +906,17 @@
     function vein() {
       var s = '<g data-r="eS">' +
         '<rect x="-12000" y="-12000" width="30000" height="24000" fill="url(#' + id('ct') + ')"/>' +
-        '<path data-r="eMt" fill="url(#' + id('skm') + ')"/><path data-r="eMb" fill="url(#' + id('skm') + ')"/>' +
+        '<rect data-r="eFine" x="-12000" y="-12000" width="30000" height="24000" fill="url(#' + id('ctsV') + ')" style="display:none"/>' +
+        '<path data-r="eMt" fill="url(#' + id('skm') + ')" stroke="#E7B0A6" stroke-opacity=".8" stroke-width="1.6" vector-effect="non-scaling-stroke"/><path data-r="eMb" fill="url(#' + id('skm') + ')" stroke="#E7B0A6" stroke-opacity=".8" stroke-width="1.6" vector-effect="non-scaling-stroke"/>' +
         '<path data-r="eMtL" fill="none" stroke="' + C.skmLine + '" stroke-width="1" opacity=".55" vector-effect="non-scaling-stroke"/>' +
         '<path data-r="eMbL" fill="none" stroke="' + C.skmLine + '" stroke-width="1" opacity=".55" vector-effect="non-scaling-stroke"/>' +
-        '<g clip-path="url(#' + id('vclip') + ')">' + tubeMarkup(VTREE, [C.adv, '#6A5A48', C.plasmaV], 1) + '</g>' +
+        '<g data-r="eSq"></g>' +
+        '<g clip-path="url(#' + id('vclip') + ')">' + treeWalls(VG, { adv: C.adv, med: C.muscleLo, endo: C.endo }) + '</g>' +
         '<path data-r="eLum" fill="' + C.plasmaV + '"/>' +
         '<path data-r="eAt" fill="url(#' + id('vadv') + ')"/><path data-r="eAb" fill="url(#' + id('vadv') + ')"/>' +
         '<path data-r="eMdt" fill="' + C.muscleLo + '"/><path data-r="eMdb" fill="' + C.muscleLo + '"/>' +
         '<path data-r="eIt" fill="' + C.endo + '"/><path data-r="eIb" fill="' + C.endo + '"/>' +
-        tubeMarkup(VTREE, [C.adv, C.muscleLo, C.plasmaV], 0) +
+        treeLumens(VG, C.plasmaV) + '<g data-r="eTree"></g>' +
         '<g data-r="eCells"></g>' +
         '<path data-r="eVAt" fill="' + C.endo + '" stroke="#FFFFFF" stroke-opacity=".35" stroke-width="1" vector-effect="non-scaling-stroke"/>' +
         '<path data-r="eVAb" fill="' + C.endo + '" stroke="#FFFFFF" stroke-opacity=".35" stroke-width="1" vector-effect="non-scaling-stroke"/>' +
@@ -812,6 +949,10 @@
         '<pattern id="' + id('vadv') + '" patternUnits="userSpaceOnUse" width="520" height="150"><rect width="520" height="150" fill="' + C.adv + '"/>' + adv + '</pattern>' +
         '<pattern id="' + id('ct') + '" patternUnits="userSpaceOnUse" width="900" height="900"><rect width="900" height="900" fill="' + C.ct + '"/>' + ct + '</pattern>' +
         '<pattern id="' + id('cts') + '" patternUnits="userSpaceOnUse" width="60" height="60"><rect width="60" height="60" fill="' + C.ct + '"/>' + cts + '</pattern>' +
+        /* the same fine texture in the artery's and the vein's worlds, lined up with the arteriole's and the venule's
+           (TR[1], TR[4]), so it matches as one stage fades into the other */
+        '<pattern id="' + id('ctsA') + '" patternUnits="userSpaceOnUse" width="60" height="60" patternTransform="translate(' + (TR[1].fA[0] - TR[1].fB[0]) + ' ' + (TR[1].fA[1] - TR[1].fB[1]) + ')"><rect width="60" height="60" fill="' + C.ct + '"/>' + cts + '</pattern>' +
+        '<pattern id="' + id('ctsV') + '" patternUnits="userSpaceOnUse" width="60" height="60" patternTransform="translate(' + (TR[4].fB[0] - TR[4].fA[0]) + ' ' + (TR[4].fB[1] - TR[4].fA[1]) + ')"><rect width="60" height="60" fill="' + C.ct + '"/>' + cts + '</pattern>' +
         '<pattern id="' + id('skm') + '" patternUnits="userSpaceOnUse" width="1400" height="540">' + skm + '</pattern>' +
         '<clipPath id="' + id('aclip') + '"><rect x="-20000" y="-20000" width="40000" height="' + (20000 - ART.ri) + '"/></clipPath>' +
         '<clipPath id="' + id('vclip') + '"><rect x="-20000" y="' + VEIN.r0 + '" width="40000" height="20000"/></clipPath>' +
@@ -874,6 +1015,18 @@
       }
       R.aCells.innerHTML = out;
       CELLS.a.els = R.aCells.children;
+      /* blood in the branches of the artery and the tributaries of the vein: a pool of discs with a paler centre,
+         as in the arteriole and the venule (moveTree places them) */
+      function treeCells(grp, fill, fill2) {
+        var o = '';
+        for (var q = 0; q < 420; q++) o += '<g style="display:none"><ellipse rx="1" ry=".69" fill="' + fill + '"/><ellipse rx=".42" ry=".26" fill="' + fill2 + '" opacity=".55"/></g>';
+        grp.innerHTML = o;
+        var els = grp.children;
+        for (q = 0; q < els.length; q++) els[q].__on = false;
+        return { els: els, last: 0 };
+      }
+      CELLS.at = treeCells(R.aTree, C.oxy, C.oxyHi);
+      CELLS.vt = treeCells(R.eTree, C.deo, C.deoHi);
       /* arteriole: cells along three lanes that run on into the capillaries */
       var Rb = rng(202); out = ''; CELLS.b = [];
       AOLP.lanes.forEach(function (ln, li) {
@@ -1060,11 +1213,10 @@
         var k0 = keys[ki], k1 = keys[ki + 1];
         var c = mixCam(k0.slice(1), k1.slice(1), (u - k0[0]) / (k1[0] - k0[0]));
         var opA, opB;
-        if (tr.dir > 0) { opA = 1 - seg(u, .72, .93); opB = seg(u, .6, .86); }
-        else { opA = 1 - seg(u, .12, .42); opB = seg(u, .04, .3); }
+        opA = 1 - seg(u, tr.fo[0], tr.fo[1]); opB = seg(u, tr.fi[0], tr.fi[1]);
         return { own: i - 1, x: c[0], y: c[1], k: c[2], vis: [[i - 1, opA, 0, 0], [i, opB, tr.fA[0] - tr.fB[0], tr.fA[1] - tr.fB[1]]], u: u, tr: tr, i: i };
       }
-      var sc = SC[i], pp = ease(seg(tl, sc.pan[0], sc.pan[1])), ch = G.narrow && sc.camHn ? sc.camHn : sc.camH;
+      var sc = SC[i], pp = ease(seg(tl - LEAD[i], sc.pan[0], sc.pan[1])), ch = G.narrow && sc.camHn ? sc.camHn : sc.camH;
       return { own: i, x: lerp(sc.camE[0], ch[0], pp), y: lerp(sc.camE[1], ch[1], pp), k: kOf(i), vis: [[i, 1, 0, 0]], u: 1, i: i };
     }
 
@@ -1085,8 +1237,7 @@
         show(g, vis[1]);
         var k = E.k, ox = vis[2], oy = vis[3];
         g.setAttribute('transform', 'matrix(' + nk(k) + ' 0 0 ' + nk(k) + ' ' + n4(T.cx - k * (E.x - ox)) + ' ' + n4(T.cy - k * (E.y - oy)) + ')');
-        var tl = t - STAGES[i].t;
-        UPD[i](tl, { k: k, cx: E.x - ox, cy: E.y - oy, own: i === E.own });
+        UPD[i](stageT(t, i), { k: k, cx: E.x - ox, cy: E.y - oy, own: i === E.own, raw: t - STAGES[i].t });
       }
       renderSections(t, E);
       renderOverlay(t, E);
@@ -1108,6 +1259,9 @@
           var c = L.list[j], x = xl + mod(c.x0 + D * (1 - c.r * c.r) - xl, L.span), y = c.r * (ri - 90);
           L.els[j].setAttribute('transform', 'translate(' + n1(x) + ' ' + n1(y) + ') rotate(' + c.rot + ')');
         }
+        if (CELLS.at) moveTree(AG, CELLS.at, ALAW, kOf(0), V.raw, V);
+        /* zoomed in, the coarse tissue behind the branches gives way to the arteriole's fine texture */
+        show(R.aFine, seg(Math.log(V.k / kOf(0)) / Math.log(100), .2, .5));
       },
       function (tl, V) {                                  /* ARTERIOLE */
         var c = toneAt(tl), ri = aolRi(c), ro = aolRo(c), a = AOL;
@@ -1192,6 +1346,8 @@
         wbcAt(tl);
       },
       function (tl, V) {                                  /* VEIN */
+        if (CELLS.vt) moveTree(VG, CELLS.vt, VLAW, kOf(4), V.raw, V);
+        show(R.eFine, seg(Math.log(V.k / kOf(4)) / Math.log(100), .2, .5));
         var P = pumpAt(tl), s = P.s, half = G.T.VW / 2 / V.k, xa = V.cx - half - 600, xb = V.cx + half + 600;
         var hh = G.T.VH / 2 / V.k, ya = V.cy - hh - 600, yb = V.cy + hh + 600;
         ST.eP = P;
@@ -1210,8 +1366,10 @@
         R.eIt.setAttribute('d', bandP(-1, 0, W.intima)); R.eIb.setAttribute('d', bandP(1, 0, W.intima));
         R.eMdt.setAttribute('d', bandP(-1, W.intima, W.intima + W.media)); R.eMdb.setAttribute('d', bandP(1, W.intima, W.intima + W.media));
         R.eAt.setAttribute('d', bandP(-1, W.intima + W.media, W.wall)); R.eAb.setAttribute('d', bandP(1, W.intima + W.media, W.wall));
-        /* the leg muscle round the vein: it shortens and thickens, and squeezes the vein */
-        var x0 = -420 + 170 * s, x1 = Math.max(xb, 9000) + 600, gap = 70, far = -Math.max(5200, -ya + 200);
+        /* the leg muscle round the vein: it shortens and thickens, and squeezes the vein. Daniel, 27 Sep: it read as
+           muscle in the vein's own wall. So it lies a clear band of connective tissue away from the vein, has its own
+           outline, and while it contracts, arrows show it pressing on the vein from outside */
+        var x0 = -420 + 170 * s, x1 = Math.max(xb, 9000) + 600, gap = LEG.gap, far = -Math.max(5200, -ya + 200);
         function muscle(sg) {
           var o = 'M' + n1(x0) + ' ' + n1(sg * -far), lines = '';
           var pts = [], n3 = 70;
@@ -1228,6 +1386,16 @@
         }
         var mt = muscle(-1), mb = muscle(1);
         R.eMt.setAttribute('d', mt[0]); R.eMb.setAttribute('d', mb[0]); R.eMtL.setAttribute('d', mt[1]); R.eMbL.setAttribute('d', mb[1]);
+        var sq = P.dir > 0 ? 1 : P.dir < 0 ? 1 - seg(P.u || 0, 0, .35) : P.s > .5 ? 1 : 0, arr = '';
+        if (sq > .02) {
+          [2850, 3850, 4850].forEach(function (xq) {
+            [-1, 1].forEach(function (sg) {
+              var yo = sg * (veinR(xq, s) + W.wall + gap + 260), yi = sg * (veinR(xq, s) + W.wall + 90), hd = 150 * -sg;
+              arr += '<path d="M' + xq + ' ' + n1(yo) + 'L' + xq + ' ' + n1(yi) + 'M' + (xq - 130) + ' ' + n1(yi - hd) + 'L' + xq + ' ' + n1(yi) + 'L' + (xq + 130) + ' ' + n1(yi - hd) + '"/>';
+            });
+          });
+        }
+        R.eSq.innerHTML = arr ? '<g class="jn__sq" opacity="' + n2(sq) + '">' + arr + '</g>' : '';
         /* the valves: pockets of the lining. Blood going towards the heart pushes the cusps against
            the wall; blood going back fills the pockets and shuts them */
         var vo = valveOpen(tl, P);
@@ -1318,7 +1486,7 @@
         var k = sectK(j) * sc;
         SXK[j] = sectK(j);
         g.setAttribute('transform', 'matrix(' + nk(k) + ' 0 0 ' + nk(k) + ' ' + n2(X.cx) + ' ' + n2(X.cy) + ')');
-        var tl = t - STAGES[j].t;
+        var tl = stageT(t, j);
         if (j === 0) {
           var A = ART, a = .06 * pulseP(tl), ri = A.ri * (1 + a), dR = ri * ri - A.ri * A.ri;
           var rr = function (r) { return n2(Math.sqrt(r * r + dR)); };
@@ -1445,6 +1613,10 @@
        of the wall, the lumen) may move up or down within that band to make room, and its point
        moves with it, so its leader stays level.
        ============================================================ */
+    /* where the vein wall's label points: beyond the second valve, but inside the view on a narrow screen too */
+    function wallX() { var E = ST.E; return E ? Math.min(8600, E.x + G.T.VW / 2 / E.k - 500) : 8600; }
+    /* where the leg muscle starts, below x */
+    function legRim(x) { return veinR(x, ST.eP ? ST.eP.s : 0) + VEIN.wall + LEG.gap; }
     function L(view, stage, text, t0, spec2) { var o = spec2; o.view = view; o.stage = stage; o.text = text; o.t0 = t0; return o; }
     var LABELS = [
       /* 1 artery — inside */
@@ -1481,10 +1653,17 @@
       L('x', 3, 'thin wall', 2.6, { ringE: function () { return [20.5 * 1.13, 20.5 * .86]; }, y: -.5 }),
       L('x', 3, 'lumen', 3.2, { lumenE: function () { return [19 * 1.13, 19 * .86]; }, y: .35, lx: .55 }),
       /* 5 vein — inside */
-      L('in', 4, function () { var P = ST.eP; return !P || P.dir === 0 ? (P && P.s > .5 ? 'leg muscle contracts' : 'leg muscle') : P.dir > 0 ? 'leg muscle contracts' : 'leg muscle relaxes'; }, 6.0,
-        { x: 3850, y: function () { return veinR(3850, ST.eP ? ST.eP.s : 0) + VEIN.wall + 600; }, band: function () { var r = veinR(3850, ST.eP ? ST.eP.s : 0) + VEIN.wall; return [r + 180, r + 2600]; } }),
-      L('in', 4, function () { return (ST.vB || 0) > .5 ? 'valve open' : 'valve closed'; }, 6.8, { at: function () { var v = ST.vBt; return v ? { x: lerp(v.bx, v.fx, .3), y: lerp(v.by, v.fy, .3) } : null; } }),
-      L('in', 4, function () { return (ST.vA || 0) > .5 ? 'valve open' : 'valve closed'; }, 7.4, { at: function () { var v = ST.vAb; return v ? { x: lerp(v.bx, v.fx, .5), y: lerp(v.by, v.fy, .5) } : null; } }),
+      L('in', 4, function () { var P = ST.eP; return !P || P.dir === 0 ? (P && P.s > .5 ? 'leg muscle contracts: it squeezes the vein' : 'leg muscle, outside the vein') : P.dir > 0 ? 'leg muscle contracts: it squeezes the vein' : 'leg muscle relaxes'; }, 6.0,
+        { x: 5600, y: function () { return legRim(5600) + 270; }, band: function () { var r = legRim(5600); return [r + 60, r + 480]; } }),
+      /* the story: first the two things to tell apart, the leg muscle outside and the vein's own thin wall, while
+         the muscle squeezes once; then the wall's label makes way for the valves', which explain the next squeezes.
+         (An open valve's pocket lies against the wall, so a valve's label and the wall's would share one level.)
+         The wall's label is on the upper wall, beyond the second valve and the squeezed stretch; the leg muscle's
+         is on the lower side, to the right of the arrows. */
+      L('in', 4, 'vein wall: thin, little muscle', 6.2,
+        { t1: 8.6, x: wallX, y: function () { var x = wallX(); return -(veinR(x, 0) + sinus(x) + VEIN.wall * .55); }, band: function () { var x = wallX(); var r = veinR(x, 0) + sinus(x); return [-(r + VEIN.wall), -r]; } }),
+      L('in', 4, function () { return (ST.vB || 0) > .5 ? 'valve open' : 'valve closed'; }, 8.8, { at: function () { var v = ST.vBt; return v ? { x: lerp(v.bx, v.fx, .3), y: lerp(v.by, v.fy, .3) } : null; } }),
+      L('in', 4, function () { return (ST.vA || 0) > .5 ? 'valve open' : 'valve closed'; }, 9.2, { at: function () { var v = ST.vAb; return v ? { x: lerp(v.bx, v.fx, .5), y: lerp(v.by, v.fy, .5) } : null; } }),
       /* 5 vein — cut across */
       L('x', 4, 'little muscle', 1.4, { ringE: function () { var q = ST.xe || { a: ELLA0, b: VEIN.r0 }; return [q.a + 70, q.b + 70]; }, y: -.62 }),
       L('x', 4, 'wide lumen', 2.0, { lumenE: function () { var q = ST.xe || { a: ELLA0, b: VEIN.r0 }; return [q.a, q.b]; }, y: -.05, lx: .45 }),
@@ -1499,9 +1678,9 @@
         var V = view === 'in' ? G.T : G.S, list = [];
         LABELS.forEach(function (lb) {
           if (lb.view !== view) return;
-          var st = STAGES[lb.stage], tl = t - st.t;
+          var st = STAGES[lb.stage], tl = stageT(t, lb.stage);
           /* a stage's labels fade in one by one, and go when the next stage starts */
-          var op = seg(tl, lb.t0, lb.t0 + .4);
+          var op = seg(tl, lb.t0, lb.t0 + .4) * (lb.t1 == null ? 1 : 1 - seg(tl, lb.t1, lb.t1 + .4));
           if (E.i !== lb.stage) {
             if (E.i === lb.stage + 1 && E.tr) op *= 1 - seg(t - STAGES[E.i].t, 0, .35); else op = 0;
           } else if (E.tr) op = 0;
