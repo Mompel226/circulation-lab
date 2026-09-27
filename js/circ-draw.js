@@ -32,6 +32,7 @@
      heartMode(m)              which drawing the lens shows
      flyTo(box, done), jump(box), boxOf(id, pad), FULL, BOX, isZoomed(), zoomBy(k), home()
      labels(on, beyond)        the names at the sides, and the ones beyond the syllabus
+     vesselNamesOnly(on)       name only blood vessels: no organ, no heart (a station about the vessels)
      setRate(bpm), rate(), flow(on), start(), stop()
      pin(el, label, colour), elFor(id), G (every part: label, note, colour)
      __seek(ph, t)             draw one moment, for the headless checks
@@ -116,6 +117,7 @@
   };
   var CHAMBERS = { ra: 1, la: 1, rv: 1, lv: 1, septum: 1, 'av-valves': 1, 'sl-valves': 1 };
   var ORGANS = { lungs: 1, liver: 1, kidneys: 1, spleen: 1, head: 1, gut: 1 };
+  var NOT_VESSEL = { heart: 1, head: 1, arms: 1, legs: 1, body: 1 };
   var ORGAN_FILL = { lungs: ['#F3C3CB', .5], liver: ['#C9876F', .34], kidneys: ['#C47A74', .42], spleen: ['#B58AAE', .28], gut: ['#E8B9A4', .55] };
 
   /* the camera's frames, in the drawing's units */
@@ -860,6 +862,11 @@
        is room. A name that finds no free row is left out: the line under the plate names what is lit.
        One name per word: "carotid artery" twice was clutter. */
     var labOn = true, labBeyond = false, labSvg = null;
+    /* a station about the vessels names only vessels (Daniel, 27 Sep: on "The main blood vessels" the drawing
+       should show "only blood vessel names ... so it actually helps the students pinpoint the different types
+       of vessels"); its organs stay lit, known by their shapes, and are named when pressed */
+    var vesselsOnly = false;
+    function isVessel(id) { return !!G[id] && !ORGANS[id] && !CHAMBERS[id] && !NOT_VESSEL[id]; }
     if (opts.map && opts.labels !== false) {
       labSvg = document.createElementNS(NS, 'svg');
       labSvg.setAttribute('class', 'cp-labels'); labSvg.setAttribute('aria-hidden', 'true');
@@ -984,7 +991,9 @@
           if (N.lv === 'X' && !labBeyond) return;
           if (N.lv === 'G' && labBeyond) return;
           if (N.needs && !organs[N.needs]) return;
+          if (vesselsOnly && !isVessel(N.id)) return;
           var on = isOn(N.id);
+          if (vesselsOnly && lit && !on && !all) return;                /* and only its own vessels, none dimmed */
           if (lit && !on && N.lv !== 'A' && !all) return;               /* while a station lights its parts, only the syllabus names stay, dimmed, for finding your way */
           if (scale < N.z && !(lit && on && N.lv !== 'X')) return;       /* a lit part is named at any zoom */
           /* a station's lit names all come first — the syllabus names, then the extras (the gut's veins, the
@@ -1029,6 +1038,7 @@
       labSvg.innerHTML = out;
     }
     function labels(on, beyond) { if (on != null) labOn = !!on; if (beyond != null) labBeyond = !!beyond; layoutLabels(); }
+    function vesselNamesOnly(on) { if (vesselsOnly !== !!on) { vesselsOnly = !!on; layoutLabels(); } }
     if (global.ResizeObserver && opts.map) {
       var ro = new ResizeObserver(function () {
         if (!svg.isConnected) { ro.disconnect(); return; }
@@ -1051,7 +1061,7 @@
       G: G, FULL: FULL, BOX: BOX, light: light, clear: function () { return light(null); }, lens: lens,
       organVessels: function (id) { return ORGAN_VESSELS[id] || null; },
       flyTo: flyTo, jump: jump, boxOf: boxOf, isZoomed: isZoomed, zoomBy: zoomBy, home: function (done) { flyTo(FULL, done); },
-      labels: labels, pin: pin, elFor: elFor,
+      labels: labels, vesselNamesOnly: vesselNamesOnly, pin: pin, elFor: elFor,
       setRate: setRate, rate: function () { return bpm; },
       heartMode: function (m) { var k = m === 'exterior' ? 'exterior' : 'section'; if (k !== heartKind) { heartKind = k; buildLens(); lens(lensMode ? k : null); } },
       flow: function (on) { flowOn = on !== false; },
