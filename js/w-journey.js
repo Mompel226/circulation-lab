@@ -209,10 +209,10 @@
              ['Its elastic fibres stretch with each surge, then recoil.', 1]],
       beyond: 'The three layers are the tunica intima, tunica media and tunica externa. Mean pressure in a large artery is about 93 mmHg.',
       note: 'Blood cells are too small to see at this scale: they are drawn larger.',
-      pic: { img: 'jn-artery', w: 900, h: 900, big: 1,
-             alt: 'A photograph through a microscope of an artery cut across: a round ring with a thick pink wall around an empty lumen.',
+      pic: { img: 'jn-artery', w: 900, h: 675, big: 1,
+             alt: 'A photograph through a microscope of an artery cut across: a round ring with a thick pink wall around an empty lumen, labelled lumen and thick wall.',
              cap: 'A real artery, cut across and stained (×40). It keeps its round shape. Its wall is thick.',
-             credit: 'Андрюша Романов (Andryusha Romanov), Wikimedia Commons, CC BY 4.0',
+             credit: 'Андрюша Романов (Andryusha Romanov), Wikimedia Commons, CC BY 4.0 · labels added',
              url: 'https://commons.wikimedia.org/wiki/File:%D0%90%D1%80%D1%82%D0%B5%D1%80%D0%B8%D1%8F_%D0%BC%D1%8B%D1%88%D0%B5%D1%87%D0%BD%D0%BE_-_%D1%8D%D0%BB%D0%B0%D1%81%D1%82%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%BE%D0%B3%D0%BE_%D1%82%D0%B8%D0%BF%D0%B0,_%D0%B3%D0%B5%D0%BC%D0%B0%D1%82%D0%BE%D0%BA%D1%81%D0%B8%D0%BB%D0%B8%D0%BD_-_%D1%8D%D0%BE%D0%B7%D0%B8%D0%BD,_%D1%83%D0%B2%D0%B5%D0%BB%D0%B8%D1%87%D0%B5%D0%BD%D0%B8%D0%B5_40.jpg' } },
     { key: 'arteriole', name: 'Arteriole', t: 12, dur: 13, ext: 'arteriole',
       inside: 'Inside an arteriole', dir: 'To the capillaries',
@@ -221,11 +221,11 @@
              ['This controls the blood flow into the capillaries.']],
       beyond: 'The lumen of an arteriole is about 30 µm across, or less. Blood pressure falls most steeply here.',
       note: '',
-      pic: { img: 'jn-skin-capillaries', w: 900, h: 444, big: 1,
-             alt: 'Dark red hairpin loops of capillaries in pale skin, seen from above through a microscope.',
-             cap: 'Real capillary loops in the skin at the base of a fingernail, in a living person. Arterioles control how much blood flows into loops like these.',
-             credit: 'Dmitry Stavtsev, Nikita Margaryants and Mikhail Volkov, Wikimedia Commons, CC BY 4.0',
-             url: 'https://commons.wikimedia.org/wiki/File:Nailfold_Capillaries.png' } },
+      pic: { img: 'jn-arteriole', w: 900, h: 621, big: 1,
+             alt: 'A real stained section through small blood vessels: on the left a round arteriole, a small lumen with red blood cells inside several rings of smooth muscle; on the right a venule; below, a capillary. Labelled.',
+             cap: 'A real arteriole, cut across. Its small round lumen, with red blood cells in it, lies inside several layers of smooth muscle. Beside it: a venule and a capillary.',
+             credit: 'Rollroboter, Wikimedia Commons, CC BY-SA 3.0 · numbers replaced by labels, shared under the same licence',
+             url: 'https://commons.wikimedia.org/wiki/File:Blutgef%C3%A4%C3%9Fe_(1).jpg' } },
     { key: 'capillary', name: 'Capillary', t: 25, dur: 14,
       inside: 'Inside a capillary', dir: 'To the venules',
       text: [['Capillaries exchange substances with the tissue cells.'],
@@ -236,7 +236,7 @@
       pic: { img: 'jn-capillary-tem', w: 900, h: 723, big: 1,
              alt: 'An electron micrograph in black and white: a round capillary with one dark, curved red blood cell almost filling it, and a thin wall around it.',
              cap: 'A real capillary in the pancreas, cut across and seen with an electron microscope. One red blood cell almost fills the lumen. Its wall is one cell thick. Scale bar: 1 µm.',
-             credit: 'Louisa Howard, Dartmouth Electron Microscope Facility, public domain',
+             credit: 'Louisa Howard, Dartmouth Electron Microscope Facility, public domain · labels added',
              url: 'https://commons.wikimedia.org/wiki/File:A_red_blood_cell_in_a_capillary,_pancreatic_tissue_-_TEM.jpg' } },
     { key: 'venule', name: 'Venule', t: 39, dur: 12, ext: 'venule',
       inside: 'Inside a venule', dir: 'To the veins',
@@ -245,7 +245,11 @@
              ['The wall is thin.']],
       beyond: 'A venule is about 8–100 µm across. White blood cells mostly leave the blood from venules, by squeezing between the wall cells.',
       note: '',
-      pic: null },
+      pic: { img: 'jn-venule', w: 900, h: 621, big: 1,
+             alt: 'The same stained section: on the right a venule, a wide lumen full of red blood cells inside a thin wall, with a capillary joining it below; on the left the arteriole. Labelled.',
+             cap: 'The same slide: a real venule, cut across. Its wall is thin and its lumen wide, full of red blood cells. A capillary joins it. Compare it with the arteriole beside it.',
+             credit: 'Rollroboter, Wikimedia Commons, CC BY-SA 3.0 · numbers replaced by labels, shared under the same licence',
+             url: 'https://commons.wikimedia.org/wiki/File:Blutgef%C3%A4%C3%9Fe_(1).jpg' } },
     { key: 'vein', name: 'Vein', t: 51, dur: 15,
       inside: 'Inside a vein', dir: 'Towards the heart',
       text: [['A vein returns blood to the heart, at low pressure.'],
@@ -491,6 +495,14 @@
       } else {
         var gut2 = clamp(Math.round(PW * .385), 112, 150);
         var H1 = clamp(Math.round(PW * .64), 196, 250), H2 = clamp(Math.round(PW * .7), 200, 260);
+        /* standing in the plate's column, both sections must fit its height with no scrolling (Daniel, 27 Sep, on a
+           MacBook: "I have to scroll up and down"): the height the column has is shared out between them */
+        var col = box.classList.contains('jn--staged') ? pack.parentNode : null;
+        if (col && col.clientHeight) {
+          var used = (packT.hidden ? 0 : packT.getBoundingClientRect().height + 6) + (key.getBoundingClientRect().height || 36) + 46;
+          var room = col.clientHeight - used;
+          if (room < H1 + H2) { var kf = Math.max(0, room) / (H1 + H2); H1 = Math.max(150, Math.floor(H1 * kf)); H2 = Math.max(156, Math.floor(H2 * kf)); }
+        }
         g.T = { w: PW, h: H1, VX: 0, VY: 24, VW: PW - gut2, VH: H1 - 50 };
         g.S = { w: PW, h: H2, VX: 0, VY: 24, VW: PW - gut2, VH: H2 - 50 };
       }
@@ -834,7 +846,7 @@
           '<g data-r="sOver"></g>' +
         '</g>' +
         '<rect class="jn__viewline" x="' + X.VX + '" y="' + X.VY + '" width="' + X.VW + '" height="' + X.VH + '" rx="10"/>' +
-        '<text class="jn__head" x="' + (X.VX + 2) + '" y="15">Cut across at the dashed line</text>' +
+        '<text class="jn__head" x="' + (X.VX + 2) + '" y="15">Transverse section at the dashed line</text>' +
         '<g data-r="sScale"></g>' +
         '<g data-r="sLabs" class="jn__labs"></g>';
       R = {};
@@ -979,37 +991,44 @@
       if (u < 4) return lerp(18, 13, u - 3);
       return lerp(13, 2, smooth(u - 4));
     }
+    /* Daniel, 27 Sep: the pressure line was too faint to read. Now a graph: blood pressure in mmHg up the side, the
+       five vessels along the bottom, the line coloured as the blood is (the artery and arteriole red, the capillary
+       red turning blue, the venule and vein blue). Each stage is also its button. */
     function buildRoute() {
-      var W = Math.floor(routeBox.getBoundingClientRect().width || G.W), H = 62, gap = 6, x0 = 2, x1 = W - 2;
+      var W = Math.floor(routeBox.getBoundingClientRect().width || G.W), ax = 32, gap = 6, x0 = ax + 8, x1 = W - 4, yT = 26, yB = 102;
+      var two = W < 470, H = two ? 160 : 146;          /* narrow: the names take two rows, so they never touch */
       var tot = END, xs = [x0];
       STAGES.forEach(function (st) { xs.push(xs[xs.length - 1] + (x1 - x0 - gap * 4) * st.dur / tot + gap); });
       xs[5] = x1;
       function segX(i) { return [xs[i] + (i ? gap / 2 : 0), xs[i + 1] - (i < 4 ? gap / 2 : 0)]; }
-      function yOf(p) { return 34 - p / 125 * 27; }
+      function yOf(p) { return yB - p / 125 * (yB - yT); }
       function xOfU(u) { var i = Math.min(4, Math.floor(u)), s2 = segX(i); return lerp(s2[0], s2[1], u - i); }
-      var d = '';
-      for (var k = 0; k <= 400; k++) { var u = k / 400 * 5; d += (k ? 'L' : 'M') + n2(xOfU(Math.min(u, 4.9999))) + ' ' + n2(yOf(routeP(Math.min(u, 4.9999)))); }
-      var gid = id('rg');
-      var st = STAGES.map(function (sg, i) {
-        var s2 = segX(i), mid = (s2[0] + s2[1]) / 2;
-        return '<g class="jn__stop' + (sg.ext ? ' jn__stop--ext' : '') + '" data-i="' + i + '" role="button" tabindex="0" aria-label="Stage ' + (i + 1) + ': ' + sg.name + '">' +
-          '<rect x="' + n1(s2[0]) + '" y="0" width="' + n1(s2[1] - s2[0]) + '" height="' + H + '" fill="transparent"/>' +
-          '<line x1="' + n1(s2[0]) + '" x2="' + n1(s2[1]) + '" y1="39" y2="39" class="jn__track"/>' +
-          '<text x="' + n1(mid) + '" y="55" text-anchor="middle" class="jn__stopn">' + esc(sg.name) + '</text>' +
-          (sg.ext ? '<line x1="' + n1(mid - textW(sg.name, 12) / 2) + '" x2="' + n1(mid + textW(sg.name, 12) / 2) + '" y1="58.5" y2="58.5" class="jn__stopx"/>' : '') + '</g>';
+      var COLS = [C.oxy, C.oxy, null, C.deo, C.deo], gid = id('rg');
+      var grid = [0, 40, 80, 120].map(function (p) {
+        return '<line x1="' + ax + '" x2="' + x1 + '" y1="' + n1(yOf(p)) + '" y2="' + n1(yOf(p)) + '" class="jn__rgrid"/><text x="' + (ax - 5) + '" y="' + n1(yOf(p) + 3.5) + '" text-anchor="end" class="jn__rtick">' + p + '</text>';
       }).join('');
-      routeBox.innerHTML = '<svg class="jn__routesvg" viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '" aria-label="Blood pressure along the way: high and pulsing in the artery, falling most steeply in the arteriole, low in the capillary, lower in the venule and the vein.">' +
-        '<defs><linearGradient id="' + gid + '" gradientUnits="userSpaceOnUse" x1="' + x0 + '" x2="' + x1 + '" y1="0" y2="0">' +
-          '<stop offset="0" stop-color="' + C.oxy + '"/><stop offset="' + n2((segX(2)[0] - x0) / (x1 - x0)) + '" stop-color="' + C.oxy + '"/>' +
-          '<stop offset="' + n2((segX(2)[1] - x0) / (x1 - x0)) + '" stop-color="' + C.deo + '"/><stop offset="1" stop-color="' + C.deo + '"/></linearGradient>' +
-          '<clipPath id="' + id('rc') + '"><rect data-q="clip" x="0" y="0" width="0" height="' + H + '"/></clipPath></defs>' +
-        '<text x="' + (W - 2) + '" y="9" text-anchor="end" class="jn__rlab">blood pressure</text>' +
-        st +
-        '<path d="' + d + '" class="jn__rcurve"/>' +
-        '<path d="' + d + '" class="jn__rcurve jn__rcurve--on" stroke="url(#' + gid + ')" clip-path="url(#' + id('rc') + ')"/>' +
-        '<circle data-q="dot" r="4.6" class="jn__rdot"/></svg>';
-      RT = { xOfU: xOfU, yOf: yOf, clip: routeBox.querySelector('[data-q="clip"]'), dot: routeBox.querySelector('[data-q="dot"]'),
-             stops: routeBox.querySelectorAll('.jn__stop') };
+      var st = STAGES.map(function (sg, i) {
+        var s2 = segX(i), mid = (s2[0] + s2[1]) / 2, col = COLS[i] || '#7B5AA6';
+        return '<g class="jn__stop' + (sg.ext ? ' jn__stop--ext' : '') + '" data-i="' + i + '" role="button" tabindex="0" aria-label="Stage ' + (i + 1) + ': ' + sg.name + '">' +
+          '<rect x="' + n1(s2[0]) + '" y="' + (yT - 6) + '" width="' + n1(s2[1] - s2[0]) + '" height="' + (H - yT + 6) + '" rx="6" class="jn__rband"/>' +
+          '<line x1="' + n1(s2[0]) + '" x2="' + n1(s2[1]) + '" y1="' + (yB + 9) + '" y2="' + (yB + 9) + '" class="jn__track" style="stroke:' + col + '"/>' +
+          '<text x="' + n1(mid) + '" y="' + (yB + 26 + (two && i % 2 ? 16 : 0)) + '" text-anchor="middle" class="jn__stopn" style="fill:' + col + '">' + esc(sg.name) + '</text>' +
+          (sg.ext ? '<line x1="' + n1(mid - textW(sg.name, 12.5) / 2) + '" x2="' + n1(mid + textW(sg.name, 12.5) / 2) + '" y1="' + (yB + 30 + (two && i % 2 ? 16 : 0)) + '" y2="' + (yB + 30 + (two && i % 2 ? 16 : 0)) + '" class="jn__stopx"/>' : '') + '</g>';
+      }).join('');
+      var lines = STAGES.map(function (sg, i) {
+        var d = '', k0 = i * 80, k1 = i * 80 + 80;
+        for (var k = k0; k <= k1; k++) { var u = Math.min(k / 400 * 5, 4.9999); d += (k === k0 ? 'M' : 'L') + n2(xOfU(u)) + ' ' + n2(yOf(routeP(u))); }
+        return '<path d="' + d + '" class="jn__rline" stroke="' + (COLS[i] || 'url(#' + gid + ')') + '"/>';
+      }).join('');
+      var c2 = segX(2);
+      routeBox.innerHTML = '<svg class="jn__routesvg" viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '" aria-label="Blood pressure along the way: high and pulsing in the artery, falling most steeply in the arteriole, low in the capillary, lowest in the vein.">' +
+        '<defs><linearGradient id="' + gid + '" gradientUnits="userSpaceOnUse" x1="' + n1(c2[0]) + '" x2="' + n1(c2[1]) + '" y1="0" y2="0"><stop offset="0" stop-color="' + C.oxy + '"/><stop offset="1" stop-color="' + C.deo + '"/></linearGradient></defs>' +
+        st + grid +
+        '<text class="jn__raxis" x="0" y="11">Blood pressure / mmHg</text>' +
+        '<line x1="' + ax + '" x2="' + ax + '" y1="' + (yT - 4) + '" y2="' + yB + '" class="jn__raxl"/>' +
+        lines +
+        '<circle data-q="dot" r="5.5" class="jn__rdot"/></svg>';
+      RT = { xOfU: xOfU, yOf: yOf, dot: routeBox.querySelector('[data-q="dot"]'), stops: routeBox.querySelectorAll('.jn__stop') };
       Array.prototype.forEach.call(RT.stops, function (g) {
         var i = +g.getAttribute('data-i');
         g.addEventListener('click', function () { goStep(i); });
@@ -1384,7 +1403,9 @@
     /* ----- over the INSIDE drawing: the heading, the cut, the scale, the zoom ----- */
     function renderOverlay(t, E) {
       var T = G.T, i = E.i, st = STAGES[i];
-      var headTxt = st.inside.toUpperCase(), dirTxt = '→ ' + st.dir.toUpperCase();
+      var dirTxt = '→ ' + st.dir.toUpperCase(), headTxt = 'LONGITUDINAL SECTION: ' + st.inside.toUpperCase();
+      /* on a phone the full title and the direction do not both fit: the title keeps the section's name */
+      if ((headTxt.length + dirTxt.length) * (G.narrow ? 6 : 7.2) + 24 > G.T.w) headTxt = 'LONGITUDINAL SECTION';
       if (R.tHead.__t !== headTxt) { R.tHead.textContent = headTxt; R.tHead.__t = headTxt; }
       if (R.tDir.__t !== dirTxt) { R.tDir.textContent = dirTxt; R.tDir.__t = dirTxt; }
       /* the dashed line where the cross-section is cut */
@@ -1623,7 +1644,6 @@
       var x = RT.xOfU(Math.min(u, 4.9999)), p;
       if (i === 0) p = 80 + 40 * pulseP(t - st.t);
       else p = routeP(Math.min(u, 4.9999));
-      RT.clip.setAttribute('width', n1(started ? x : 0));
       set(RT.dot, { cx: n1(x), cy: n1(RT.yOf(p)), fill: i < 2 ? C.oxy : i === 2 ? mixc(C.deo, C.oxy, 1 - f) : C.deo });
       Array.prototype.forEach.call(RT.stops, function (g, k) { g.classList.toggle('is-on', started && k === i); g.classList.toggle('is-done', started && k < i); });
     }
@@ -1681,7 +1701,7 @@
         c.classList.toggle('is-on', i >= 0 && col === { 0: 0, 2: 1, 4: 2 }[i]);
       });
       svgT.setAttribute('aria-label', i < 0 ? 'An artery cut along its length, with blood in it.' : st.inside + ', cut along its length. ' + st.text.map(function (s) { return s[0]; }).join(' '));
-      svgS.setAttribute('aria-label', 'The ' + st.name.toLowerCase() + ' cut across, labelled.');
+      svgS.setAttribute('aria-label', 'A transverse section of the ' + st.name.toLowerCase() + ' (cut across), labelled.');
     }
 
     /* ============================================================
@@ -1759,6 +1779,9 @@
       ro.observe(plate);
     }
     if (global.ResizeObserver) watchSize(); else global.addEventListener('resize', fit);
+    /* the column's height changes with the window's, not only its width: lay out again when staged */
+    var onWinH = function () { if (!box.isConnected) { global.removeEventListener('resize', onWinH); return; } if (box.classList.contains('jn--staged')) { lastW = 0; fit(); } };
+    global.addEventListener('resize', onWinH);
 
     var stg = CL.stage ? CL.stage({ box: box, spec: spec, pack: pack, home: root, before: function () { return below; }, watch: function () { return box; },
       onPlace: function (inColumn) { packT.hidden = !inColumn; box.classList.toggle('jn--staged', inColumn); lastW = 0; fit(); } }) : null;
