@@ -121,7 +121,7 @@
     pack.appendChild(packT); pack.appendChild(map); mapHome.appendChild(pack);
     wrap.appendChild(mapHome); wrap.appendChild(side);
     box.appendChild(wrap);
-    box.appendChild(h('p', 'widget__note', 'Red is oxygenated blood and blue is deoxygenated blood, as on every diagram; real blood is never blue. The heart is shown cut open in the magnified view beside the body, seen from the front, so its right side is on your left. Scroll or pinch to zoom.'));
+    box.appendChild(h('p', 'widget__note', 'Red is oxygenated blood and blue is deoxygenated blood, as on every diagram; real blood is never blue. Teal is the deoxygenated blood from the gut to the liver. The heart is shown cut open in the magnified view beside the body, seen from the front, so its right side is on your left. Scroll or pinch to zoom.'));
 
     var solved = {}, cur = 0, got = [], via = [], wrong = 0, draw = null;
     PUZZLES.forEach(function (p, i) {
