@@ -136,6 +136,12 @@
 .pu__art-wide{fill:none;stroke:#E0453F;stroke-width:15;stroke-linecap:round}
 .pu__ring{fill:none;stroke:#FFB3A7;stroke-width:3.4}
 .pu__panel{display:flex;flex-direction:column;gap:10px;min-width:0}
+.pu__sites{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.pu__siteh{font-size:12.5px;font-weight:600;color:var(--grey);margin-right:2px}
+.pu__site{padding:5px 11px;font-size:13px}
+.pu__site.is-on{background:var(--k-heart,#A3213A);border-color:var(--k-heart,#A3213A);color:#fff}
+.pu__site:disabled{opacity:.45;cursor:default}
+.pu--stack .pu__sites{grid-column:1 / -1}
 .pu--stack .pu__panel{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px 12px;align-items:stretch}
 .pu--stack .pu__dials{grid-column:1}
 .pu--stack .pu__start,.pu--stack .pu__beat{grid-column:2;grid-row:1}
