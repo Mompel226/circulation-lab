@@ -49,19 +49,23 @@ import { MeshoptDecoder } from './vendor/three/examples/jsm/libs/meshopt_decoder
 import { RoomEnvironment } from './vendor/three/examples/jsm/environments/RoomEnvironment.js?v=0.185.1';
 
 /* ---------- the look of each part ----------
-   Muscle is dark red-brown, cut muscle a paler red, valve tissue cream. Arteries are pale, as they
-   are in a dissection; the venae cavae look blue-purple because their walls are thin and the
-   blood behind them is dark. The coronary arteries are a brighter red so they can be found. */
+   Coloured part by part, the way a medical illustrator colours a heart (Daniel, 27 Sep, of Servier Medical
+   Art's hearts: "the different parts of the heart are slightly differently coloured, particularly the atria,
+   ventricles, but also both of the arteries and both of the veins ... do the same on the 3D"). Before, muscle
+   was one dark red-brown and the two arteries the same pale pink, so the parts ran together. Now: the
+   ventricles a muscle rose, the septum a shade deeper, the atria mauve; the aorta orange-red and the
+   pulmonary artery blue, the pulmonary veins red and the venae cavae a deeper blue, as the blood in each
+   is; valve tissue cream; the coronary arteries a brighter red on the ventricles. Cut muscle is paler. */
 const LOOK = {
-  lv: { c: 0x8c302b, cap: 0xc9665b }, rv: { c: 0x8c302b, cap: 0xc9665b }, septum: { c: 0x8c302b, cap: 0xc9665b },
-  la: { c: 0x96433c, cap: 0xd4766a }, ra: { c: 0x96433c, cap: 0xd4766a },
-  pap_lv_al: { c: 0x86302b, cap: 0xc9665b }, pap_lv_pm: { c: 0x86302b, cap: 0xc9665b },
-  pap_rv_ant: { c: 0x86302b, cap: 0xc9665b }, pap_rv_post: { c: 0x86302b, cap: 0xc9665b }, pap_rv_sep: { c: 0x86302b, cap: 0xc9665b },
+  lv: { c: 0xb0585e, cap: 0xe3a3a3 }, rv: { c: 0xb0585e, cap: 0xe3a3a3 }, septum: { c: 0x9e4a53, cap: 0xe3a3a3 },
+  la: { c: 0x8c5a7c, cap: 0xcfa0be }, ra: { c: 0x8c5a7c, cap: 0xcfa0be },
+  pap_lv_al: { c: 0x9c4a52, cap: 0xe3a3a3 }, pap_lv_pm: { c: 0x9c4a52, cap: 0xe3a3a3 },
+  pap_rv_ant: { c: 0x9c4a52, cap: 0xe3a3a3 }, pap_rv_post: { c: 0x9c4a52, cap: 0xe3a3a3 }, pap_rv_sep: { c: 0x9c4a52, cap: 0xe3a3a3 },
   valve_tri: { c: 0xeadcc6, cap: 0xf7efe2 }, valve_mit: { c: 0xeadcc6, cap: 0xf7efe2 },
   valve_aor: { c: 0xeadcc6, cap: 0xf7efe2 }, valve_pul: { c: 0xeadcc6, cap: 0xf7efe2 },
-  aorta: { c: 0xdcb4aa, r: 0.52 }, pulmonary_artery: { c: 0xd9b0ab, r: 0.52 },
-  pulmonary_veins: { c: 0xb65b5f, r: 0.5 }, vena_cava_sup: { c: 0x5d4d80, r: 0.5 }, vena_cava_inf: { c: 0x5d4d80, r: 0.5 },
-  coronary: { c: 0xd9483e, r: 0.4 }
+  aorta: { c: 0xc8452c, r: 0.5 }, pulmonary_artery: { c: 0x5f8fb6, r: 0.5 },
+  pulmonary_veins: { c: 0xa93a45, r: 0.5 }, vena_cava_sup: { c: 0x3d63a2, r: 0.5 }, vena_cava_inf: { c: 0x3d63a2, r: 0.5 },
+  coronary: { c: 0xd6331f, r: 0.4 }
 };
 const SOLID = /^(lv|rv|la|ra|septum|pap_|valve_)/;
 /* the cut depth past which only a stray sliver of a part would be left floating: hide it there
@@ -228,7 +232,7 @@ vec3 h3beat(vec3 p){ vec3 d = vec3(0.0); for (int i = 0; i < 4; i++) { vec3 q = 
     patchWall(mat, o, solid ? look.cap : null);
     o.material = mat;
     const index = byIndex.length; byIndex.push(id);
-    parts[id] = { id, mesh: o, mat, idMat: idMaterial(index, o), index, solid };
+    parts[id] = { id, mesh: o, mat, idMat: idMaterial(index, o), index, solid, base: mat.color.clone(), capBase: mat.userData.u ? mat.userData.u.uCap.value.clone() : null };
   });
   /* ---------------- a hole in the right atrium's wall ----------------
      In the model a small tunnel, about 1.5 by 3 mm, runs through the back wall of the right atrium
@@ -373,8 +377,8 @@ vec3 h3beat(vec3 p){ vec3 d = vec3(0.0); for (int i = 0; i < 4; i++) { vec3 q = 
      an open mesh would be wrong. */
   const CAP_GROUPS = [
     { ids: ['valve_tri', 'valve_mit', 'valve_pul'], color: 0xf7efe2 },
-    { ids: ['lv', 'rv', 'septum', 'pap_lv_al', 'pap_lv_pm'], color: 0xc9665b },
-    { ids: ['la', 'ra'], color: 0xd4766a }
+    { ids: ['lv', 'rv', 'septum', 'pap_lv_al', 'pap_lv_pm'], color: 0xe3a3a3 },
+    { ids: ['la', 'ra'], color: 0xcfa0be }
   ];
   const capObjs = [], capQuads = [];
   const capPlane = new THREE.PlaneGeometry(4, 4);
@@ -938,7 +942,7 @@ void main() {
     const mesh = new THREE.Mesh(g, mat); mesh.name = 'chordae'; heart.add(mesh);
     patchWall(mat, mesh, null);
     const index = byIndex.length; byIndex.push('chordae');
-    parts.chordae = { id: 'chordae', mesh, mat, idMat: idMaterial(index, mesh), index, solid: false };
+    parts.chordae = { id: 'chordae', mesh, mat, idMat: idMaterial(index, mesh), index, solid: false, base: mat.color.clone(), capBase: null };
   })();
 
   /* ---------------- modes: what is shown ---------------- */
@@ -957,6 +961,27 @@ void main() {
       m.userData.flagged = on;
     });
   }
+  /* A part pressed in Explore is lit and every other part dims, cut faces too, as on the body plate
+     (Daniel, 27 Sep: "you cannot select areas of the heart and highlight them to understand what each part
+     is"; a press did name the part, but its faint glow on dark muscle was easy to miss). The part under the
+     pointer glows faintly, so it is plain that parts can be pressed. Colours and glows only: no shader change,
+     so it is cheap enough to follow the pointer. */
+  const DIM = new THREE.Color(0x262b33);
+  let hoverId = null;
+  function sameAs(a, id) { return !!a && (a === id || (a.indexOf('vena_cava') === 0 && id.indexOf('vena_cava') === 0) || ((a === 'papillary' || a.indexOf('pap_') === 0) && id.indexOf('pap_') === 0)); }
+  function paintChoice() {
+    const choosing = mode === 'explore' && !!selected;
+    Object.values(parts).forEach((pt) => {
+      const m = pt.mat, on = sameAs(selected, pt.id), hov = !on && mode === 'explore' && sameAs(hoverId, pt.id), dim = choosing && !on;
+      if (pt.base) { m.color.copy(pt.base); if (dim) m.color.lerp(DIM, 0.62); }
+      if (pt.capBase && m.userData.u) { m.userData.u.uCap.value.copy(pt.capBase); if (dim) m.userData.u.uCap.value.lerp(DIM, 0.62); }
+      m.emissive.setHex(on ? 0xffc86e : hov ? 0xfff0cc : 0x000000); m.emissiveIntensity = on ? 0.55 : hov ? (dim ? 0.3 : 0.2) : 0;
+    });
+    capQuads.forEach((q, gi) => {
+      q.material.color.setHex(CAP_GROUPS[gi].color);
+      if (choosing && !CAP_GROUPS[gi].ids.some((id) => sameAs(selected, id))) q.material.color.lerp(DIM, 0.62);
+    });
+  }
   function applyLook() {
     const live = mode !== 'explore';
     const lit = (id) => selected && (selected === id || (selected === 'vena_cava' && /^vena_cava/.test(id)) || (selected === 'papillary' && /^pap_/.test(id)));
@@ -968,10 +993,9 @@ void main() {
       if (pt.xmat) pt.xmat.uniforms.uFade.value = sideOnly && XRAY_SIDE[pt.id] && XRAY_SIDE[pt.id] !== 'S' && XRAY_SIDE[pt.id] !== sideOnly ? 0.14 : 1;
       m.transparent = false; m.opacity = 1; m.depthWrite = true; m.side = THREE.DoubleSide;
       if (m.userData.u) m.userData.u.uCapOn.value = 1;
-      const on = lit(pt.id);
-      m.emissive.setHex(on ? 0xffc36b : 0x000000); m.emissiveIntensity = on ? 0.42 : 0;
       m.needsUpdate = true;
     });
+    paintChoice();
     vgroup.visible = live;
     Object.keys(VALVES).forEach((k) => {
       const m = VALVES[k].mesh.material, on = lit('valve_' + k), thin = mode === 'flow';
@@ -1456,7 +1480,10 @@ void main() {
     if (idStale) return;               /* hover never forces a render; the cursor updates once idle */
     const hit = idAt(e.clientX - b.left, e.clientY - b.top);
     el.style.cursor = hit ? 'pointer' : 'grab';
+    const h = mode === 'explore' && hit ? hit[0] : null;
+    if (h !== hoverId) { hoverId = h; paintChoice(); kick(); }
   });
+  el.addEventListener('pointerleave', () => { if (hoverId) { hoverId = null; paintChoice(); kick(); } });
   controls.addEventListener('start', () => { moving = true; viewName = 'own'; hideLabels(); if (opts.onInteract) opts.onInteract(); });
   /* any change of camera, however it came about, takes the labels down; they are laid out again once
      the view is still, so a leader is never drawn to where a part used to be */
@@ -1471,6 +1498,13 @@ void main() {
   function kick() {
     pending = true;
     if (!raf && !inFrame && visible && onScreen && !dead) { last = -1; raf = requestAnimationFrame(frame); }
+  }
+  /* once the heart is still, the picture of which part is where is brought up to date, so the part under
+     the pointer can glow before anything is pressed (it used to wait for a press) */
+  let idleT = 0;
+  function idleIds() {
+    if (idleT || coarse || mode !== 'explore' || !idStale) return;
+    idleT = setTimeout(() => { idleT = 0; if (idStale && !dead && !moving && !tween && !raf) renderIds(); }, 160);
   }
   let frames = 0, why = '';
   function frame(now) {
@@ -1494,6 +1528,7 @@ void main() {
     /* the names come back once the camera is still, even while the blood keeps flowing */
     if (!labelsShown && labelWant.length && !tween && !moving && !labelTimer) relabelSoon(busy ? 240 : 120);
     if (busy || moving || pending) raf = requestAnimationFrame(frame);
+    else idleIds();
   }
   function renderNow() {
     Object.keys(VALVES).forEach((k) => { if (VALVES[k].dirty) buildValve(k); });

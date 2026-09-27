@@ -390,7 +390,7 @@
     more.querySelector('.h3__goecg').addEventListener('click', function () {
       if (!(CL.goToWidget && CL.goToWidget('monitor', '.es', 'the ECG simulation'))) location.hash = 'monitor';
     });
-    box.appendChild(h('p', 'h3__credit', 'The heart is a real one: HuBMAP Human Reference Atlas (Browne and Schlehlein 2024), from the Visible Human Male, US National Library of Medicine. CC BY 4.0. The moving valve cusps, the tendons, the left ventricle\u2019s papillary muscles and the blood paths are added for this lab.'));
+    box.appendChild(h('p', 'h3__credit', 'The heart is a real one: HuBMAP Human Reference Atlas (Browne and Schlehlein 2024), from the Visible Human Male, US National Library of Medicine. CC BY 4.0. The moving valve cusps, the tendons, the left ventricle\u2019s papillary muscles and the blood paths are added for this lab. The colours are not the real ones: each part has its own, as in a textbook drawing, so you can tell them apart.'));
 
     /* =====================================================================
        state
