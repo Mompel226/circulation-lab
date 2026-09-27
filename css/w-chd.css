@@ -26,12 +26,13 @@
 
 /* ---------- artery: the drawing ---------- */
 .ar__bg{fill:#0D1A22}
-.ar__fib path{fill:none;stroke:#FFE3DA;stroke-opacity:.1;stroke-width:3.6}
-.ar__str path{fill:none;stroke:#3A0D12;stroke-opacity:.24;stroke-width:3.6;stroke-dasharray:1.1 2.4}
-.ar__mnuc ellipse{fill:#4A1318;opacity:.5}
-.ar__cap path{fill:none;stroke:#E4484B;stroke-width:1.5;stroke-opacity:.7;stroke-linecap:round}
-.ar__fat{fill:#D8B86B}
-.ar__fatc path{fill:#EDD48F;stroke:#BF9A4E;stroke-width:.7}
+/* the heart above: the ring, the patch beyond it, the artery beyond it */
+.ar__ringH{fill:none;stroke:#0D1A22;stroke-opacity:.45;stroke-width:5.5}
+.ar__ring{fill:none;stroke:#F6C453;stroke-width:2.6}
+.ar__ladD{fill:#4B1826}
+/* the artery below, cut open, in the ring's yellow frame */
+.ar__void{fill:#0A141B}
+.ar__frame{fill:none;stroke:#F6C453;stroke-width:2.6;stroke-opacity:.9}
 .ar__col path{fill:none;stroke:#EFD5C7;stroke-opacity:.55;stroke-width:.9}
 .ar__adv{fill:#D5B09F}
 .ar__med{stroke:none}
@@ -48,12 +49,6 @@
 .ar__clotf{stroke:#4B0C13;stroke-width:.9}
 .ar__ccell{fill:#C23840;stroke:#560D15;stroke-width:.7}
 .ar__fibr{fill:none;stroke:#F6D2D5;stroke-opacity:.55;stroke-width:1}
-.ar__rbc{fill:#FF8A7E;stroke:#7A1E21;stroke-width:1}
-.ar__bw{fill:none;stroke:#C98579;stroke-width:21;stroke-linejoin:round}
-.ar__bw--s{stroke-width:15}
-.ar__bl{fill:none;stroke:#B92F33;stroke-width:13;stroke-linejoin:round;stroke-linecap:round}
-.ar__bl--s{stroke-width:9}
-.ar__brlB .ar__bl{stroke:inherit}
 .ar__dir path{fill:none;stroke:#FFFFFF;stroke-opacity:.6;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
 
 /* ---------- profiles ---------- */

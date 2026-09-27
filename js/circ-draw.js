@@ -123,8 +123,10 @@
     heart:      { x: 176, y: 168, w: 196, h: 128 },
     heartClose: { x: 180, y: 172, w: 188, h: 122 },
     valves:     { x: 180, y: 172, w: 188, h: 122 },
-    coronary:   { x: 180, y: 172, w: 188, h: 122 },
-    'cardiac-vein': { x: 180, y: 172, w: 188, h: 122 },
+    /* the heart itself, centred: no magnified heart beside it (Daniel, 27 Sep: the coronary station showed
+       "three hearts"; the one in the square went, and the body is centred on its own heart) */
+    coronary:   { x: 150, y: 172, w: 144, h: 122 },
+    'cardiac-vein': { x: 150, y: 172, w: 144, h: 122 },
     lungs:      { x: 128, y: 160, w: 166, h: 136 },
     chest:      { x: 118, y: 140, w: 184, h: 190 },
     liver:      { x: 118, y: 244, w: 180, h: 104 },
