@@ -333,7 +333,8 @@
       apply();
     }
     function hold(el, onEnd) {
-      release(false);                            /* a second press replaces the first */
+      /* a second press replaces the first, with no moment between in which a widget could take the column */
+      if (pin) { var was = pin; pin = null; was.off(); }
       var sc = scrollerOf(el || document.getElementById('panelInner')), h = pin = { onEnd: onEnd }, seen = false, t0 = Date.now(), raf = 0;
       function pos() { return sc ? sc.scrollTop : (global.pageYOffset || 0); }
       function high() { return sc ? sc.clientHeight : (global.innerHeight || 800); }

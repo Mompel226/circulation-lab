@@ -738,7 +738,7 @@
     document.addEventListener('visibilitychange', function () { if (document.hidden) stop(); else if (svg.isConnected) start(); });
 
     /* ----- the camera ----- */
-    var cam = { x: FULL.x, y: FULL.y, w: FULL.w, h: FULL.h }, flying = null;
+    var cam = { x: FULL.x, y: FULL.y, w: FULL.w, h: FULL.h }, flying = null, flyBox = null, flyDone = null;
     function aspect() { var r = svg.getBoundingClientRect(); return r.width > 0 && r.height > 0 ? r.width / r.height : FULL.w / FULL.h; }
     function fit(b, asIs) {
       var a = aspect(), w = b.w, h = b.h, r = svg.getBoundingClientRect();
@@ -767,6 +767,7 @@
     }
     function flyTo(box, done) {
       if (flying) cancelAnimationFrame(flying);
+      flyBox = box || FULL; flyDone = done || null;
       var from = { x: cam.x, y: cam.y, w: cam.w, h: cam.h }, to = clampView(fit(box || FULL));
       if (still) { setView(to); if (done) done(); return; }
       var t0f = null, D = 780;
@@ -778,7 +779,7 @@
         var cx = (from.x + from.w / 2) + ((to.x + to.w / 2) - (from.x + from.w / 2)) * f, cy = (from.y + from.h / 2) + ((to.y + to.h / 2) - (from.y + from.h / 2)) * f;
         var zh = zw * to.h / to.w;
         setView({ x: cx - zw / 2, y: cy - zh / 2, w: zw, h: zh });
-        if (k < 1) flying = requestAnimationFrame(step); else { flying = null; if (done) done(); }
+        if (k < 1) flying = requestAnimationFrame(step); else { flying = null; flyBox = null; if (done) done(); }
       })(performance.now());
     }
     function jump(box, asIs) { if (flying) cancelAnimationFrame(flying); flying = null; setView(clampView(fit(box || FULL, asIs))); }
@@ -845,7 +846,9 @@
       else if (drag && drag.pinch) drag = null;
     }
     svg.addEventListener('pointerup', up); svg.addEventListener('pointercancel', up);
-    svg.addEventListener('dblclick', function (e) { var p = toArt(e.clientX, e.clientY); zoomAt(.55, p.x, p.y); });
+    /* a double-click on empty space zooms in there; on a part it is only a press (its first click chose the part,
+       and plate.js does not count its second click as a second press) */
+    svg.addEventListener('dblclick', function (e) { if (partAt(e)) return; var p = toArt(e.clientX, e.clientY); zoomAt(.55, p.x, p.y); });
 
     /* ----- pointing and clicking ----- */
     var lastPtr = null, hoverPart = null;
@@ -1091,6 +1094,10 @@
            remain zoomed in, even if I scroll up, and only zoom out if I click whole body") */
         var r = opts.map.getBoundingClientRect();
         if (r.width < 4 || r.height < 4) return;
+        /* resized while flying to a part (a long line under the body can do it): fly on to the part, fitted to the
+           new size. Stopping where it was left the camera short of the part (Daniel, 27 Sep: the hepatic portal
+           vein's name did not zoom to it) */
+        if (flying && flyBox) { flyTo(flyBox, flyDone); return; }
         jump(cam && isZoomed() ? cam : FULL, true);
       });
       ro.observe(opts.map);

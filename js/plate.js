@@ -11,6 +11,7 @@
 
   var draw = null, svg, map, tag, said, whole, hint, col, bench, sim;
   var shown = null;                 /* what is lit now: { name, n } — a station's parts, or one part clicked */
+  var lastPress = { id: null, t: 0 };
   var onPick = function () {};
   var current = null;
   var still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -33,7 +34,10 @@
       onEnter: function (id, target) { var g = draw.G[PRESS_AS[id] || id]; if (g) draw.pin(target, g.label, g.colour); },
       onLeave: function () { if (tag) tag.classList.remove('on'); },
       onClick: function (id) {
-        var gid = PRESS_AS[id] || id;
+        var gid = PRESS_AS[id] || id, now = Date.now();
+        /* the second click of a double-click is not a second press: a double-click chooses the part, as one click does */
+        if (gid === lastPress.id && now - lastPress.t < 450) return;
+        lastPress = { id: gid, t: now };
         /* the part already chosen, pressed again: it is let go, and the station's parts come back */
         if (focused && gid === focused) { letGo(); return; }
         onPick(gid);
@@ -133,8 +137,11 @@
      zoomed out. Now pressing it again, or Whole body, lets it go too. */
   function letGo() {
     if (!focused) return;
-    if (global.CircLearn && global.CircLearn.releasePlate) global.CircLearn.releasePlate();   /* its end brings the picture back */
-    if (focused) unfocus();
+    unfocus();
+    /* the body keeps the column until the reader scrolls on: letting go must not hand it to a widget that happens
+       to be in view (Daniel, 27 Sep: pressing the mesenteric vein again brought up Trace the route, whose
+       paragraph is beside the mesenteric vein's). The new hold replaces the part's own. */
+    if (global.CircLearn && global.CircLearn.holdPlate) global.CircLearn.holdPlate(null, null);
   }
   /* the reader has moved on from the part: the station's own picture comes back */
   function unfocus() {
