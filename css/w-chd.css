@@ -33,6 +33,9 @@
 /* a piece of the clot that has lodged in a small branch further along, and the dusky patch round it */
 .ar__lodge{fill:#2B0E17;stroke:#FBE3D6;stroke-width:.9}
 .ar__frag{stroke:#4B0C13;stroke-width:.8}
+/* the divide where the small branch leaves: the two vessels' walls back to back, lined on both faces */
+.ar__cmid{fill:none;stroke:#D5B09F;stroke-width:6;stroke-linecap:round}
+.ar__clin{fill:none;stroke:#F4E4DB;stroke-width:3.2}
 /* the artery below, cut open, in the ring's yellow frame */
 .ar__void{fill:#0A141B}
 .ar__frame{fill:none;stroke:#F6C453;stroke-width:2.6;stroke-opacity:.9}
@@ -133,3 +136,7 @@
 .sim > .ar__pack .sp__now{display:none!important}
 .ar.ar--staged .ar__wrap{grid-template-columns:minmax(0,1fr)}
 .sim > .ar__pack .ar__fig{margin:0}
+/* while the view follows the piece of clot (step 5): extension, and less common */
+.ar__extpill rect{fill:#F4F1EA;stroke:#9A9A9A;stroke-width:1;stroke-dasharray:3 2}
+.ar__extpill text{fill:#5A5A5A;font-family:var(--sans,Inter,system-ui,sans-serif);font-weight:700;letter-spacing:.08em}
+.ar .sp__tag{background:#F4F1EA;color:#5A5A5A;border:1px dashed #9A9A9A}

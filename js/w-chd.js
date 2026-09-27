@@ -120,6 +120,16 @@
     yA: 36, yB: 260                                     /* the strip of the model that is drawn */
   };
   var LUM0 = AR.yLum2 - AR.yLum;                        /* 116: the lumen of the healthy artery */
+  /* Downstream of the deposit the artery divides (FORK): the main artery goes on above, and a smaller branch
+     leaves below it, narrowing as it goes. The model is XMAX long; the view shows AR.W of it, and pans by up to
+     PAN_MAX to follow a piece of clot down to the branch (Daniel, 27 Sep: "move the animation towards a narrower
+     area and show how the blood clot would block"). carTop / carBot: the upper and lower faces of the divide. */
+  var XMAX = 1300, PAN_MAX = 620;
+  var FORK = { x0: 772, x1: 900, top: 140, bot0: 164, bot1: 192 };
+  function forkK(x) { var k = (x - FORK.x0) / (FORK.x1 - FORK.x0); k = k < 0 ? 0 : k > 1 ? 1 : k; return k * k * (3 - 2 * k); }
+  function carTop(x) { return 168 - (168 - FORK.top) * forkK(x); }
+  function carBot(x) { return x <= FORK.x1 ? 170 + (FORK.bot0 - 170) * forkK(x) : FORK.bot0 + (FORK.bot1 - FORK.bot0) * Math.min(1, (x - FORK.x1) / (XMAX - FORK.x1)); }
+  function wLow(x) { return x < FORK.x0 ? 0 : AR.yLum2 - carBot(x); }      /* the small branch's lumen */
   function bump(u) { return u <= -1 || u >= 1 ? 0 : (1 - u * u) * (1 - u * u); }
   function bumpFlat(u) { if (u <= -1 || u >= 1) return 0; var q = 1 - u * u * u * u; return q * q; }
 
@@ -144,15 +154,20 @@
   /* the heart muscle beyond the ring: supplied (no tint), short of oxygen (dusky), dead (grey) */
   var MUS = { isch: '#5E3F7E', dead: '#8C8A90' };
 
+  /* The IGCSE story is steps 1-4, 6 and 7 (0610 9.2: the blockage of a coronary artery). Step 5, a piece of the
+     clot carried off to block a smaller branch, is extension and less common (Daniel, 27 Sep: "make clear what is
+     extension or less common but still interesting to know"): it has its own step, tagged, so it never blurs the
+     main story. */
   var AR_STEPS = [
     { t: 0,  h: 'A healthy coronary artery', p: 'Above: the heart from the front, with its coronary arteries on its surface. Below: the part of one coronary artery inside the yellow ring, cut open along its length. Its lining is smooth and its lumen is wide, so blood flows freely. The blood brings oxygen and glucose to the heart muscle.' },
     { t: 12, h: 'Fatty material builds up in the wall', p: 'Over many years, fatty material containing cholesterol builds up in the wall of the artery, under the lining. At first the fatty deposit is small, and blood still flows freely.' },
     { t: 22, h: 'The lumen becomes narrower', p: 'The fatty deposit grows over more years. It bulges into the lumen, so the lumen becomes narrower and less blood can flow through it. The wall there is less elastic. During exercise, the heart muscle beyond the narrow part may not receive enough oxygen.' },
-    { t: 35, h: 'A blood clot forms', p: 'The surface of the fatty deposit becomes rough and breaks. Platelets stick to the rough surface, and a blood clot forms on it. Pieces can break off the clot and be carried away in the blood until they block a smaller artery further along.' },
-    { t: 43, h: 'The clot blocks the artery', p: 'The clot grows until it blocks the artery completely. No blood can flow past it. The heart muscle beyond the blockage receives no oxygen and no glucose: on the heart, its patch darkens.' },
-    { t: 52, h: 'Heart muscle cells die: a heart attack', p: 'Without oxygen, the heart muscle beyond the blockage cannot respire aerobically, so it cannot contract. Its cells die, and its patch turns grey. This is a heart attack. The muscle before the blockage still receives blood.' }
+    { t: 35, h: 'A blood clot forms', p: 'The surface of the fatty deposit becomes rough and breaks. Platelets stick to the rough surface, and a blood clot forms on it.' },
+    { t: 40, h: 'A piece of the clot breaks off', tag: 'Extension', p: 'Less common, and not in the 0610 syllabus: a piece of the clot can break off and be carried along until it reaches a branch too narrow for it. There it sticks and blocks that branch, and the small patch of heart muscle the branch supplies gets less oxygen.' },
+    { t: 46, h: 'The clot blocks the artery', p: 'The clot grows until it blocks the artery completely. No blood can flow past it. The heart muscle beyond the blockage receives no oxygen and no glucose: on the heart, its patch darkens.' },
+    { t: 55, h: 'Heart muscle cells die: a heart attack', p: 'Without oxygen, the heart muscle beyond the blockage cannot respire aerobically, so it cannot contract. Its cells die, and its patch turns grey. This is a heart attack. The muscle before the blockage still receives blood.' }
   ];
-  var AR_END = 63;
+  var AR_END = 66;
 
   /* the state of the artery at time t */
   function depAt(t) {      /* the deposit's thickness at its centre */
@@ -162,8 +177,8 @@
   }
   function clotAt(t) {     /* the clot's thickness at its centre */
     if (t < 38.4) return 0;
-    if (t < 43.2) return 16 * ease(seg(t, 38.4, 42.4));
-    return 16 + 54 * ease(seg(t, 43.6, 49.5));
+    if (t < 46.2) return 16 * ease(seg(t, 38.4, 42.4));
+    return 16 + 54 * ease(seg(t, 46.6, 52.5));
   }
   /* A deposit is long and low, not a peak: several times longer than it is thick, thickest along a broad
      stretch in its middle, thinning gently at its ends (Daniel, 27 Sep: "it kind of looks like a mountain";
@@ -173,6 +188,7 @@
   function clotHalf(C) { return 16 + (AR.hk - 16) * clamp01(C / 40); }
   function C_(x, C) { return C * bumpFlat((x - AR.xk) / clotHalf(C)); }
   function lumenW(x, P, C) { return Math.max(0, AR.yLum2 - P_(x, P) - C_(x, C) - AR.yLum); }
+  function mainW(x, P, C) { return x < FORK.x0 ? lumenW(x, P, C) : carTop(x) - AR.yLum; }
   function narrowest(P, C) { var m = LUM0; for (var x = AR.xc - 90; x <= AR.xc + 90; x += 5) m = Math.min(m, lumenW(x, P, C)); return m; }
   /* flow through the artery, 1 = healthy. Unchanged until the lumen is half closed, then falling to
      nothing as it closes (a simplification of Gould et al. 1974). */
@@ -208,7 +224,7 @@
 
   /* everything in the artery that never moves: built once */
   function arStatic(u) {
-    var W = AR.W, r = rng(7), s = '', i, x, y;
+    var W = AR.W, XL = XMAX + 8, r = rng(7), s = '', i, x, y;
     s += '<defs>' +
       /* plasma, pale and straw-tinted, as it is between the cells: the blood's red is its cells */
       '<linearGradient id="' + u + 'lu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C98C7C"/><stop offset=".5" stop-color="#E8BFA6"/><stop offset="1" stop-color="#C98C7C"/></linearGradient>' +
@@ -220,16 +236,17 @@
       '<clipPath id="' + u + 'cp"><rect class="ar__cr" x="-4" y="' + AR.yA + '" width="' + (W + 8) + '" height="' + (AR.yB - AR.yA) + '" rx="12"/></clipPath>' +
       rbcDefs(u) +
       '</defs>';
-    s += '<g clip-path="url(#' + u + 'cp)">';
-    s += '<rect class="ar__void" x="-4" y="' + AR.yA + '" width="' + (W + 8) + '" height="' + (AR.yB - AR.yA) + '"/>';
+    /* the view is a window on the artery: what is in it slides along (ar__pan) while the window stays */
+    s += '<g clip-path="url(#' + u + 'cp)"><g class="ar__pan">';
+    s += '<rect class="ar__void" x="-4" y="' + AR.yA + '" width="' + XL + '" height="' + (AR.yB - AR.yA) + '"/>';
     /* the blood in the lumen */
-    s += '<rect x="-4" y="' + AR.yLum + '" width="' + (W + 8) + '" height="' + LUM0 + '" fill="url(#' + u + 'lu)"/>';
+    s += '<rect x="-4" y="' + AR.yLum + '" width="' + XL + '" height="' + LUM0 + '" fill="url(#' + u + 'lu)"/>';
     /* the two walls: adventitia, media with elastic fibres, the internal elastic lamina, the lining */
-    s += '<rect class="ar__adv" x="-4" y="' + AR.yOut + '" width="' + (W + 8) + '" height="' + (AR.yMed - AR.yOut) + '"/>';
-    s += '<rect class="ar__med" x="-4" y="' + AR.yMed + '" width="' + (W + 8) + '" height="' + (AR.yIel - AR.yMed) + '" fill="url(#' + u + 'm1)"/>';
-    s += '<rect class="ar__adv" x="-4" y="' + AR.yMed2 + '" width="' + (W + 8) + '" height="' + (AR.yOut2 - AR.yMed2) + '"/>';
-    s += '<rect class="ar__med" x="-4" y="' + AR.yIel2 + '" width="' + (W + 8) + '" height="' + (AR.yMed2 - AR.yIel2) + '" fill="url(#' + u + 'm2)"/>';
-    function wavy(y0, amp, per, ph) { var dd = 'M-6 ' + n1(y0); for (var xx = 0; xx <= W + 12; xx += 6) dd += ' L' + xx + ' ' + n1(y0 + amp * Math.sin(xx / per + ph)); return dd; }
+    s += '<rect class="ar__adv" x="-4" y="' + AR.yOut + '" width="' + XL + '" height="' + (AR.yMed - AR.yOut) + '"/>';
+    s += '<rect class="ar__med" x="-4" y="' + AR.yMed + '" width="' + XL + '" height="' + (AR.yIel - AR.yMed) + '" fill="url(#' + u + 'm1)"/>';
+    s += '<rect class="ar__adv" x="-4" y="' + AR.yMed2 + '" width="' + XL + '" height="' + (AR.yOut2 - AR.yMed2) + '"/>';
+    s += '<rect class="ar__med" x="-4" y="' + AR.yIel2 + '" width="' + XL + '" height="' + (AR.yMed2 - AR.yIel2) + '" fill="url(#' + u + 'm2)"/>';
+    function wavy(y0, amp, per, ph) { var dd = 'M-6 ' + n1(y0); for (var xx = 0; xx <= XMAX + 12; xx += 6) dd += ' L' + xx + ' ' + n1(y0 + amp * Math.sin(xx / per + ph)); return dd; }
     var el = '';
     [64, 71, 78].forEach(function (yy, k) { el += '<path d="' + wavy(yy, 1.6, 7, k) + '"/>'; });
     [216, 223, 230].forEach(function (yy, k) { el += '<path d="' + wavy(yy, 1.6, 7, k + 1.5) + '"/>'; });
@@ -239,17 +256,29 @@
     s += '<g class="ar__col">' + col + '</g>';
     s += '<g class="ar__iel"><path d="' + wavy(AR.yIel, 1.3, 5, 0) + '"/><path d="' + wavy(AR.yIel2 + 1, 1.3, 5, 2) + '"/></g>';
     var smc = '';
-    for (i = 0; i < 44; i++) { x = r() * W; y = (i % 2 ? AR.yMed + 4 : AR.yIel2 + 4) + r() * 20; smc += '<ellipse cx="' + n1(x) + '" cy="' + n1(y) + '" rx="5.4" ry="1.3" transform="rotate(' + n1(6 * (r() - .5)) + ' ' + n1(x) + ' ' + n1(y) + ')"/>'; }
+    for (i = 0; i < 88; i++) { x = r() * XMAX; y = (i % 2 ? AR.yMed + 4 : AR.yIel2 + 4) + r() * 20; smc += '<ellipse cx="' + n1(x) + '" cy="' + n1(y) + '" rx="5.4" ry="1.3" transform="rotate(' + n1(6 * (r() - .5)) + ' ' + n1(x) + ' ' + n1(y) + ')"/>'; }
     s += '<g class="ar__smc">' + smc + '</g>';
     /* the wall under the deposit loses its elastic fibres: this patch hides them as the deposit grows */
     s += '<rect class="ar__stiff" x="' + (AR.xc - AR.hw) + '" y="' + (AR.yIel2 - 1) + '" width="' + (2 * AR.hw) + '" height="' + (AR.yMed2 - AR.yIel2 + 1) + '" fill="url(#' + u + 'sf)" opacity="0"/>';
-    s += '<rect class="ar__lin" x="-4" y="' + (AR.yIel - 1) + '" width="' + (W + 8) + '" height="5"/>';
+    s += '<rect class="ar__lin" x="-4" y="' + (AR.yIel - 1) + '" width="' + XL + '" height="5"/>';
     var en = '';
-    for (x = 8; x < W; x += 24) en += '<ellipse cx="' + x + '" cy="' + (AR.yLum - 2.2) + '" rx="4.4" ry="1.2"/>';
+    for (x = 8; x < XMAX; x += 24) en += '<ellipse cx="' + x + '" cy="' + (AR.yLum - 2.2) + '" rx="4.4" ry="1.2"/>';
     s += '<g class="ar__enuc">' + en + '</g>';
+    /* the divide: where the small branch leaves, the two vessels' walls meet as a wedge of wall, lined on both faces */
+    var ct = 'M' + FORK.x0 + ' 169', cb = '';
+    for (x = FORK.x0; x <= XMAX + 6; x += 6) ct += ' L' + x + ' ' + n1(carTop(x));
+    for (x = XMAX + 6; x >= FORK.x0; x -= 6) cb += ' L' + x + ' ' + n1(carBot(x));
+    s += '<path class="ar__med" d="' + ct + cb + 'Z" fill="#B8665C"/>';
+    var mid = 'M' + (FORK.x0 + 30) + ' ' + n1((carTop(FORK.x0 + 30) + carBot(FORK.x0 + 30)) / 2);
+    for (x = FORK.x0 + 36; x <= XMAX + 6; x += 6) mid += ' L' + x + ' ' + n1((carTop(x) + carBot(x)) / 2);
+    s += '<path class="ar__cmid" d="' + mid + '"/>';
+    var lt = '', lb = '';
+    for (x = FORK.x0; x <= XMAX + 6; x += 6) { lt += (lt ? ' L' : 'M') + x + ' ' + n1(carTop(x) - 1.6); lb += (lb ? ' L' : 'M') + x + ' ' + n1(carBot(x) + 1.6); }
+    s += '<path class="ar__clin" d="' + lt + '"/><path class="ar__clin" d="' + lb + '"/>';
     /* the parts that change: the deposit, the lower lining, the clot and the cells */
     s += '<g class="ar__dep"></g><g class="ar__lin2"></g><g class="ar__clot"></g><g class="ar__cells"></g>';
-    /* which way the blood flows: from the aorta, on the left */
+    s += '</g>';
+    /* which way the blood flows: from the aorta, on the left (fixed to the window) */
     s += '<g class="ar__dir"><path d="M626 136 L635 148 L626 160"/><path d="M636 136 L645 148 L636 160"/></g>';
     s += '</g>';
     /* the frame, in the ring's yellow: this is the part inside the ring on the heart */
@@ -272,7 +301,7 @@
       '<g clip-path="url(#' + u + 'vc)"><circle class="ar__lodgeS" cx="' + LODGE[0] + '" cy="' + LODGE[1] + '" r="13" filter="url(#' + u + 'soft)" opacity="0"/></g>' +
       '<circle class="ar__lodge" cx="' + LODGE[0] + '" cy="' + LODGE[1] + '" r="2.6" opacity="0"/>' +
       '<circle class="ar__ringH" cx="' + BLK[0] + '" cy="' + BLK[1] + '" r="' + BLK_R + '"/>' +
-      '<circle class="ar__ring" cx="' + BLK[0] + '" cy="' + BLK[1] + '" r="' + BLK_R + '"/>';
+      '<circle class="ar__ring" cx="' + BLK[0] + '" cy="' + BLK[1] + '" r="' + BLK_R + '"/>';     /* moved with the view (render) */
   }
 
   /* the deposit's cholesterol crystals and fat droplets, placed in its own proportions */
@@ -286,14 +315,27 @@
     for (var i = 0; i < 26; i++) out.push({ u: (r() * 2 - 1) * .85, v: .1 + r() * .8, a: r() * Math.PI, cell: i % 2 === 0 });
     return out;
   })();
-  /* Pieces of the clot break off while it grows, and the blood carries them away; one lodges in a smaller
-     branch further along and blocks it (a microembolus: Falk E et al. 2013, Eur Heart J 34: 719–728). The
-     clot itself still blocks the artery where it formed, on the deposit: in most heart attacks the artery
-     is found blocked at that spot (DeWood MA et al. 1980, N Engl J Med 303: 897–902). tb: when each piece
-     breaks off; lane: its height in the lumen as it goes. On the heart, the first lodges at LODGE. */
-  var FRAGS = [{ tb: 39.6, lane: .42, rot: 1 }, { tb: 41.2, lane: .6, rot: -1 }];
-  var LODGE = [231, 253], LODGE_T = 41.9;
+  /* A piece of the clot breaks off while it grows and the blood carries it away, down the artery and into a
+     smaller branch, until the branch is too narrow for it: there it sticks and blocks that branch (a microembolus:
+     Falk E et al. 2013, Eur Heart J 34: 719–728; platelet emboli in small intramyocardial arteries: Davies MJ et
+     al. 1986, Circulation 73: 418–427). The clot itself still blocks the artery where it formed, on the deposit,
+     which is what causes most heart attacks (DeWood MA et al. 1980, N Engl J Med 303: 897–902); a clot carried
+     in from elsewhere causes only about 3 in 100 (Shibata T et al. 2015, Circulation 132: 241–250).
+     FR: when it breaks off and how long it travels; X_LODGE: where the branch is as narrow as the piece;
+     LODGE: that place on the heart, at the end of a diagonal branch beyond the ring. */
+  var FR = { tb: 40.2, dur: 2 };
+  var X_LODGE = 1143, FRAG_S = 2, LODGE = [231, 253], LODGE_T = FR.tb + FR.dur;     /* the piece, drawn twice FRAG_D's size, is as tall as the branch at X_LODGE */
   var FRAG_D = 'M-6.5 -2.8C-4 -6.2 2.6 -6.4 6.2 -2.6C8.6 .4 6 4.8 1.4 5.2C-3 6 -8.4 2.8 -6.5 -2.8Z';
+  function sm01(k) { k = k < 0 ? 0 : k > 1 ? 1 : k; return k * k * (3 - 2 * k); }
+  function fragX0() { return AR.xk + clotHalf(clotAt(FR.tb)) * .72; }
+  function fragX(t) { var x0 = fragX0(); return x0 + (X_LODGE - x0) * sm01((t - FR.tb) / FR.dur); }
+  /* the view: still, then following the piece (keeping it near the middle), holding on it where it sticks,
+     and back to the deposit as the next step begins */
+  function panAt(t) {
+    if (t <= FR.tb) return 0;
+    if (t < 46) return Math.max(0, Math.min(PAN_MAX, fragX(Math.min(t, LODGE_T)) - 330));
+    return PAN_MAX * (1 - ease(seg(t, 46, 47.2)));
+  }
   var PLT = (function () { var r = rng(44), out = []; for (var i = 0; i < 14; i++) out.push({ x: -15 + 30 * (i / 13) + 2 * (r() - .5), t0: 37.4 + r() * 1.6, dy: r() * 2.5 }); return out; })();
 
   function artery(spec) {
@@ -314,11 +356,12 @@
     var gDep = svg.querySelector('.ar__dep'), gLin = svg.querySelector('.ar__lin2'), gClot = svg.querySelector('.ar__clot'), gCells = svg.querySelector('.ar__cells');
     var stiff = svg.querySelector('.ar__stiff'), terr = svg.querySelector('.ar__terr'), ladD = svg.querySelector('.ar__ladD');
     var lodge = svg.querySelector('.ar__lodge'), lodgeS = svg.querySelector('.ar__lodgeS');
+    var panG = svg.querySelector('.ar__pan'), ringEls = [svg.querySelector('.ar__ringH'), svg.querySelector('.ar__ring')];
 
     /* red blood cells: five lanes across the lumen; each keeps its own tilt, from face on to edge on */
     var r = rng(5), TRUNK = [], LANES = [.12, .3, .5, .7, .88];
     LANES.forEach(function (lane, j) {
-      var n = 17;
+      var n = 34;
       for (var i = 0; i < n; i++) {
         var o = r();
         TRUNK.push({ lane: lane, g: 1.25 * (1 - .55 * (2 * lane - 1) * (2 * lane - 1)), s0: (i + [0, .55, .2, .8, .38][j] + .24 * (r() - .5)) / n,
@@ -326,17 +369,26 @@
       }
     });
 
+    var LOWC = [];                 /* the small branch's own cells */
+    for (var li = 0; li < 11; li++) LOWC.push({ s0: (li + .4 * r()) / 11, tilt: 8 * (r() - .5) });
+    /* the length of the artery as the blood sees it, healthy: sets the cells' speed */
+    var TOT0 = (function () { var t0 = 0, d6 = 6; for (var xx = 0; xx < XMAX; xx += d6) t0 += mainW(xx + d6 / 2, 0, 0) / LUM0 * d6; return t0; })();
+    var V_LODGE = null;
     /* where things are on screen: set by setLayout */
     var lay = { tall: false, f: 17, mL: 146, mR: 150, sH: .92, hx: 0, hy: 0, ySec: 0, vb: null };
-    function toScreen(x, y) { return lay.tall ? [y - AR.yA, x + lay.ySec] : [x, y - AR.yA + lay.ySec]; }
+    var pan = 0;
+    function toScreen(x, y) { return lay.tall ? [y - AR.yA, x - pan + lay.ySec] : [x - pan, y - AR.yA + lay.ySec]; }
     function heartPt(x, y) { return [lay.hx + x * lay.sH, lay.hy + y * lay.sH]; }
 
     function render(t) {
       var P = depAt(t), C = clotAt(t), Q = flowAt(t), V = volumeAt(t);
-      var crack = ease(seg(t, 36, 37.6)), stf = ease(seg(t, 25, 33)), dead = ease(seg(t, 53.5, 60.5));
+      var crack = ease(seg(t, 36, 37.6)), stf = ease(seg(t, 25, 33)), dead = ease(seg(t, 56.5, 63.5));
       var sB = Math.sqrt(Q);
       var i, x;
       stiff.setAttribute('opacity', n1(stf * .92));
+      pan = panAt(t); panG.setAttribute('transform', 'translate(' + n1(-pan) + ' 0)');
+      var pf = pan / PAN_MAX, rx = BLK[0] + (LODGE[0] - BLK[0]) * pf, ry = BLK[1] + (LODGE[1] - BLK[1]) * pf;
+      ringEls.forEach(function (el) { el.setAttribute('cx', n1(rx)); el.setAttribute('cy', n1(ry)); });
 
       /* the heart: the patch beyond the ring darkens as its supply fails, then turns grey as its cells die;
          the artery beyond the ring darkens as the blood in it stops */
@@ -387,15 +439,23 @@
         for (x = b; x >= a; x -= 3) dn += ' L' + n1(x) + ' ' + n1(top(x) - (x > xn - 26 && x < xn + 26 ? notch(x) : 0));
         return '<path class="ar__linf" d="' + up + dn + 'Z"/>';
       }
-      if (crack > .02) { lin += liningPath(-4, xn - gp) + liningPath(xn + gp, AR.W + 4); }
-      else lin += liningPath(-4, AR.W + 4);
-      for (x = 8; x < AR.W; x += 24) {
+      if (crack > .02) { lin += liningPath(-4, xn - gp) + liningPath(xn + gp, XMAX + 4); }
+      else lin += liningPath(-4, XMAX + 4);
+      for (x = 8; x < XMAX; x += 24) {
         if (crack > .02 && Math.abs(x - xn) < gp + 5) continue;
         var ly = top(x) - 2 - (Math.abs(x - xn) < 26 ? notch(x) : 0), sl = (top(x + 2) - top(x - 2)) / 4;
         lin += '<ellipse class="ar__enuc2" cx="' + x + '" cy="' + n1(ly) + '" rx="4.4" ry="1.2" transform="rotate(' + n1(Math.atan(sl) * 57.3) + ' ' + x + ' ' + n1(ly) + ')"/>';
       }
       gLin.innerHTML = lin;
 
+      /* the piece's height as it goes: off the clot's surface, down into the lower lanes, then into the middle of the
+         small branch */
+      function fragY(xx) {
+        var x0 = fragX0(), y0 = top(x0) - 10;
+        if (xx < 420) return y0 + (188 - y0) * sm01((xx - x0) / (420 - x0));
+        var xc2 = Math.max(xx, FORK.x0), yc = carBot(xc2) + wLow(xc2) / 2;
+        return 188 + (yc - 188) * sm01((xx - FORK.x0 + 20) / 80);
+      }
       /* platelets stick to the torn surface first, then the clot grows on it */
       var clot = '';
       PLT.forEach(function (p) {
@@ -422,71 +482,100 @@
           else clot += '<path class="ar__fibr" d="M' + n1(bx - 9 * Math.cos(bit.a)) + ' ' + n1(by - 4 * Math.sin(bit.a)) + ' Q' + n1(bx) + ' ' + n1(by + 3) + ' ' + n1(bx + 9 * Math.cos(bit.a)) + ' ' + n1(by + 4 * Math.sin(bit.a)) + '"/>';
         });
       }
-      FRAGS.forEach(function (fr) {
-        var sN = t - fr.tb; if (sN <= 0) return;
-        var x0 = AR.xk + clotHalf(clotAt(fr.tb)) * .72, xf = x0 + 90 * sN + 32 * sN * sN; if (xf > AR.W + 12) return;
-        var yC = top(x0) - 8, yL = AR.yLum + lumenW(xf, P, C) * fr.lane, k = clamp01(sN / .35), yf = yC + (yL - yC) * k;
-        var op = Math.min(1, sN / .15, (AR.W + 12 - xf) / 30);
-        clot += '<path class="ar__frag" d="' + FRAG_D + '" fill="url(#' + u + 'cl)" transform="translate(' + n1(xf) + ' ' + n1(yf) + ') rotate(' + n1(fr.rot * 55 * sN) + ')" opacity="' + n1(op) + '"/>';
-      });
+      if (t > FR.tb) {
+        var xf = fragX(t), yf = fragY(xf), ang = 220 * sm01((t - FR.tb) / FR.dur);
+        clot += '<path class="ar__frag" d="' + FRAG_D + '" fill="url(#' + u + 'cl)" transform="translate(' + n1(xf) + ' ' + n1(yf) + ') rotate(' + n1(ang) + ') scale(' + FRAG_S + ')" opacity="' + n1(Math.min(1, (t - FR.tb) / .15)) + '"/>';
+      }
       gClot.innerHTML = clot;
 
       /* the red blood cells. Each lane carries the same blood per second along its whole length, so
          a cell moves faster where the lumen is narrow; when the lumen closes, every cell stops. Once the
          clot closes the artery, the blood trapped beyond it no longer flows: it gives up its oxygen to the
          muscle around it and is drawn dusky. */
-      var NT = 111, dx = AR.W / (NT - 1), TX = [], TT = [0], TW = [];
-      for (i = 0; i < NT; i++) { TX.push(i * dx); TW.push(lumenW(i * dx, P, C)); }
+      var NT = 218, dx = XMAX / (NT - 1), TX = [], TT = [0], TW = [];
+      for (i = 0; i < NT; i++) { TX.push(i * dx); TW.push(mainW(i * dx, P, C)); }
       for (i = 1; i < NT; i++) TT.push(TT[i - 1] + (TW[i - 1] + TW[i]) / 2 / LUM0 * dx);
       var TOT = TT[NT - 1];
       function xOfTau(tau) {
         var lo = 0, hi = NT - 1;
-        if (tau <= 0) return 0; if (tau >= TOT) return AR.W;
+        if (tau <= 0) return 0; if (tau >= TOT) return XMAX;
         while (hi - lo > 1) { var m = (lo + hi) >> 1; if (TT[m] < tau) lo = m; else hi = m; }
         return TX[lo] + (tau - TT[lo]) / ((TT[hi] - TT[lo]) || 1) * dx;
       }
-      var cells = '', v0 = 72 / AR.W, past = AR.xk + AR.hk * .5, trapped = Q < .02;
+      var cells = '', v0 = 72 / TOT0, past = AR.xk + AR.hk * .5, trapped = Q < .02, x0w = pan - 24, x1w = pan + AR.W + 24;
       TRUNK.forEach(function (c) {
-        var sN = (c.s0 + c.g * V * v0) % 1, xx = xOfTau(sN * TOT), w = lumenW(xx, P, C);
+        var sN = (c.s0 + c.g * V * v0) % 1, xx = xOfTau(sN * TOT); if (xx < x0w || xx > x1w) return;
+        var w = mainW(xx, P, C);
         if (w < 4) return;
-        var yy = AR.yLum + w * c.lane, slope = (lumenW(xx + 2, P, C) - lumenW(xx - 2, P, C)) / 4 * c.lane;
+        /* past the divide the main artery is narrower: its five lanes are fitted into it, none faded */
+        var fk = forkK(xx), ln = c.lane + (.18 + .64 * (c.lane - .12) / .76 - c.lane) * fk;
+        var yy = AR.yLum + w * ln, slope = (mainW(xx + 2, P, C) - mainW(xx - 2, P, C)) / 4 * ln;
         var room = c.lane === .5 ? clamp01((w - 6) / 4) : (c.lane === .3 || c.lane === .7) ? clamp01((w - 24) / 10) : clamp01((w - 44) / 14);
-        var op = Math.min(1, xx / 20, (AR.W - xx) / 20, room); if (op <= .02) return;
+        if (xx > FORK.x0) room = Math.max(room, fk);
+        var op = Math.min(1, xx / 20, (XMAX - xx) / 20, room); if (op <= .02) return;
         var ang = Math.atan(slope) * 57.3 + (c.tilt + c.spin * sN) * (1 - clamp01((LUM0 - w) / 60));
         var set = trapped && xx > past ? 'D' : '';
         cells += '<use href="#' + u + 'rb' + set + (c.k ? 'F' : 'S') + '" transform="translate(' + n1(xx) + ' ' + n1(yy) + ') rotate(' + n1(ang) + ') scale(' + RB + ' ' + n1(RB * (c.k || 1)) + ')" opacity="' + n1(op) + '"/>';
+      });
+      /* the small branch: its cells squeeze through edge on; they stop when the piece sticks, and beyond it
+         the blood, going nowhere, gives up its oxygen and turns dusky */
+      if (V_LODGE == null) { V_LODGE = volumeAt(LODGE_T); volumeAt(t); }
+      var VL = Math.min(V, V_LODGE), lodgedNow = t >= LODGE_T;
+      LOWC.forEach(function (c) {
+        var xx = FORK.x0 + 26 + ((c.s0 + .055 * VL) % 1) * (XMAX - FORK.x0 - 20); if (xx < x0w || xx > x1w) return;
+        if (lodgedNow && Math.abs(xx - X_LODGE) < 24) return;
+        var w = wLow(xx); if (w < 6) return;
+        var dusky = t > LODGE_T + .4 && xx > X_LODGE;
+        cells += '<use href="#' + u + 'rb' + (dusky ? 'D' : '') + 'S" transform="translate(' + n1(xx) + ' ' + n1(carBot(xx) + w / 2) + ') rotate(' + n1(c.tilt) + ') scale(1.15)" opacity="' + n1(Math.min(1, (xx - FORK.x0 - 20) / 20)) + '"/>';
       });
       gCells.innerHTML = cells;
 
       /* labels, in the margins, leaders ruled level: the heart's first, then the artery's */
       var hItems = [], aItems = [], vb = lay.vb, f = lay.f;
-      function addA(id, text, mx, my, side, op) { var p = toScreen(mx, my); aItems.push({ id: id, text: text, x: p[0], y: p[1], side: side, op: op == null ? 1 : op }); }
+      function addA(id, text, mx, my, side, op) {
+        if (mx < pan + 6 || mx > pan + AR.W - 6) return;             /* out of the window */
+        var p = toScreen(mx, my); aItems.push({ id: id, text: text, x: p[0], y: p[1], side: side, op: op == null ? 1 : op });
+      }
       function addH(id, text, hxp, hyp, side, op) { var p = heartPt(hxp, hyp); hItems.push({ id: id, text: text, x: p[0], y: p[1], side: side, op: op == null ? 1 : op }); }
       addH('aorta', 'aorta', 86, 62, 'L');
       addH('cor', 'coronary artery', 181, 171, 'L');
-      addH('ring', 'cut open below', BLK[0] + BLK_R, BLK[1], 'R');
-      if (lg > .05 && t < 45.5) addH('lodge', 'a piece of clot blocks a small branch', LODGE[0] + 2, LODGE[1], 'R', Math.min(lg, clamp01((45.5 - t) / 1.5)));
+      addH('ring', pf > .5 ? 'a small branch, cut open below' : 'cut open below', rx + BLK_R, ry, 'R');
+      if (lg > .05 && t < 48.5 && pf < .5) addH('lodge', 'a piece of clot blocks a small branch', LODGE[0] + 2, LODGE[1], 'R', Math.min(lg, clamp01((48.5 - t) / 1.5)));
       var tOp = clamp01(Math.max(isch * 2.5, dead));
       if (tOp > .02) addH('terr', 'heart muscle beyond the blockage', 222, 292, 'R', tOp);
       /* the wall, the lining and the lumen are the same all along: named on the right, near the end; the deposit
          and the clot on the left (Daniel, 27 Sep: every name on the left side was cluttered). A phone keeps
          its own sides. */
       var xp = AR.xc + (lay.tall ? 26 : -62), xk = AR.xc + (lay.tall ? -20 : -28);
-      addA('wall', 'wall of artery', lay.tall ? 24 : 610, (AR.yMed + AR.yIel) / 2, lay.tall ? 'L' : 'R');
-      addA('lining', 'lining', lay.tall ? 64 : 610, AR.yLum - 2, lay.tall ? 'L' : 'R');
-      addA('lumen', 'lumen', lay.tall ? 104 : 610, lay.tall ? 148 : 124, lay.tall ? 'L' : 'R');
+      if (pf <= .5) {           /* down at the branch, the names are the branch, the piece and the lumen */
+        addA('wall', 'wall of artery', (lay.tall ? 24 : 610) + pan, (AR.yMed + AR.yIel) / 2, lay.tall ? 'L' : 'R');
+        addA('lining', 'lining', (lay.tall ? 64 : 610) + pan, AR.yLum - 2, lay.tall ? 'L' : 'R');
+      }
+      addA('lumen', 'lumen', (lay.tall ? 104 : 610) + pan, lay.tall ? 148 : 124, lay.tall ? 'L' : 'R');
+      if (pf > .5) {
+        var xb = X_LODGE - 150;
+        addA('branch', 'a smaller branch', xb, carBot(xb) + wLow(xb) / 2, lay.tall ? 'R' : 'L', clamp01((pf - .5) * 4));
+        if (t > FR.tb) { var xq = fragX(t); addA('piece', 'a piece of the clot', xq + 10, fragY(xq), 'R', clamp01((pf - .5) * 4)); }
+      }
       var pth = P_(xp, P); if (pth > 5) addA('dep', 'fatty deposit (plaque)', xp, AR.yIel2 - pth / 2 + 1, lay.tall ? 'R' : 'L', clamp01((pth - 5) / 6));
       var cth = Math.min(C_(xk, C), lumenW(xk, P, 0)), cbot = top(xk) - 4;
       if (cth > 5) addA('clot', 'blood clot', xk, cbot - cth / 2, lay.tall ? 'R' : 'L', clamp01((cth - 5) / 5));
       var hTop = vb.y + 6, hBot = lay.ySec - 8, aTop = lay.ySec + 4, aBot = vb.y + vb.h - 6;
-      gLab.innerHTML =
+      /* while the view follows the piece of clot, it says so: extension, and less common */
+      var pillOp = clamp01((pf - .3) * 3), pill2 = '';
+      if (pillOp > .02) {
+        var pfz = f * .72, ptx = 'EXTENSION \u00b7 LESS COMMON', pw = ptx.length * pfz * .64 + 18, py0 = lay.ySec + (lay.tall ? 8 : 10);
+        pill2 = '<g class="ar__extpill" opacity="' + n1(pillOp) + '"><rect x="10" y="' + n1(py0) + '" width="' + n1(pw) + '" height="' + n1(pfz * 1.7) + '" rx="' + n1(pfz * .85) + '"/>' +
+          '<text x="' + n1(10 + pw / 2) + '" y="' + n1(py0 + pfz * 1.18) + '" text-anchor="middle" style="font-size:' + n1(pfz) + 'px">' + ptx + '</text></g>';
+      }
+      gLab.innerHTML = pill2 +
         L.labels({ items: hItems.filter(function (q) { return q.side === 'L'; }), left: -8, right: vb.bw + 8, font: f, width: lay.mL - 26, top: hTop, bottom: hBot, gap: 5 }) +
         L.labels({ items: hItems.filter(function (q) { return q.side === 'R'; }), left: -8, right: vb.bw + 8, font: f, width: lay.mR - 26, top: hTop, bottom: hBot, gap: 5 }) +
         L.labels({ items: aItems.filter(function (q) { return q.side === 'L'; }), left: -8, right: vb.bw + 8, font: f, width: lay.mL - 26, top: aTop, bottom: aBot, gap: 5 }) +
         L.labels({ items: aItems.filter(function (q) { return q.side === 'R'; }), left: -8, right: vb.bw + 8, font: f, width: lay.mR - 26, top: aTop, bottom: aBot, gap: 5 });
 
       /* the read-outs above the drawing */
-      var when = t < 12 ? 'at the start' : t < 22 ? 'over many years' : t < 35 ? 'over more years' : t < 43 ? 'suddenly' : t < 52 ? 'within minutes' : '20 to 40 minutes later';
+      var when = t < 12 ? 'at the start' : t < 22 ? 'over many years' : t < 35 ? 'over more years' : t < 46 ? 'suddenly' : t < 55 ? 'within minutes' : '20 to 40 minutes later';
       var flow = Q > .97 ? ['normal', 'ok'] : Q > .02 ? ['less', 'warn'] : ['none past the clot', 'bad'];
       var mus = dead > .05 ? ['cells die', 'bad'] : Q < .02 ? ['no oxygen, no glucose', 'bad'] : Q < .97 ? ['less oxygen', 'warn'] : ['oxygen and glucose', 'ok'];
       pill('when', when, 'plain'); pill('flow', flow[0], flow[1]); pill('mus', mus[0], mus[1]);
@@ -497,7 +586,7 @@
       p.className = 'ar__pill is-' + cls;
     }
 
-    var R = [0, 16, 28, 43.5, 56, 66.5, 78], M = [0, 12, 22, 35, 43, 52, AR_END], clock = readerClock(R, M);
+    var R = [0, 16, 28, 43.5, 51.5, 64, 75, 87], M = [0, 12, 22, 35, 40, 46, 55, AR_END], clock = readerClock(R, M);
     var sp = L.stepper({ steps: readerSteps(AR_STEPS, R), end: R[R.length - 1], render: function (t) { render(clock(t)); } });
     box.appendChild(sp.bar);
     var wrap = h('div', 'ar__wrap');
@@ -510,7 +599,7 @@
     wrap.appendChild(left); wrap.appendChild(sp.list);
     box.appendChild(wrap);
     box.appendChild(h('p', 'widget__note', 'Not to scale: the red blood cells are drawn hundreds of times larger than real, and far fewer. Time is squeezed: a deposit grows over years, a clot forms in minutes, and heart muscle cells die after 20 to 40 minutes without blood. Heart: Servier Medical Art, CC BY 4.0.'));
-    box.appendChild(h('p', 'widget__note ar__fence', '<b>Not asked in 0610.</b> “Plaque” and “atheroma” are other names for the fatty deposit. The chest pain of step 3 is called angina; a heart attack is also called a myocardial infarction.'));
+    box.appendChild(h('p', 'widget__note ar__fence', '<b>Not asked in 0610.</b> Step 5 is extension: in most heart attacks the clot blocks the artery where it forms, as in step 6. “Plaque” and “atheroma” are other names for the fatty deposit; the chest pain of step 3 is angina; a heart attack is also called a myocardial infarction.'));
 
     /* the layout: the heart above, the artery below; the artery turned on its side on a narrow screen;
        lettering at least 13 px on screen */
