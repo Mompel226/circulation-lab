@@ -43,17 +43,21 @@
      ch. 3). The sacs are drawn larger than real ones so they can be seen.
    · A rod-shaped bacterium is about 2 µm long and 1 µm wide (Madigan MT et al., Brock Biology of
      Microorganisms, 15th ed., 2018, ch. 2), so a phagocyte is several times larger.
-   · Step 7, antigen display. Not in 0610, whose Topic 10.1 (Supplement) has only "each pathogen has
-     its own antigens, which have specific shapes". IB Biology guide 2025, C3.2.7 "Antigens as
-     recognition molecules that trigger antibody production" (most antigens are proteins or
-     glycoproteins on the outer surface of pathogens) and C3.2.8 "Activation of B-lymphocytes by
-     helper T-lymphocytes" (the helper T-cell "has also become activated by the same type of
-     antigen"). Phagocytes, above all macrophages, break the pathogen's proteins into short pieces in
-     the vacuole, load them onto their own membrane proteins (MHC class II) and carry them to the
-     cell surface in small vesicles; a helper T-cell whose receptor fits the piece binds to it
-     (Murphy K, Weaver C, Janeway's Immunobiology, 9th ed., 2016, ch. 6). Macrophages and dendritic
-     cells do this most; neutrophils, like the cell drawn, only in some conditions (Vono M et al.
-     2017, Blood 129: 1991–2001). The antigens are drawn as triangles, far larger than real.
+   · Step 7, antigen display. Not a statement of the 0610 syllabus (2023-25 or 2026-28), whose Topic 10.1
+     (Supplement) has only "each pathogen has its own antigens, which have specific shapes"; but 0610 mark
+     schemes have credited it: 0610/32/M/J/14 Q4(d)(ii) "Describe the role of phagocytes in defence against
+     disease", point 6 "identify antigen / pathogens, for lymphocytes" (the examiner report calls it the
+     point on "the ability of the phagocyte to present the antigen to the lymphocyte"), and 0610/42/M/J/17
+     Q6(c)(ii), AVP "e.g. antigens presented on cell surface". No 0654, 0653, 5090, 5129 or Edexcel 4BI1
+     scheme credits it (searched 27 Sep 2026). IB Biology guide 2025, C3.2.7 "Antigens as recognition
+     molecules that trigger antibody production" (most antigens are proteins or glycoproteins on the outer
+     surface of pathogens) and C3.2.8 "Activation of B-lymphocytes by helper T-lymphocytes" (the helper
+     T-cell "has also become activated by the same type of antigen"). Phagocytes, above all macrophages,
+     break the pathogen's proteins into short pieces in the vacuole, load them onto their own membrane
+     proteins (MHC class II) and carry them to the cell surface in small vesicles; a helper T-cell whose
+     receptor fits the piece binds to it (Murphy K, Weaver C, Janeway's Immunobiology, 9th ed., 2016, ch. 6).
+     Macrophages and dendritic cells do this most; neutrophils, like the cell drawn, only in some conditions
+     (Vono M et al. 2017, Blood 129: 1991–2001). The antigens are drawn as triangles, far larger than real.
    · Bacteria release small peptides that attract neutrophils (Schiffmann E, Corcoran BA,
      Wahl SM 1975, PNAS 72: 1059–1062); damaged tissue releases others. Extensions of the cell
      surround the particle and fuse, enclosing it in a vacuole; sacs fuse with the vacuole and
@@ -271,7 +275,7 @@
     { t: 29, h: 'Enzymes are released into the vacuole', p: 'Small sacs in the cytoplasm contain digestive enzymes. The sacs join with the vacuole and release their enzymes into it.' },
     { t: 37, h: 'The enzymes digest the bacterium', p: 'The enzymes digest the bacterium. They break down its large molecules into small, soluble molecules. The pathogen is destroyed.' },
     { t: 45, h: 'The products are absorbed', tag: 'Not asked in 0610', p: 'The small, soluble products are harmless. They are absorbed into the cytoplasm, or released from the cell. The vacuole becomes smaller, and the phagocyte can engulf another pathogen.' },
-    { t: 54, h: 'The phagocyte displays the antigens', tag: 'IB C3.2 Defence against disease · not in 0610', p: 'Pieces of the bacterium\'s antigens are kept. Small sacs carry them to the cell membrane, and proteins in the membrane hold them on its outer surface. The phagocyte now displays the antigens (antigen presentation). A helper T-cell, a lymphocyte whose receptor fits these antigens, can bind to them. This helps to start antibody production against this pathogen.' }
+    { t: 54, h: 'The phagocyte displays the antigens', tag: 'IB C3.2 Defence against disease · beyond the 0610 syllabus', p: 'Pieces of the bacterium\'s antigens are kept. Small sacs carry them to the cell membrane, and proteins in the membrane hold them on its outer surface. The phagocyte now displays the antigens (antigen presentation). A helper T-cell, a lymphocyte whose receptor fits these antigens, can bind to them. This helps to start antibody production against this pathogen.' }
   ];
   var PH_END = 64;
   /* The antigens: on the bacterium, triangles on its surface, in its own frame (x, y, the angle they point);
@@ -555,7 +559,7 @@
     return mount(S, sp, 'ph', [
       ['The phagocyte drawn is a neutrophil, the commonest phagocyte in blood: its nucleus has several lobes, and its cytoplasm is full of small granules. A real one is about 11 µm across, and the bacterium about 2 µm long. The sacs of enzymes are drawn larger than real, and the chemicals, enzymes, products and antigens far larger than real molecules. You see a thin slice, so the extensions look like two arms: in the whole cell they are a cup.'],
       ['<b>Not asked in 0610.</b> Moving towards the chemicals is called chemotaxis. The sacs of enzymes are called lysosomes. Step 6, what happens to the products, goes beyond the syllabus.', 'ph__fence'],
-      ['<b>Step 7 is IB Biology C3.2, Defence against disease</b>, not 0610 (in 0610, antigens come only in Topic 10: each pathogen has its own antigens, with specific shapes). Antigens are presented mostly by macrophages, larger phagocytes in the tissues, and by dendritic cells; a neutrophil, the cell drawn, does it only in some conditions (Vono et al. 2017).', 'ph__fence']
+      ['<b>Step 7 is IB Biology C3.2, Defence against disease.</b> The 0610 syllabus does not list it, but two 0610 mark schemes gave a mark for it in questions on phagocytes (Paper 32, June 2014, Q4(d)(ii); Paper 42, June 2017, Q6(c)(ii)). Antigens are presented mostly by macrophages, larger phagocytes in the tissues, and by dendritic cells; a neutrophil, the cell drawn, does it only in some conditions (Vono et al. 2017).', 'ph__fence']
     ], function (D, narrow) {
       var tall = !!narrow;
       lay = frameOf(svg, bg, model, cr, tall ? { x0: 22, x1: 584, y0: 16, y1: 284 } : { x0: 0, x1: 620, y0: 8, y1: 292 }, tall, D, 9, 9, 118, 118);
