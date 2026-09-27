@@ -222,17 +222,23 @@
     return measure(pts);
   })();
 
+  /* Daniel, 27 Sep: the vena cava ran far from the aorta ("in the biology they travel together"). In the abdomen
+     the aorta runs just to the body's left of the midline and the vena cava just to its right, side by side on
+     the back wall; the iliac veins run with the iliac arteries into the legs, each vein beside its artery (towards
+     the midline); the vena cava begins a little lower than the aorta divides. The hepatic veins join it just
+     under the diaphragm, and the hepatic artery passes in front of it to the liver. */
   var VES = [
     /* arteries, from the heart outwards. g: the group each is drawn in (groupsOf, below). w: its width, or
        [at the start, at the end] if it tapers. into: how far its start lies inside the vessel it leaves */
-    { id: 'aoAbd', a: 1, g: 'A1', w: [10.4, 8.6], p: [AO0, [689, 806], [678, 828], [667, 852], [664, 880], [664, 960], [664, 1040], [664, 1110]] },
-    { id: 'iliacAR', a: 1, g: 'A2', w: [6.2, 5.2], into: 4, p: [[664, 1110], [651, 1136], [627, 1168], [608, 1204], [600, 1238]] },
-    { id: 'iliacAL', a: 1, g: 'A2', w: [6.2, 5.2], into: 4, p: [[664, 1110], [677, 1136], [701, 1168], [720, 1204], [728, 1238]] },
-    { id: 'renAR', a: 1, g: 'A1', w: 4.4, into: 4, p: [[664, 920], [640, 923], [606, 932], [575, 946]] },
-    { id: 'renAL', a: 1, g: 'A1', w: 4.4, into: 4, p: [[664, 915], [682, 918], [701, 927]] },
-    /* the coeliac artery, a short thick trunk, and the hepatic artery on from it to the liver */
-    { id: 'hepA', a: 1, g: 'A1', w: [5.6, 3.6], into: 4, p: [[664, 848], [656, 842], [646, 843], [633, 848], [618, 854], [610, 859]] },
-    { id: 'sma', a: 1, g: 'M', w: [5.2, 3.2], into: 5, p: [[664, 876], [665, 918], [668, 958], [670, 988], [656, 1016], [636, 1042], [614, 1070], [594, 1094], [582, 1110]] },
+    { id: 'aoAbd', a: 1, g: 'A1', w: [10.4, 8.6], p: [AO0, [689, 806], [676, 826], [660, 850], [652, 878], [650, 920], [650, 980], [650, 1040], [650, 1108]] },
+    { id: 'iliacAR', a: 1, g: 'A2', w: [6.2, 5.2], into: 4, p: [[650, 1108], [638, 1134], [620, 1166], [606, 1202], [599, 1238]] },
+    { id: 'iliacAL', a: 1, g: 'A2', w: [6.2, 5.2], into: 4, p: [[650, 1108], [662, 1134], [684, 1166], [704, 1202], [714, 1238]] },
+    { id: 'renAR', a: 1, g: 'A1', w: 4.4, into: 4, p: [[650, 921], [626, 925], [600, 934], [575, 946]] },
+    { id: 'renAL', a: 1, g: 'A1', w: 4.4, into: 4, p: [[650, 916], [676, 919], [701, 927]] },
+    /* the coeliac artery, a short thick trunk, and the hepatic artery on from it to the liver, in front of the
+       vena cava (so drawn with the arteries in front, M) */
+    { id: 'hepA', a: 1, g: 'M', w: [5.6, 3.6], into: 4, p: [[650, 849], [642, 842], [632, 843], [622, 848], [614, 855], [608, 860]] },
+    { id: 'sma', a: 1, g: 'M', w: [5.2, 3.2], into: 5, p: [[650, 876], [654, 910], [660, 948], [666, 984], [656, 1016], [636, 1042], [614, 1070], [594, 1094], [582, 1110]] },
     { id: 'bcA', a: 1, g: 'A1', w: 5.4, p: [hp([193, -60]), [636, 488], [630, 474]] },
     { id: 'carAR', a: 1, g: 'A1', w: 4.4, p: [[630, 474], [626, 430], [624, 360]] },
     { id: 'subAR', a: 1, g: 'A1', w: 4.4, p: [[630, 474], [600, 467], [552, 470], [508, 494], [482, 536]] },
@@ -240,17 +246,17 @@
     { id: 'subAL', a: 1, g: 'A1', w: 4.4, p: [hp([299, -60]), [706, 486], [748, 476], [792, 496], [818, 540]] },
     /* veins, towards the heart. The vena cava begins where the veins from the legs join, and widens as it
        collects the renal veins and the hepatic veins, to the width of the heart's own */
-    { id: 'iliacVR', a: 0, g: 'V', w: [5.6, 6.6], p: [[586, 1238], [590, 1204], [595, 1158], [598, 1110]] },
-    { id: 'iliacVL', a: 0, g: 'V', w: [5.6, 6.6], p: [[742, 1238], [737, 1206], [716, 1170], [681, 1140], [640, 1124], [598, 1110]] },
-    { id: 'ivcAbd', a: 0, g: 'V', w: [8.8, 15.2], p: [[598, 1110], [598, 1040], [598, 960], [596, 904], [590, 862], [581, 826], [572, 801], IVC0] },
-    { id: 'renVR', a: 0, g: 'V', w: 5, p: [[575, 957], [586, 955], [597, 953]] },
-    { id: 'renVL', a: 0, g: 'V', w: 5, p: [[701, 941], [680, 942], [650, 944], [622, 946], [599, 947]] },
-    { id: 'hepVR', a: 0, g: 'V', w: [4.2, 5.4], p: [[522, 838], [540, 823], [556, 809], [568, 798]] },
-    { id: 'hepVM', a: 0, g: 'V', w: [4.2, 5.4], p: [[598, 836], [589, 820], [578, 807], [570, 800]] },
-    { id: 'hepVL', a: 0, g: 'V', w: [3.8, 5], p: [[680, 812], [648, 806], [610, 803], [574, 801]] },
+    { id: 'iliacVR', a: 0, g: 'V', w: [5.6, 6.6], p: [[607, 1238], [611, 1204], [620, 1170], [630, 1144], [637, 1122]] },
+    { id: 'iliacVL', a: 0, g: 'V', w: [5.6, 6.6], p: [[706, 1238], [698, 1204], [680, 1172], [658, 1146], [637, 1122]] },
+    { id: 'ivcAbd', a: 0, g: 'V', w: [8.8, 15.2], p: [[637, 1122], [637, 1060], [637, 1000], [637, 950], [637, 900], [637, 862], [634, 840], [626, 822], [610, 806], [588, 796], IVC0] },
+    { id: 'renVR', a: 0, g: 'V', w: 5, p: [[575, 957], [598, 956], [620, 954], [637, 953]] },
+    { id: 'renVL', a: 0, g: 'V', w: 5, p: [[701, 941], [680, 942], [660, 944], [646, 946], [637, 947]] },
+    { id: 'hepVR', a: 0, g: 'V', w: [4.2, 5.4], p: [[522, 838], [542, 822], [560, 808], [574, 799]] },
+    { id: 'hepVM', a: 0, g: 'V', w: [4.2, 5.4], p: [[598, 842], [601, 826], [604, 812], [606, 805]] },
+    { id: 'hepVL', a: 0, g: 'V', w: [3.8, 5], p: [[690, 818], [664, 816], [644, 820], [630, 824]] },
     /* from the gut to the liver: the mesenteric vein along the root of the mesentery, then, joined by the veins of
        the spleen and stomach (not drawn), the hepatic portal vein, up to the liver */
-    { id: 'portal', a: 0, por: 1, g: 'P', w: [4.2, 7.4], p: [[574, 1115], [588, 1100], [604, 1080], [624, 1056], [644, 1031], [657, 1008], [657, 982], [650, 952], [640, 922], [628, 896], [616, 878], [606, 867]] },
+    { id: 'portal', a: 0, por: 1, g: 'P', w: [4.2, 7.4], p: [[574, 1115], [590, 1098], [606, 1078], [622, 1058], [634, 1040], [640, 1018], [640, 990], [638, 960], [634, 930], [626, 904], [616, 884], [606, 867]] },
     { id: 'jugR', a: 0, g: 'V', w: 4.4, p: [[610, 360], [610, 430], [607, 474]] },
     { id: 'subVR', a: 0, g: 'V', w: 4.4, p: [[474, 546], [500, 504], [548, 480], [596, 476], [607, 474]] },
     { id: 'bcvR', a: 0, g: 'V', w: [6, 7], p: [[607, 474], [604, 490], hp([104, -60])] },
@@ -325,8 +331,8 @@
   var LIVER_IN = [
     { a: 0, por: 1, g: 'P', w: [5.6, 3], p: [[606, 867], [584, 858], [560, 850], [534, 845]] },
     { a: 0, por: 1, g: 'P', w: [5, 2.6], p: [[606, 867], [628, 853], [656, 839], [690, 823]] },
-    { a: 1, g: 'A1', w: [2.8, 1.8], p: [[610, 859], [590, 851], [566, 845], [542, 840]] },
-    { a: 1, g: 'A1', w: [2.6, 1.6], p: [[610, 859], [630, 848], [660, 834], [694, 818]] }
+    { a: 1, g: 'M', w: [2.8, 1.8], p: [[608, 860], [590, 851], [566, 845], [542, 840]] },
+    { a: 1, g: 'M', w: [2.6, 1.6], p: [[608, 860], [630, 848], [660, 834], [694, 818]] }
   ];
   LIVER_IN.forEach(function (v) { v.c = curve(v.p, false, 3); v.nocell = 1; });
 
@@ -341,12 +347,12 @@
     chestL:  { x: 578, y: 512, w: 232, h: 290 },
     desc:    { x: 580, y: 620, w: 190, h: 360 },
     kidney:  { x: 572, y: 856, w: 206, h: 190 },
-    legSpot: { x: 548, y: 1206, w: 86, h: 76 }
+    legSpot: { x: 560, y: 1208, w: 86, h: 76 }
   };
   /* the lens on the gut opens where the vein the story follows leaves it (TRK, one of the six) */
   var TRK = 2, GUT0 = MES.mv[TRK].gut;
   VIEW.gutSpot = { x: GUT0[0] - 52, y: GUT0[1] - 46, w: 104, h: 92 };
-  var SPOT = { B: GUT0.slice(), C: [590, 844], D: [591, 1244] };
+  var SPOT = { B: GUT0.slice(), C: [590, 844], D: [603, 1246] };
 
   /* ================================================================
      THE TIMELINE — ten steps; each plays, then holds on its last frame
@@ -369,14 +375,16 @@
   /* from the gut, along its vein through the mesentery, into the mesenteric vein, up the hepatic portal vein to the liver */
   function fromGut(v) { return chain([curve([v.gut, v.p[0]], false, 3), v.c, sub(VI.portal.c, nearest(VI.portal.c, v.p[2][0], v.p[2][1]), VI.portal.c.total)]); }
   var J4 = chain([fromGut(MES.mv[TRK]), curve([[606, 867], [600, 860], [594, 852]], false, 3)]);
-  var J7 = chain([curve([[596, 832], [589, 820], [578, 807], [570, 800], IVC0], false, 3),
+  /* from a hepatic vein along the vena cava to the heart */
+  function toHeart(v) { var e = v.p[v.p.length - 1]; return chain([v.c, sub(VI.ivcAbd.c, nearest(VI.ivcAbd.c, e[0], e[1]), VI.ivcAbd.c.total)]); }
+  var J7 = chain([sub(toHeart(VI.hepVM), 4, 1e9),
                   curve([[28, 560], [28, 420], [30, 330], [48, 268], [80, 238], [98, 262], [104, 318], [116, 364], [134, 390], [156, 380], [170, 340], [172, 280], [172, 210], [172, 150], [178, 108], [240, 97], [330, 110]].map(hp), false, 3)]);
   var J8 = curve([hp([330, 110]), hp([430, 144]), [768, 588], [782, 612], [779, 648], [764, 660], [756, 640], hp([430, 192]), hp([396, 195]), hp([363, 200]), hp([330, 212]), hp([310, 232]), hp([308, 262]), hp([302, 310]), hp([290, 368]), hp([274, 404])], false, 3);
   var AORTA = chain([curve([[274, 404], [252, 414], [238, 352], [230, 282], [229, 214], [229, 150], [232, 96], [248, 58], [272, 38], [298, 42], [306, 70], [300, 110], [300, 300], [300, 560]].map(hp), false, 3),
-                     curve([AO0, [689, 806], [678, 828], [667, 852], [664, 880], [664, 915]], false, 3)]);
-  var J9U = chain([AORTA, curve([[664, 915], [682, 918], [701, 927], [716, 930], [734, 920], [742, 940], [730, 956], [712, 956], [705, 962], [699, 986], [696, 1004]], false, 3)]);
-  var J9G = chain([AORTA, curve([[664, 915], [664, 960], [664, 1000], [664, 1040]], false, 3)]);
-  var J10 = curve([[664, 1040], [664, 1110], [651, 1136], [627, 1168], [608, 1204], [600, 1236], [594, 1244]], false, 3);
+                     curve([AO0, [689, 806], [676, 826], [660, 850], [652, 878], [650, 916]], false, 3)]);
+  var J9U = chain([AORTA, curve([[650, 916], [676, 919], [701, 927], [716, 930], [734, 920], [742, 940], [730, 956], [712, 956], [705, 962], [699, 986], [696, 1004]], false, 3)]);
+  var J9G = chain([AORTA, curve([[650, 916], [650, 960], [650, 1000], [650, 1040]], false, 3)]);
+  var J10 = curve([[650, 1040], [650, 1108], [638, 1134], [620, 1166], [606, 1202], [600, 1234], [602, 1245]], false, 3);
   function journey(c, t, a, b, lag) {
     var u = ease(seg(t, a, b));
     return at(c, Math.max(0, c.total * u - (lag || 0)));
@@ -712,8 +720,8 @@
       portalHalo() + group(inGroup('P')) + group(inGroup('M')) +
       '<path d="' + dOf(ORG.liver, 1) + '" fill="#9A4A3C" fill-opacity=".36" stroke="#D08A74" stroke-opacity=".75" stroke-width="1.3"/>' +
       gutTube(ORG.si) +
-      bedNet(ellTest(592, 1248, 24, 13), [600, 1238], [586, 1238], 8, 41, false, [566, 1234, 618, 1262]) +
-      bedNet(ellTest(736, 1248, 24, 13), [728, 1238], [742, 1238], 8, 43, false, [710, 1234, 762, 1262]) +
+      bedNet(ellTest(603, 1250, 24, 13), [599, 1238], [607, 1238], 8, 41, false, [577, 1236, 629, 1264]) +
+      bedNet(ellTest(710, 1250, 24, 13), [714, 1238], [706, 1238], 8, 43, false, [684, 1236, 736, 1264]) +
       '</g>';
     /* the glow that names a vessel in a step: under the heart, over everything else */
     body += '<g data-r="glow" class="bf__glow"></g>';
@@ -854,9 +862,9 @@
     var ST = {
       portGlu: gutVeins.map(function (c, i) { return stream(c, 'glu', 6, 20, 100 + i); }),
       portAa: gutVeins.map(function (c, i) { return stream(c, 'aa', 5, 20, 200 + i); }),
-      hepGlu: ['hepVR', 'hepVM', 'hepVL'].map(function (k, i) { return stream(chain([VI[k].c, curve([VI[k].p[VI[k].p.length - 1], IVC0], false, 3)]), 'glu', 3, 16, 300 + i); }),
-      hepUrea: ['hepVR', 'hepVM', 'hepVL'].map(function (k, i) { return stream(chain([VI[k].c, curve([VI[k].p[VI[k].p.length - 1], IVC0], false, 3)]), 'urea', 3, 16, 400 + i); }),
-      renA: [stream(VI.renAL.c, 'urea', 4, 24, 500), stream(VI.renAR.c, 'urea', 6, 24, 501), stream(sub(VI.aoAbd.c, nearest(VI.aoAbd.c, 664, 852), nearest(VI.aoAbd.c, 664, 1040)), 'urea', 7, 30, 502)],
+      hepGlu: ['hepVR', 'hepVM', 'hepVL'].map(function (k, i) { return stream(toHeart(VI[k]), 'glu', 3, 16, 300 + i); }),
+      hepUrea: ['hepVR', 'hepVM', 'hepVL'].map(function (k, i) { return stream(toHeart(VI[k]), 'urea', 3, 16, 400 + i); }),
+      renA: [stream(VI.renAL.c, 'urea', 4, 24, 500), stream(VI.renAR.c, 'urea', 6, 24, 501), stream(sub(VI.aoAbd.c, nearest(VI.aoAbd.c, 652, 852), nearest(VI.aoAbd.c, 650, 1040)), 'urea', 7, 30, 502)],
       renV: [stream(VI.renVL.c, 'urea', 4, 16, 600), stream(VI.renVR.c, 'urea', 2, 16, 601)],
       ure: [stream(VI.ureL.c, 'urea', 7, 9, 700), stream(VI.ureR.c, 'urea', 7, 9, 701)],
       lungO2: [], lungCo2: []
@@ -1152,7 +1160,7 @@
       { d: dOf(VI.carAR.c) + dOf(VI.carAL.c) + dOf(VI.subAR.c) + dOf(VI.subAL.c) + dOf(VI.bcA.c), col: C.oxy, w: 9, on: [[4.6, 8.6]] },
       { d: dOf(VI.portal.c) + MES.mv.map(function (v) { return dOf(v.c); }).join(''), col: C.por, w: 12, on: [[26.4, 34.6]] },
       { d: dOf(VI.hepVR.c) + dOf(VI.hepVM.c) + dOf(VI.hepVL.c), col: C.deo, w: 11, on: [[52.4, 60.6]] },
-      { d: dOf(sub(VI.ivcAbd.c, nearest(VI.ivcAbd.c, 590, 862), VI.ivcAbd.c.total)) + dOf(curve([[28, 560], [28, 420], [30, 330], [48, 268], [70, 244]].map(hp), false, 3)), col: C.deo, w: 14, on: [[53.4, 60.6]] },
+      { d: dOf(sub(VI.ivcAbd.c, nearest(VI.ivcAbd.c, 637, 880), VI.ivcAbd.c.total)) + dOf(curve([[28, 560], [28, 420], [30, 330], [48, 268], [70, 244]].map(hp), false, 3)), col: C.deo, w: 14, on: [[53.4, 60.6]] },
       { d: dOf(curve([[172, 380], [172, 280], [172, 210], [172, 150], [178, 108], [240, 97], [330, 110], [430, 144]].map(hp), false, 3)), col: C.deo, w: 12, on: [[56.4, 61.5]] },
       { d: dOf(curve([[430, 192], [396, 195], [363, 200], [330, 212]].map(hp), false, 3)) + dOf(curve([[430, 248], [396, 244], [363, 238], [330, 226]].map(hp), false, 3)), col: C.oxy, w: 10, on: [[62.6, 68.6]] },
       { d: dOf(VI.renVL.c) + dOf(VI.renVR.c), col: C.deo, w: 10, on: [[72.6, 78.6]] },
@@ -1230,10 +1238,10 @@
       function L2(text, side, x, y, a0, b0, cls, f) { var op = win(t, a0, b0, f || .45) * vis; if (op > .01) li.push([text, side, x, y, op, cls]); }
       L2('left ventricle', 'R', hx(292), hy(372), .3, 8.6);
       L2('aorta', 'R', 689, 806, .5, 8.6);
-      L2('hepatic artery', 'R', 652, 845.5, 1.5, 8.6);
+      L2('hepatic artery', 'R', 622, 848, 1.5, 8.6);
       L2('renal artery', 'R', 688, 919.5, 3.5, 8.6);
       var smaQ = atF(VI.sma.c, .5); L2('mesenteric artery', 'R', smaQ.x, smaQ.y, 2.5, 8.6, 'is-beyond');
-      L2('to the legs', 'L', 608, 1204, 4.5, 8.6);
+      L2('to the legs', 'L', 606, 1202, 4.5, 8.6);
       L2('to the head and arms', 'L', 612, 467.5, 4.5, 8.6);
       /* step 4 */
       var siQ = at(ORG.si, nearest(ORG.si, 744, 1078)); L2('small intestine', 'R', siQ.x, siQ.y, 26.4, 34.6);
@@ -1242,10 +1250,10 @@
       L2('liver', 'L', 540, 870, 26.6, 34.6);
       var hpQ = at(VI.portal.c, nearest(VI.portal.c, 632, 904)); L2('hepatic portal vein', 'L', hpQ.x, hpQ.y, 27, 34.6);
       var smvQ = atF(VI.portal.c, .3); L2('mesenteric vein', 'R', smvQ.x, smvQ.y, 26.6, 34.6, 'is-beyond');
-      L2('hepatic artery', 'R', 646, 845.5, 30.5, 36);
+      L2('hepatic artery', 'R', 622, 848, 30.5, 36);
       /* step 7 */
-      L2('hepatic veins', 'L', 591, 824, 52.4, 60.6);
-      L2('vena cava', 'L', 591, 864, 53.2, 60.6);
+      L2('hepatic veins', 'L', 601, 826, 52.4, 60.6);
+      L2('vena cava', 'L', 637, 872, 53.2, 60.6);
       L2('right atrium', 'L', hx(84), hy(222), 55.2, 60.6);
       L2('right ventricle', 'L', hx(98), hy(330), 56.2, 60.6);
       L2('pulmonary artery', 'R', hx(250), hy(97), 57.2, 61.8);
@@ -1256,14 +1264,14 @@
       L2('left atrium', 'R', hx(338), hy(236), 63.8, 68.6);
       L2('left ventricle', 'R', hx(300), hy(372), 65.4, 68.8);
       /* step 9 */
-      L2('aorta', 'L', 664, 1016, 69.6, 78.6);
+      L2('aorta', 'R', 650, 1000, 69.6, 78.6);
       L2('renal artery', 'R', 686, 919, 70.8, 78.6);
       L2('renal vein', 'R', 690, 942.5, 71.8, 78.6);
       L2('kidney', 'R', 750, 960, 71.2, 78.6);
       L2('ureter', 'R', 693, 1030, 73.2, 78.6);
-      L2('vena cava', 'L', 598, 1000, 71.6, 78.6);
+      L2('vena cava', 'L', 637, 892, 71.6, 78.6);
       /* step 10 */
-      L2('to the legs', 'L', 612, 1188, 78.6, 81);
+      L2('to the legs', 'L', 611, 1188, 78.6, 81);
       li.forEach(function (q) { var s = toScreen(cam, q[2], q[3]); lab(q[0], q[1], s[0], s[1], q[4], q[5]); });
       /* the followed molecules, named where they are */
       function tl(txt, pos, side, a0, b0) { if (!pos) return; var op = win(t, a0, b0, .4) * vis; var s = toScreen(cam, pos.x, pos.y); lab(txt, side, s[0], s[1], op, 'is-tracer'); }
