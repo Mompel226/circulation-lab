@@ -134,3 +134,5 @@
    column; the buttons, the route, the words and the real picture stay on the right */
 .sim > .jn__pack{flex:1;min-height:0;display:flex;flex-direction:column;gap:6px;overflow:auto}
 .sim > .jn__pack .jn__plate{margin:auto 0}
+/* the leg muscle pressing on the vein from outside, while it contracts */
+.jn__sq path{fill:none;stroke:#FFE3A0;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
