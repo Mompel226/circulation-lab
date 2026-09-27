@@ -67,12 +67,8 @@
 .cl__chem{fill:#FFE27A}
 .cl__fibrin{fill:none;stroke:#A0640F;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
 .cl__clot{fill:#7A1E21}
-.cl__rep{fill:#E4B5A3}
 .cl__wallfix{fill:#C06A5F;stroke:#8C4138;stroke-width:.8}
-.cl__new rect{fill:#F5D2C4;stroke:#CE9784;stroke-width:.8}
-.cl__new .cl__newbg{fill:#EBC6B3;stroke:none}
-.cl__newtop{fill:#F5E3D3;stroke:#DCC2AC;stroke-width:.8}
-.cl__new .cl__nn{fill:#A0675C}
+.cl__newt{fill:#FFEFE8}
 .cl__scabf{stroke:#3B1B10;stroke-width:1}
 .cl__scabt ellipse{fill:#3B1B10;opacity:.45}
 .cl__bug{fill:#7DB43F;stroke:#3B6A1D;stroke-width:.6}

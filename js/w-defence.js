@@ -583,11 +583,11 @@
   CL.vi = CL.vo - CL.vw;
   var CL_STEPS = [
     { t: 0,  h: 'A cut breaks the skin and a blood vessel', p: 'A cut breaks the skin and the wall of a small blood vessel. Blood is lost through the wound.' },
-    { t: 8,  h: 'Platelets stick at the wound', p: '**Platelets** are fragments of cells, much smaller than red blood cells. At the wound they stick to the damaged wall and to each other. Chemicals from the platelets and the damaged tissue start a chain of reactions.' },
-    { t: 18, h: 'Fibrinogen is converted into fibrin', tag: 'Supplement', p: 'Plasma carries a **soluble** protein, **fibrinogen**. The chain of reactions makes an enzyme, thrombin. Thrombin **converts** fibrinogen into **fibrin**, which is **insoluble**. The fibrin forms long threads.' },
+    { t: 8,  h: 'Platelets stick at the wound', p: '**Platelets** are fragments of cells, much smaller than red blood cells. At the wound they stick to the damaged tissue and to each other, and collect at the break in the vessel. Chemicals from the platelets and the damaged tissue start a chain of reactions.' },
+    { t: 18, h: 'Fibrinogen is converted into fibrin', tag: 'Supplement', p: 'Plasma carries a **soluble** protein, **fibrinogen**. The chain of reactions makes an enzyme, thrombin. Thrombin **converts** fibrinogen into **fibrin**, which is **insoluble**. Fibrin threads grow from the platelets and the damaged tissue across the wound.' },
     { t: 27, h: 'A mesh traps the cells: a clot', tag: 'Supplement', p: 'The fibrin threads form a **mesh** across the wound. The mesh **traps red blood cells** and platelets, forming a clot. The clot **prevents blood loss**.' },
     { t: 36, h: 'The clot becomes a scab', p: 'The clot dries and hardens into a **scab**. The scab **prevents the entry of pathogens** into the body.' },
-    { t: 44, h: 'New skin grows under the scab', tag: 'Beyond the 0610 syllabus', p: 'Under the scab, skin cells near the wound divide by mitosis. The new cells grow across the wound, and the wall of the blood vessel is repaired. Then the scab separates from the new skin.' }
+    { t: 44, h: 'New skin grows under the scab', tag: 'Beyond the 0610 syllabus', p: 'Under the scab, skin cells near the wound divide by mitosis, and the new cells grow across the wound. Below, the clot is broken down and replaced by new tissue, and the wall of the blood vessel is repaired. Then the scab separates from the new skin.' }
   ];
   var CL_END = 55;
   /* the two sides of the cut, surface to vessel, when it is fully open */
@@ -626,11 +626,25 @@
     var k = (s - P.len[lo]) / ((P.len[hi] - P.len[lo]) || 1);
     return [P.pts[lo][0] + (P.pts[hi][0] - P.pts[lo][0]) * k, P.pts[lo][1] + (P.pts[hi][1] - P.pts[lo][1]) * k];
   }
-  /* the routes the escaping blood takes: up from the lumen, through the gap, up the cut, into the drop */
+  /* the routes the escaping blood takes: up from the lumen, through the gap, up the cut, into the drop (where each
+     cell leaves this section; none ends at the edge of the drop, half out of it) */
   var OUT = [-1, 0, 1].map(function (k) {
-    return sampleP([[CL.vx + 34 * k, 372], [CL.vx + 5 * k, 322], [CL.vx + 3 * k, 300], [CL.vx + 6 * k, 250], [CL.vx + 9 * k, 200], [CL.vx + 13 * k, 150], [CL.vx + 18 * k, 100], [CL.vx + 24 * k, 74], [CL.vx + 36 * k, 58], [CL.vx + 42 * k, 64]]);
+    return sampleP([[CL.vx + 9 * k, 338], [CL.vx + 5 * k, 322], [CL.vx + 3 * k, 300], [CL.vx + 6 * k, 250], [CL.vx + 9 * k, 200], [CL.vx + 13 * k, 150], [CL.vx + 18 * k, 100], [CL.vx + 22 * k, 76], [CL.vx + 27 * k, 62]]);
   });
-  var OUTC = (function () { var r = rng(51), out = []; OUT.forEach(function (P, pi) { var n = 9; for (var i = 0; i < n; i++) out.push({ p: pi, s0: (i + [0, .45, .2][pi] + .2 * r()) / n, face: r() < .5, spin: r() * 360, plt: i % 4 === 2 }); }); return out; })();
+  /* the escaping cells, nine to a route. Where a step stops (the model times below), none is half-drawn: each is moved
+     along its route, as little as it can be, until it is clear of where cells come into view and leave */
+  var OUTC = (function () {
+    var r = rng(51), out = [], VP = [8, 18, 27].map(function (m) { return [outflow(m), flowAt(m)]; });
+    OUT.forEach(function (P, pi) {
+      function clear(s0) { return VP.every(function (v) { var s = (((s0 + v[0] * 40 / P.total) % 1) + 1) % 1 * P.total; return s > Math.max(1, 8 * v[1]) + 2 && s < P.total - Math.max(1, 12 * v[1]) - 2; }); }
+      for (var i = 0; i < 9; i++) {
+        var s0 = (i + [0, .45, .2][pi] + .2 * r()) / 9, d = 0;
+        while (d < .2 && !clear(s0 + d) && !clear(s0 - d)) d += .002;
+        out.push({ p: pi, s0: (clear(s0 + d) ? s0 + d : s0 - d + 1) % 1, face: r() < .5, spin: r() * 360 });
+      }
+    });
+    return out;
+  })();
   /* what is in the lumen: red blood cells, a white blood cell, platelets and fibrinogen */
   var LUM = (function () {
     var r = rng(77), cells = [[262, 430, 0, true]], plts = [], rods = [[366, 440, .5]], k;
@@ -661,18 +675,52 @@
     var from = [[364, 350], [258, 372], [352, 392], [284, 344], [378, 372], [236, 392], [336, 334], [262, 352], [322, 370], [340, 360], [300, 364], [278, 330]];
     return tg.map(function (p, i) { return { tx: p[0], ty: p[1], fx: from[i][0], fy: from[i][1], t0: 8.4 + .42 * i }; });
   })();
-  /* fibrin threads: each grows across the wound; two dissolved fibrinogen molecules join it on the way */
+  /* Platelets in the blood that fills the wound (Daniel, 28 Sep: fibrin "appearing at the top where there's no
+     platelets ... the animation might actually be faking a few things"). They come with the blood, so they are all
+     through the wound, not only at the break in the vessel. Each rides up the cut with the blood (at the speed the
+     red blood cells move) and is caught where it is drawn: those at a side (L, R) touch the damaged tissue in step 2,
+     become active (spiky), stick to it and release chemicals; those in the blood (M, x given) are slowed and caught
+     as the blood clots in step 3, when thrombin activates them too. Fibrin then forms on the active platelets and the
+     damaged tissue, so every thread below starts at a platelet. Each is [side, y] or ['M', y, x, when caught]. */
+  var WP = (function () {
+    var spec = [['L', 90], ['R', 112], ['L', 135], ['R', 158], ['L', 180], ['R', 204], ['L', 225], ['R', 248], ['L', 268],
+                ['M', 128, 312, 19.2], ['M', 196, 306, 18.9], ['M', 76, 318, 20.5], ['M', 60, 296, 21], ['M', 61, 327, 21.4]];
+    return spec.map(function (q, i) {
+      var y = q[1], x = q[0] === 'L' ? edgeX(1, 0, y) + 3.6 : q[0] === 'R' ? edgeX(1, 1, y) - 3.6 : q[2];
+      var dx = q[0] === 'L' ? -1.6 : q[0] === 'R' ? 1.6 : 0;           /* those at a side press onto it as they stick */
+      var t0 = q[0] === 'M' ? q[3] : 8.8 + .28 * i;
+      /* the way it comes: from the lumen through the break, up the middle of the cut, then across to its place */
+      var lane = CL.vx + .3 * (q[0] === 'M' ? x - CL.vx : q[0] === 'L' ? -5 : 5), yT = y + 30, pts = [[lane, 338], [lane, 322]];
+      for (var yy = 298; yy > yT; yy -= 24) pts.push([lane, yy]);
+      for (var k = 0; k <= 6; k++) { var u = k / 6, a1 = 1 - u; pts.push([a1 * a1 * lane + 2 * a1 * u * lane + u * u * x, a1 * a1 * yT + 2 * a1 * u * (y + 8) + u * u * y]); }
+      return { x: x, y: y, dx: dx, side: q[0], t0: t0, ph: i * 1.7, P: sampleP(pts), Va: outflow(t0) };
+    });
+  })();
+  function anchorAt(a) {                  /* a thread's end: a wound platelet, a platelet of the plug, or a point of a side */
+    if (a[0] === 'w') return [WP[a[1]].x + WP[a[1]].dx, WP[a[1]].y];
+    if (a[0] === 's') return [STICK[a[1]].tx, STICK[a[1]].ty];
+    return [edgeX(1, a[0] === 'l' ? 0 : 1, a[1]) + (a[0] === 'l' ? 1 : -1), a[1]];
+  }
+  /* fibrin threads: each grows from a platelet across the blood to another platelet or to a side of the cut; two
+     dissolved fibrinogen molecules join it on the way. The first ones grow from the plug upwards (step 3); the rest
+     thicken the mesh (step 4). */
   var THREADS = (function () {
     var r = rng(91), out = [];
-    var spec = [[320, 214, 12, -28], [300, 262, 10, 20], [312, 170, 16, 18], [306, 124, 22, -16], [316, 300, 8, 8], [296, 92, 30, 10], [322, 70, 34, -8],
-                [304, 232, 12, 30], [318, 150, 16, -26], [300, 190, 14, -10], [326, 110, 24, 22], [290, 60, 40, -6], [308, 280, 9, -22], [314, 84, 28, 26]];
-    spec.forEach(function (s, i) {
-      var ang = s[3] * Math.PI / 180, hw = 44 + s[2] * .8, dx = Math.cos(ang) * hw, dy = Math.sin(ang) * hw;
-      out.push({ x0: s[0] - dx, y0: s[1] - dy, x1: s[0] + dx, y1: s[1] + dy, cx: s[0] + (r() - .5) * 10, cy: s[1] + (r() - .5) * 10, mx: s[0], my: s[1],
-                 g0: i < 7 ? 18.6 + i * .8 : 27.3 + (i - 7) * .55, dur: i < 7 ? 3.4 : 2.6 });
+    var spec = [[['s', 11], ['r', 262]], [['s', 7], ['w', 8]], [['w', 8], ['w', 7]], [['w', 7], ['l', 245]], [['w', 6], ['r', 228]],
+                [['w', 5], ['w', 10]], [['w', 10], ['w', 4]], [['w', 4], ['r', 182]], [['w', 3], ['w', 9]], [['w', 9], ['w', 0]],
+                [['w', 2], ['r', 140]], [['w', 1], ['l', 118]], [['w', 0], ['r', 78]], [['w', 11], ['w', 13]],
+                [['w', 12], ['w', 13]], [['w', 6], ['w', 5]], [['w', 3], ['l', 160]], [['w', 1], ['w', 9]], [['w', 12], ['w', 0]], [['s', 6], ['w', 7]]];
+    spec.forEach(function (q, i) {
+      var a = anchorAt(q[0]), b = anchorAt(q[1]), mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2, L = len(b[0] - a[0], b[1] - a[1]);
+      var bend = (r() - .5) * .28 * L, nx = -(b[1] - a[1]) / (L || 1), ny = (b[0] - a[0]) / (L || 1);
+      var cx = mx + nx * bend, cy = my + ny * bend;
+      out.push({ x0: a[0], y0: a[1], x1: b[0], y1: b[1], cx: cx, cy: cy, mx: (a[0] + 2 * cx + b[0]) / 4, my: (a[1] + 2 * cy + b[1]) / 4,
+                 g0: i < 13 ? 18.6 + i * .62 : 27.3 + (i - 13) * .55, dur: i < 13 ? 2.8 : 2.4 });
     });
     return out;
   })();
+  /* the thread that is named: one of the first to form in step 3, across the lower half of the wound */
+  var FIB_L = THREADS.filter(function (th) { return th.g0 < 22; }).sort(function (a, b) { return len(a.mx - 312, a.my - 228) - len(b.mx - 312, b.my - 228); })[0];
   function threadAt(th, k) { var a = 1 - k; return [a * a * th.x0 + 2 * a * k * th.cx + k * k * th.x1, a * a * th.y0 + 2 * a * k * th.cy + k * k * th.y1]; }
   var FEED = (function () {
     var r = rng(63), out = [];
@@ -690,6 +738,8 @@
       '<linearGradient id="' + u + 'sc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5B2E1E"/><stop offset="1" stop-color="#7A3E26"/></linearGradient>' +
       '<clipPath id="' + u + 'cp"><rect class="cl__cr"/></clipPath>' +
       '<clipPath id="' + u + 'wd"><path class="cl__wclip"/></clipPath>' +
+      '<clipPath id="' + u + 'hb"><path class="cl__hclip"/></clipPath>' +
+      '<filter id="' + u + 'hs" x="-25%" y="-5%" width="150%" height="110%"><feGaussianBlur stdDeviation="2.2"/></filter>' +
       '</defs>';
     /* dermis: connective tissue with collagen fibres and fibroblasts */
     s += '<rect x="-10" y="150" width="' + (CL.W + 20) + '" height="' + (CL.H - 140) + '" fill="url(#' + u + 'de)"/>';
@@ -757,7 +807,7 @@
     var q = function (c) { return svg.querySelector(c); };
     var bg = q('.cl__bg'), model = q('.cl__model'), cr = q('.cl__cr'), gLab = q('.cl__labs');
     var wall = q('.cl__wall'), endo = q('.cl__endo'), wnuc = q('.cl__wnuc'), gLum = q('.cl__lumc'), air = q('.cl__air'), blood = q('.cl__blood'), gOut = q('.cl__out');
-    var gStick = q('.cl__stick'), gFib = q('.cl__fib'), clotP = q('.cl__clot'), gHeal = q('.cl__heal'), gScab = q('.cl__scab'), gBugs = q('.cl__bugs'), wclip = q('.cl__wclip');
+    var gStick = q('.cl__stick'), gFib = q('.cl__fib'), clotP = q('.cl__clot'), gHeal = q('.cl__heal'), gScab = q('.cl__scab'), gBugs = q('.cl__bugs'), wclip = q('.cl__wclip'), hclip = q('.cl__hclip');
     var lay = null;
 
     function ringPath(r1, r2, a0, a1) {   /* a ring from angle a0 to a1 (radians, clockwise), between radii r1 < r2 */
@@ -774,7 +824,7 @@
       /* the vessel wall, with the gap the cut made; it closes again in step 6 */
       var heal = ease(seg(t, 45.5, 50.5)), gA = -97 * Math.PI / 180, gB = -82.4 * Math.PI / 180, mid = (gA + gB) / 2;
       var ga = lerp(mid, gA, o), gb = lerp(mid, gB, o);
-      if (o > .01) {
+      if (o > .01 && heal < .999) {
         wall.setAttribute('d', ringPath(CL.vi, CL.vo, gb, ga + 2 * Math.PI));
         endo.setAttribute('d', ringPath(CL.vi, CL.vi + 2.4, gb, ga + 2 * Math.PI));
       } else {
@@ -784,24 +834,40 @@
       for (i = 0; i < 16; i++) { var a = -Math.PI / 2 + (i + .5) * Math.PI / 8; if (o > .01 && a > ga - .06 && a < gb + .06) continue; var nx = CL.vx + Math.cos(a) * (CL.vi + 5.5), ny = CL.vy + Math.sin(a) * (CL.vi + 5.5); wn += '<ellipse cx="' + n1(nx) + '" cy="' + n1(ny) + '" rx="4.6" ry="1.6" transform="rotate(' + n1(a * 57.3 + 90) + ' ' + n1(nx) + ' ' + n1(ny) + ')"/>'; }
       wnuc.innerHTML = wn;
 
-      /* the wound: open air above the blood, blood below it and in the drop */
-      var Lp = cutPts(o, 0), Rp = cutPts(o, 1);
+      /* the wound: open air above the blood, blood below it and in the drop. In step 6 new tissue replaces the clot
+         from both sides of the cut: the wound is then the band between its two closing sides, and everything in it
+         (the cells, the platelets, the fibrin) goes as the band passes it, so the skin drawn beneath shows again */
+      var hc = ease(seg(t, 44.8, 51));
+      var Lp = cutPts(o, 0).map(function (q) { return [lerp(q[0], CL.vx, hc), q[1]]; }), Rp = cutPts(o, 1).map(function (q) { return [lerp(q[0], CL.vx, hc), q[1]]; });
+      function exC(side, y) { return lerp(edgeX(o, side, y), CL.vx, hc); }
+      function inBand(x, y) { return Math.min(x - exC(0, y), exC(1, y) - x); }       /* how far inside the wound, now */
+      /* what is in the wound is cut off at a line a little outside each closing side (the margin shrinks to nothing as
+         they close, so nothing is cut when they start), and fades as that line comes within r of its middle */
+      var HM = 7 * clamp01(1 - hc * 5);
+      function fadeIn(x, y, r) { return hc > 0 ? clamp01((inBand(x, y) + HM - r) / 5) : 1; }
       function edgePoly(ytop) {
         var left = [], right = [];
         for (var k = 0; k < Lp.length; k++) { if (Lp[k][1] >= ytop) left.push(Lp[k]); }
         for (k = 0; k < Rp.length; k++) { if (Rp[k][1] >= ytop) right.push(Rp[k]); }
-        left.unshift([edgeX(o, 0, ytop), ytop]); right.unshift([edgeX(o, 1, ytop), ytop]);
+        left.unshift([exC(0, ytop), ytop]); right.unshift([exC(1, ytop), ytop]);
         var d = 'M' + left.map(function (p) { return n1(p[0]) + ' ' + n1(p[1]); }).join(' L');
         d += ' L' + n1(CL.vx + (Rp[Rp.length - 1][0] - CL.vx)) + ' ' + (CL.vy - CL.vi + 6) + ' L' + n1(Lp[Lp.length - 1][0]) + ' ' + (CL.vy - CL.vi + 6);
         return d + ' L' + right.reverse().map(function (p) { return n1(p[0]) + ' ' + n1(p[1]); }).join(' L') + 'Z';
       }
       if (o > .01) {
-        air.setAttribute('d', edgePoly(CL.ys - 10));
-        var gone = t >= 51.8, dB = F < CL.vy - CL.vi - 1 ? edgePoly(gone ? CL.ys + 14 : Math.max(CL.ys - 10, F)) : '';
-        if (hD > .3 && !gone) { var dd = 'M' + (CL.vx + 52) + ' ' + (CL.ys + 2); for (var xx = CL.vx + 52; xx >= CL.vx - 52; xx -= 4) dd += ' L' + xx + ' ' + n1(domeY(xx, hD)); dB += dd + ' L' + (CL.vx - 52) + ' ' + (CL.ys + 2) + 'Z'; }
+        var open = hc < .995;
+        air.setAttribute('d', open ? edgePoly(CL.ys - 10) : '');
+        var dB = open && F < CL.vy - CL.vi - 1 ? edgePoly(Math.max(CL.ys - 10, F)) : '';
+        if (hD > .3 && hc < .99) { var dd = 'M' + (CL.vx + 52) + ' ' + (CL.ys + 2); for (var xx = CL.vx + 52; xx >= CL.vx - 52; xx -= 4) dd += ' L' + xx + ' ' + n1(domeY(xx, hD)); dB += dd + ' L' + (CL.vx - 52) + ' ' + (CL.ys + 2) + 'Z'; }
         blood.setAttribute('d', dB);
         wclip.setAttribute('d', dB || 'M0 0Z');
+        if (hc > 0) {
+          var hl2 = [], hr2 = [];
+          for (var yh = CL.ys - 40; yh <= CL.vy - CL.vi + 10; yh += 6) { hl2.push(n1(exC(0, yh) - HM) + ' ' + yh); hr2.unshift(n1(exC(1, yh) + HM) + ' ' + yh); }
+          hclip.setAttribute('d', 'M' + hl2.join(' L') + ' L' + hr2.join(' L') + 'Z');
+        }
       } else { air.setAttribute('d', ''); blood.setAttribute('d', ''); wclip.setAttribute('d', 'M0 0Z'); }
+      [gOut, gStick].forEach(function (g) { if (hc > 0) g.setAttribute('clip-path', 'url(#' + u + 'hb)'); else g.removeAttribute('clip-path'); });
 
       /* the lumen's contents: still, apart from a slight shimmer (in this section the blood flows towards you) */
       var lm = '', stuckFrom = {};
@@ -817,28 +883,54 @@
       gLum.innerHTML = lm;
 
       /* the blood that escapes: cells move up the cut while blood flows; when the flow stops they stay where they are */
-      var ou = '';
+      /* a cell comes into view (and leaves at the end of the drop) in the same short time whatever the speed of the flow,
+         so none is left half-drawn when the flow is slow or stops */
+      var ou = '', fl = flowAt(t), fIn = Math.max(1, 8 * fl), fOut = Math.max(1, 12 * fl);
       if (o > .01) OUTC.forEach(function (c) {
         var P = OUT[c.p], sN = (c.s0 + V * 40 / P.total) % 1, pos = atP(P, sN * P.total);
         if (pos[1] < F - 4 && !(pos[1] < CL.ys && hD > 2)) return;
-        if (pos[1] < CL.ys && pos[1] < domeY(pos[0], hD) + 6) return;
-        if (t >= 51.8 && pos[1] < CL.ys + 16) return;
-        var op = Math.min(1, sN * P.total / 20, (1 - sN) * P.total / 12);
+        var op = Math.min(1, sN * P.total / fIn, (1 - sN) * P.total / fOut);
+        if (pos[1] < CL.ys) op *= clamp01((pos[1] - domeY(pos[0], hD) - 4) / 4);
+        /* one still inside the vessel when the plug closes the break is carried on along the vessel, out of this
+           section, instead of into the wound */
+        if (pos[1] > CL.vy - CL.vi + 2) op *= clamp01((fl - .05) / .07);
+        op *= fadeIn(pos[0], pos[1], 4);
         if (op < .05) return;
-        ou += c.plt ? platelet(pos[0], pos[1], 0, ' opacity="' + n1(op) + '"') : rbc(pos[0], pos[1], c.spin + sN * 220, c.face, ' opacity="' + n1(op) + '"');
+        ou += rbc(pos[0], pos[1], c.spin + sN * 220, c.face, op < .99 ? ' opacity="' + n1(op) + '"' : '');
       });
       gOut.innerHTML = ou;
 
-      /* platelets stick to the damaged wall and to each other, and release chemicals */
-      var st = '';
+      /* platelets collect at the break in the vessel, stick to the damaged wall and to each other, and release
+         chemicals */
+      var st = '', plt0 = null;
       STICK.forEach(function (p, k) {
         var m = ease(seg(t, p.t0, p.t0 + 1.8)), act = ease(seg(t, p.t0 + 1.5, p.t0 + 2.4));
         var x = lerp(p.fx, p.tx, m), y = lerp(p.fy, p.ty, m);
         if (m < .01) { x += .6 * Math.sin(t + p.fx); y += .6 * Math.cos(t + p.fy); }
-        st += platelet(x, y, act);
+        var op = m > .5 ? fadeIn(x, y, 2) : 1;
+        if (k === 0) plt0 = [x, y, op];
+        if (op < .05) return;
+        st += platelet(x, y, act, op < .99 ? ' opacity="' + n1(op) + '"' : '');
         if (act > .5 && t < 27) for (var j = 0; j < 3; j++) {
           var age = ((t - p.t0 - 2.4 + j * .6) % 1.8 + 1.8) % 1.8, aa = k * 1.3 + j * 2.1, rr = 4 + age * 7, op = (1 - age / 1.8) * (1 - seg(t, 24, 27));
           st += '<circle class="cl__chem" cx="' + n1(x + Math.cos(aa) * rr) + '" cy="' + n1(y + Math.sin(aa) * rr) + '" r="1.3" opacity="' + n1(op) + '"/>';
+        }
+      });
+      /* the platelets that come out with the blood (WP): each rides up the cut with it and slows to a stop where it is
+         caught; then it becomes active (spiky), one at a side presses onto it, and it too releases chemicals */
+      WP.forEach(function (w, k) {
+        var Db = 40 * (w.Va - V), D = Db >= 14 ? Db - 7 : Db > 0 ? Db * Db / 28 : 0;   /* still to go: slows to a stop */
+        if (D > w.P.total) return;
+        var at = atP(w.P, w.P.total - D), sN = w.P.total - D;
+        var act = ease(seg(t, w.t0, w.t0 + 1)), stk = ease(seg(t, w.t0 + .5, w.t0 + 1.5));
+        var x = at[0] + w.dx * stk, y = at[1];
+        if (D <= 0) { x += (1 - act) * .7 * Math.sin(t * 1.1 + w.ph); y += (1 - act) * .7 * Math.cos(t * .9 + w.ph); }
+        var op = Math.min(1, sN / fIn) * (y < CL.ys ? clamp01((y - domeY(x, hD) - 2) / 4) : 1) * fadeIn(x, y, 2);
+        if (op < .05) return;
+        st += platelet(x, y, act, op < .99 ? ' opacity="' + n1(op) + '"' : '');
+        if (act > .5 && t < 27) for (var j = 0; j < 2; j++) {
+          var age = ((t - w.t0 - 1 + j * .9) % 1.8 + 1.8) % 1.8, aa = k * 1.7 + j * 2.4, rr = 4 + age * 6, op2 = (1 - age / 1.8) * (1 - seg(t, 24, 27)) * op;
+          st += '<circle class="cl__chem" cx="' + n1(x + Math.cos(aa) * rr) + '" cy="' + n1(y + Math.sin(aa) * rr) + '" r="1.3" opacity="' + n1(op2) + '"/>';
         }
       });
       /* and from the damaged tissue: the broken ends of the vessel wall and the sides of the cut */
@@ -853,7 +945,7 @@
           }
         });
       }
-      gStick.innerHTML = o > .01 ? st : '';
+      gStick.innerHTML = st;
 
       /* fibrinogen in the wound joins into fibrin threads; the threads make a mesh */
       var fb = '';
@@ -875,46 +967,29 @@
       }
       gFib.innerHTML = fb;
       gFib.setAttribute('clip-path', 'url(#' + u + 'wd)');
+      var fibOp = 1 - ease(seg(hc, .5, .92));
+      if (fibOp < 1) gFib.setAttribute('opacity', n1(fibOp)); else gFib.removeAttribute('opacity');
 
       /* the clot: the mesh with what it has trapped */
       var ck = ease(seg(t, 28.5, 33));
       clotP.setAttribute('d', ck > .01 ? blood.getAttribute('d') : '');
       clotP.setAttribute('opacity', n1(ck * .3));
 
-      /* healing: new skin under the scab, the vessel wall closes, the tissue below repairs */
+      /* healing: where the clot was, new tissue (the skin's own layers, drawn beneath, show again as the band closes;
+         a little paler while they are new); the vessel wall grows back from both sides of the gap */
       var hl = '';
-      if (t > 44.5) {
-        var gk = ease(seg(t, 45, 51)), dk = ease(seg(t, 46, 51.5));
-        var yT = CL.ys + 16;
-        hl += '<path class="cl__rep" opacity="' + n1(dk) + '" d="' + edgePoly(yBas(CL.vx) - 4).replace(/Z$/, 'Z') + '"/>';
-        /* the wall grows back from both sides of the gap */
-        if (heal > .01) {
+      if (hc > .001) {
+        var yTop = CL.ys + 1, yBot = CL.vy - CL.vi + 4, strip = '';
+        [0, 1].forEach(function (side) {
+          var outer = [], inner = [];
+          for (var yy = yTop; yy <= yBot + .01; yy += 4) { outer.push(n1(edgeX(o, side, yy)) + ' ' + n1(yy)); inner.unshift(n1(exC(side, yy)) + ' ' + n1(yy)); }
+          strip += 'M' + outer.join(' L') + ' L' + inner.join(' L') + 'Z';
+        });
+        hl += '<path class="cl__newt" d="' + strip + '" opacity="' + n1(.26 - .12 * ease(seg(t, 51.8, 54.4))) + '" filter="url(#' + u + 'hs)"/>';
+        if (heal > .01 && heal < .999) {
           var e1 = ga + (mid - ga) * heal, e2 = gb - (gb - mid) * heal;
           hl += '<path class="cl__wallfix" d="' + ringPath(CL.vi, CL.vo, ga - .01, e1) + ringPath(CL.vi, CL.vo, e2, gb + .01) + '"/>' +
                 '<path class="cl__endo" d="' + ringPath(CL.vi, CL.vi + 2.4, ga - .01, e1) + ringPath(CL.vi, CL.vi + 2.4, e2, gb + .01) + '"/>';
-        }
-        /* the new skin fills the gap from both sides: first its tissue, then its cells */
-        var fL = lerp(262, CL.vx + 2, gk), fR = lerp(360, CL.vx - 2, gk);
-        var nc = '<rect class="cl__newbg" x="250" y="' + (yT - 2) + '" width="' + n1(fL - 250) + '" height="' + n1(yBas(CL.vx) + 14 - yT) + '"/>' +
-                 '<rect class="cl__newbg" x="' + n1(fR) + '" y="' + (yT - 2) + '" width="' + n1(372 - fR) + '" height="' + n1(yBas(CL.vx) + 14 - yT) + '"/>';
-        for (var row = 0; row < 6; row++) {
-          var ty = yT + row * 19, w = 24;
-          for (var cx = 270 + (row % 2) * 12; cx < 352; cx += w) {
-            var half = cx + w / 2 < CL.vx ? 0 : 1, front = half ? lerp(360, CL.vx - 2, gk) : lerp(262, CL.vx + 2, gk);
-            var show = half ? cx >= front - 4 : cx + w <= front + 4;
-            if (!show) continue;
-            var base = yBas(cx + w / 2) - 2, hh = Math.min(17, base - ty - 1);
-            if (hh < 8) continue;
-            nc += '<rect x="' + n1(cx + 1) + '" y="' + n1(ty) + '" width="' + (w - 2) + '" height="' + n1(hh) + '" rx="5"/><ellipse class="cl__nn" cx="' + n1(cx + w / 2) + '" cy="' + n1(ty + hh / 2) + '" rx="3.8" ry="2.9"/>';
-          }
-        }
-        hl += '<g class="cl__new" clip-path="url(#' + u + 'wd)">' + nc + '</g>';
-        /* once the scab is off, the new skin makes its own outer layer, level with the rest */
-        var sf = ease(seg(t, 52.4, 54.6));
-        if (sf > .01) {
-          var yA2 = CL.ys + 15 - 14 * sf, pL = [], pR = [];
-          for (var yy = yA2; yy <= CL.ys + 16; yy += 2) { pL.push(n1(edgeX(o, 0, yy) - .5) + ' ' + n1(yy)); pR.unshift(n1(edgeX(o, 1, yy) + .5) + ' ' + n1(yy)); }
-          hl += '<path class="cl__newtop" d="M' + pL.join(' L') + ' L' + pR.join(' L') + 'Z"/>';
         }
       }
       gHeal.innerHTML = hl;
@@ -952,13 +1027,15 @@
       add('wall', 'blood vessel wall', CL.vx + Math.cos(-2.09) * (CL.vi + CL.vw / 2), CL.vy + Math.sin(-2.09) * (CL.vi + CL.vw / 2), 'L');
       add('rbc', 'red blood cell', RBC_L[0], RBC_L[1], 'L');
       add('wbc', 'white blood cell', 286, 462, 'L');
-      var p0 = STICK[0], pm = ease(seg(t, p0.t0, p0.t0 + 1.8));
-      if (t < 50) add('plt', 'platelet', lerp(p0.fx, p0.tx, pm), lerp(p0.fy, p0.ty, pm), 'R', 1 - seg(t, 46.5, 49));
+      if (plt0 && plt0[2] > .3) add('plt', 'platelet', plt0[0], plt0[1], 'R', clamp01((plt0[2] - .3) / .5));
       add('fgn', 'fibrinogen (soluble)', LUM.rods[0][0], LUM.rods[0][1], 'R');
-      var th0 = THREADS[3]; if (t > th0.g0 + th0.dur * .55 && t < 50) add('fib', 'fibrin (insoluble threads)', th0.mx, th0.my, 'R', Math.min(clamp01((t - th0.g0 - th0.dur * .55) / .6), 1 - seg(t, 46.5, 49)));
-      if (ck > .3 && t < 50) add('clot', 'clot', 306, 262, 'R', Math.min(clamp01((ck - .3) * 3), 1 - seg(t, 47, 49.5)));
+      var th0 = FIB_L, fo = Math.min(fadeIn(th0.mx, th0.my, 2), fibOp);
+      if (t > th0.g0 + th0.dur * .55 && fo > .3) add('fib', 'fibrin (insoluble threads)', th0.mx, th0.my, 'R', Math.min(clamp01((t - th0.g0 - th0.dur * .55) / .6), clamp01((fo - .3) / .5)));
+      var co = fadeIn(306, 262, 2);
+      if (ck > .3 && co > .3) add('clot', 'clot', 306, 262, 'R', Math.min(clamp01((ck - .3) * 3), clamp01((co - .3) / .5)));
       if (sk > .3 && fall < .2) add('scab', 'scab', 296, 62, 'L', Math.min(clamp01((sk - .3) * 3), 1 - seg(fall, 0, .2)));
-      if (t > 47.5) add('new', 'new skin', 318, 142, 'R', clamp01((t - 47.5) / .8));
+      /* the new skin: named in the tissue that has grown in from the right side of the cut */
+      if (hc > .3) add('new', 'new skin', (exC(1, 142) + edgeX(o, 1, 142)) / 2, 142, 'R', clamp01((hc - .3) / .2));
       gLab.innerHTML = drawLabels(lay, items, { plt: 1.4, fgn: 1.2, bug: 1.2 }, lay.f * .75);   /* names a clear gap apart */
 
       var when = t < 8 ? 'in seconds' : t < 18 ? 'within a minute' : t < 36 ? 'a few minutes' : t < 44 ? 'hours later' : 'days later';
@@ -966,7 +1043,7 @@
       S.pill('when', when, 'plain'); S.pill('bleed', bl[0], bl[1]);
     }
 
-    var R = [0, 9, 21, 30, 40, 48, 59], M = [0, 8, 18, 27, 36, 44, CL_END], clock = readerClock(R, M);
+    var R = [0, 9, 23.5, 35, 45, 53, 68], M = [0, 8, 18, 27, 36, 44, CL_END], clock = readerClock(R, M);
     var sp = L.stepper({ steps: readerSteps(CL_STEPS, R), end: R[R.length - 1], render: function (t) { render(clock(t)); } });
     return mount(S, sp, 'cl', [
       ['The cells are drawn to scale; fibrinogen (the short rods) is drawn hundreds of times larger than real.'],
