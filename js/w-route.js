@@ -65,8 +65,8 @@
   /* vessels the blood passes through on the way that 0610 does not name: clicking one is not
      wrong, it is lit and the reader is asked for the named vessel it leads to */
   var PASS = {
-    'hepatic-portal-vein': { 'mesenteric-vein': 'Yes, the blood leaves the small intestine in the mesenteric vein (0610 does not ask you to name it). Follow it: which vessel does it join, to enter the liver?' },
-    'hepatic-artery': { 'coeliac-artery': 'Yes, the blood passes through the coeliac artery, a short branch of the aorta (0610 does not ask you to name it). Which of its branches goes to the liver?' }
+    'hepatic-portal-vein': { 'mesenteric-vein': 'Yes, the blood leaves the small intestine in the mesenteric vein (the 0610 syllabus does not name it). Follow it: which vessel does it join, to enter the liver?' },
+    'hepatic-artery': { 'coeliac-artery': 'Yes, the blood passes through the coeliac artery, a short branch of the aorta (the 0610 syllabus does not name it). Which of its branches goes to the liver?' }
   };
   var NOT_A_ROUTE = {
     heart: 'That is the muscular wall of the heart. Click one of the four chambers.',
