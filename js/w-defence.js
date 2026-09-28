@@ -281,7 +281,7 @@
     { t: 20, h: 'The bacterium is engulfed', p: 'The ends of the extensions meet and join. The bacterium is now inside the phagocyte, enclosed in a vacuole. This is phagocytosis: the phagocyte engulfs the pathogen.' },
     { t: 29, h: 'Enzymes are released into the vacuole', p: 'Small sacs in the cytoplasm contain digestive enzymes. The sacs join with the vacuole and release their enzymes into it.' },
     { t: 37, h: 'The enzymes digest the bacterium', p: 'The enzymes digest the bacterium. They break down its large molecules into small, soluble molecules. The pathogen is destroyed.' },
-    { t: 45, h: 'The products are absorbed', tag: 'Not asked in 0610', p: 'The small, soluble products are harmless. They are absorbed into the cytoplasm, or released from the cell. The vacuole becomes smaller, and the phagocyte can engulf another pathogen.' },
+    { t: 45, h: 'The products are absorbed', tag: 'Beyond 0610', p: 'The small, soluble products are harmless. They are absorbed into the cytoplasm, or released from the cell. The vacuole becomes smaller, and the phagocyte can engulf another pathogen.' },
     { t: 54, h: 'The phagocyte displays the antigens', tag: 'IB C3.2 Defence against disease · beyond the 0610 syllabus', p: 'Pieces of the bacterium\'s antigens are kept. Small sacs carry them to the cell membrane, and proteins in the membrane hold them on its outer surface. The phagocyte now displays the antigens (antigen presentation). A helper T-cell, a lymphocyte whose receptor fits these antigens, can bind to them. This helps to start antibody production against this pathogen.' }
   ];
   var PH_END = 64;
@@ -565,7 +565,7 @@
     var sp = L.stepper({ steps: readerSteps(PH_STEPS, R), end: R[R.length - 1], render: function (t) { render(clock(t)); } });
     return mount(S, sp, 'ph', [
       ['The phagocyte drawn is a neutrophil, the commonest phagocyte in blood: its nucleus has several lobes, and its cytoplasm is full of small granules. A real one is about 11 µm across, and the bacterium about 2 µm long. The sacs of enzymes are drawn larger than real, and the chemicals, enzymes, products and antigens far larger than real molecules. You see a thin slice, so the extensions look like two arms: in the whole cell they are a cup.'],
-      ['<b>Not asked in 0610.</b> Moving towards the chemicals is called chemotaxis. The sacs of enzymes are called lysosomes. Step 6, what happens to the products, goes beyond the syllabus.', 'ph__fence'],
+      ['<b>Beyond 0610.</b> Moving towards the chemicals is called chemotaxis. The sacs of enzymes are called lysosomes. Step 6, what happens to the products, goes beyond the syllabus.', 'ph__fence'],
       ['<b>Step 7 is IB Biology C3.2, Defence against disease.</b> The 0610 syllabus does not list it, but two 0610 mark schemes gave a mark for it in questions on phagocytes (Paper 32, June 2014, Q4(d)(ii); Paper 42, June 2017, Q6(c)(ii)). Antigens are presented mostly by macrophages, larger phagocytes in the tissues, and by dendritic cells; a neutrophil, the cell drawn, does it only in some conditions (Vono et al. 2017).', 'ph__fence']
     ], function (D, narrow) {
       var tall = !!narrow;

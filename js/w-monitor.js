@@ -1204,7 +1204,7 @@
     box.appendChild(calc);
     var fb = h('div', 'ec__fb'); fb.setAttribute('aria-live', 'polite');
     box.appendChild(fb);
-    var namesBtn = button('wbtn ec__namesb', 'Name the waves <span>(not asked in 0610)</span>');
+    var namesBtn = button('wbtn ec__namesb', 'Name the waves <span>(beyond 0610)</span>');
     namesBtn.setAttribute('aria-expanded', 'false');
     box.appendChild(namesBtn);
     var names = h('div', 'ec__names'); names.hidden = true;
@@ -1303,7 +1303,7 @@
     clr.addEventListener('click', function () { picks = []; fb.innerHTML = ''; fb.className = 'ec__fb'; inp.value = ''; tries = 0; draw(); status(); });
     function choose(i) { cur = i; picks = []; fb.innerHTML = ''; fb.className = 'ec__fb'; inp.value = ''; tries = 0; draw(); status(); }
 
-    /* the named waves, on one beat drawn larger: not asked in 0610 */
+    /* the named waves, on one beat drawn larger: beyond 0610 */
     var NW = 640, NH = 320, NB = 240, NMM = 16, NX0 = 180, NX1 = 460;
     function drawNames() {
       var S = STRIPS[0], pxs = NMM * SPEED, rT = S.first + S.rr, t0 = rT - .26, s = '', mv = 10 * NMM;
@@ -1317,7 +1317,7 @@
         { id: 'qrs', text: 'QRS spike', x: NX0 + (rT - t0) * pxs, y: NB - 1.25 * mv, side: 'L' },
         { id: 't', text: 'T wave', x: NX0 + (tPk - t0) * pxs, y: NB - S.ta * mv, side: 'R' }
       ], left: NX0, right: NX1, font: Math.max(18, Math.round(fontPx * NW / EC_W * 1.15)), width: 160, top: 6, bottom: NH - 6, gap: 6 });
-      names.innerHTML = '<p class="ec__fence">Extension: 0610 does not ask you to name the waves.</p>' +
+      names.innerHTML = '<p class="ec__fence">Extension: the 0610 syllabus does not name the waves.</p>' +
         '<svg viewBox="0 0 ' + NW + ' ' + NH + '" class="ec__nsvg" role="img" aria-label="One beat of the ECG, drawn larger, with its three waves named: the P wave, the QRS spike and the T wave.">' + s + '</svg>' +
         '<ul class="ec__nlist"><li><b>P wave</b>: the electrical signal spreads over the atria, just before they contract.</li>' +
         '<li><b>QRS spike</b>: the signal spreads through the ventricles, just before they contract.</li>' +

@@ -736,7 +736,7 @@
     wrap.appendChild(left); wrap.appendChild(sp.list);
     box.appendChild(wrap);
     box.appendChild(h('p', 'widget__note', 'Not to scale: the red blood cells are drawn hundreds of times larger than real, and far fewer. Time is squeezed: a deposit grows over years, a clot forms in minutes, and heart muscle cells die after 20 to 40 minutes without blood. Dead muscle is drawn grey and breaking down; in a real heart this takes hours to days. Heart: Servier Medical Art, CC BY 4.0.'));
-    box.appendChild(h('p', 'widget__note ar__fence', '<b>Not asked in 0610.</b> Step 5 is extension: in most heart attacks the clot blocks the artery where it forms, as in step 6. “Plaque” and “atheroma” are other names for the fatty deposit; the chest pain of step 3 is angina; a heart attack is also called a myocardial infarction.'));
+    box.appendChild(h('p', 'widget__note ar__fence', '<b>Beyond 0610.</b> Step 5 is extension: in most heart attacks the clot blocks the artery where it forms, as in step 6. “Plaque” and “atheroma” are other names for the fatty deposit; the chest pain of step 3 is angina; a heart attack is also called a myocardial infarction.'));
 
     /* the layout: the heart above, the artery below; the artery turned on its side on a narrow screen;
        lettering at least 13 px on screen */
