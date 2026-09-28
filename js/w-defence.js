@@ -587,7 +587,7 @@
     { t: 18, h: 'Fibrinogen is converted into fibrin', tag: 'Supplement', p: 'Plasma carries a **soluble** protein, **fibrinogen**. The chain of reactions makes an enzyme, thrombin. Thrombin **converts** fibrinogen into **fibrin**, which is **insoluble**. Fibrin threads grow from the platelets and the damaged tissue across the wound.' },
     { t: 27, h: 'A mesh traps the cells: a clot', tag: 'Supplement', p: 'The fibrin threads form a **mesh** across the wound. The mesh **traps red blood cells** and platelets, forming a clot. The clot **prevents blood loss**.' },
     { t: 36, h: 'The clot becomes a scab', p: 'The clot dries and hardens into a **scab**. The scab **prevents the entry of pathogens** into the body.' },
-    { t: 44, h: 'New skin grows under the scab', tag: 'Beyond the 0610 syllabus', p: 'Under the scab, skin cells near the wound divide by mitosis, and the new cells grow across the wound. Below, the clot is broken down and replaced by new tissue, and the wall of the blood vessel is repaired. Then the scab separates from the new skin.' }
+    { t: 44, h: 'New skin grows under the scab', tag: 'Mitosis: 17.2.2 (Supplement)', p: 'Under the scab, skin cells near the wound divide by mitosis, and the new cells grow across the wound. Below, the clot is broken down and replaced by new tissue, and the wall of the blood vessel is repaired. Then the scab separates from the new skin.' }
   ];
   var CL_END = 55;
   /* the two sides of the cut, surface to vessel, when it is fully open */
@@ -1047,7 +1047,7 @@
     var sp = L.stepper({ steps: readerSteps(CL_STEPS, R), end: R[R.length - 1], render: function (t) { render(clock(t)); } });
     return mount(S, sp, 'cl', [
       ['The cells are drawn to scale; fibrinogen (the short rods) is drawn hundreds of times larger than real.'],
-      ['<b>Beyond the 0610 syllabus:</b> thrombin (step 3) and step 6, though 0610 mark schemes have given marks for both (for example Paper 31, June 2012, Q1(c)).', 'cl__fence']
+      ['<b>Beyond the 0610 syllabus:</b> thrombin (step 3), and step 6 apart from repair by mitosis (17.2.2, Supplement), though 0610 mark schemes have given marks for both (for example Paper 31, June 2012, Q1(c)).', 'cl__fence']
     ], function (D, nar) {
       var narrow = !!nar;
       lay = frameOf(svg, bg, model, cr, narrow ? { x0: 198, x1: 422, y0: 20, y1: 510 } : { x0: 0, x1: 620, y0: 20, y1: 510 }, false, D, narrow ? 10 : 10, narrow ? 11 : 11, narrow ? 112 : 132, narrow ? 112 : 132);
