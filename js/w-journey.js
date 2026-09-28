@@ -274,7 +274,7 @@
   })();
   var TAG = {
     arteriole: { chip: 'Not in 9.3', note: 'Arterioles appear in 14.4 (S): vasoconstriction and vasodilation in the skin.' },
-    venule: { chip: 'Beyond the syllabus', note: '' }
+    venule: { chip: 'Old syllabus · until 2022', note: 'Venules were in the 0610 syllabus until 2022 (Supplement, 9.3): “State the function of arterioles, venules and shunt vessels”.' }
   };
   /* the comparison the exam asks for (9.3.1 and S 9.3.4), for the three vessels it names */
   var TABLE = {

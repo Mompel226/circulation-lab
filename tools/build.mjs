@@ -131,6 +131,11 @@ for (const [from, to] of [['engine/engine.js', 'js/engine.js'], ['engine/marking
 /* ---------- the shared glossary ---------- */
 const { GLOSSARY } = await import(pathToFileURL(resolve(SHARED, 'glossary.master.js')).href);
 const { formsOf } = await import(pathToFileURL(resolve(SHARED, 'glossary-forms.mjs')).href);
+/* The old syllabus (labs-shared/past-syllabus.mjs): what this lab teaches that the 2026–28 syllabus does not
+   include, and the older 0610 syllabus it comes from. The places are in ../circulation-lab-source/past-syllabus.json,
+   never in the questions; each carries the fingerprint of what it was put on. */
+const { loadPast, pastOf, pastPage } = await import(pathToFileURL(resolve(SHARED, 'past-syllabus.mjs')).href);
+const PAST = loadPast(SHARED, resolve(REPO, '../circulation-lab-source'));
 const DEF = new Map(GLOSSARY.map(e => [e.term.toLowerCase(), e]));
 const missing = [], clash = [];
 for (const st of STATIONS) {
@@ -253,6 +258,7 @@ for (const st of STATIONS) {
     vault[id] = v;
     s.activities.push(p);
   }
+  { const past = pastOf(PAST, st, s.activities); if (past) s.past = past; }
   pub.push(s);
 }
 
@@ -283,7 +289,10 @@ writeFileSync(resolve(REPO, 'js/data/stations.js'),
   '   Presentation only. The answers are not in this file: each question carries\n' +
   '   a salted hash, which is enough to mark an answer but not to read it. */\n' +
   'window.ANSWER_SALT = ' + JSON.stringify(SALT) + ';\n' +
-  'window.STATIONS = ' + JSON.stringify(pub, null, 1) + ';\n');
+  'window.STATIONS = ' + JSON.stringify(pub, null, 1) + ';\n' +
+  '/* the older 0610 statements this lab teaches (labs-shared/syllabus-past.json) */\n' +
+  'window.PAST_SYLLABUS = ' + JSON.stringify(pastPage(PAST, pub)) + ';\n');
+if (PAST.problems.length) console.error('Old-syllabus tags that no longer fit (fix ../circulation-lab-source/past-syllabus.json):\n  ' + PAST.problems.join('\n  '));
 
 if (process.argv.includes('--vault')) {
   writeFileSync(resolve(REPO, 'js/data/keys.enc.js'),
