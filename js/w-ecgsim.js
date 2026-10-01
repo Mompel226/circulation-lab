@@ -364,7 +364,6 @@
     var leadId = 'II', freeAng = 60, ms = 0, sp = null, dragging = false;
     function curAng() { if (leadId === 'free') return freeAng; for (var i = 0; i < LEADS.length; i++) if (LEADS[i].id === leadId) return LEADS[i].ang; return 60; }
     function curLead() { for (var i = 0; i < LEADS.length; i++) if (LEADS[i].id === leadId) return LEADS[i]; return null; }
-    function freePos() { var r = freeAng * Math.PI / 180; return [C[0] + Math.cos(r) * RING, C[1] + Math.sin(r) * RING]; }
     function ep(k) { return [bx(ELEC[k][0]), by(ELEC[k][1])]; }
 
     function drawLead() {

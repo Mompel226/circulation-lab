@@ -71,7 +71,7 @@ marginal branch, right coronary artery, right marginal branch, posterior descend
    red patches. Each vertex of these two valves lying inside a chamber wall was moved towards the valve's
    own axis to 0.5 mm clear of the wall, the move spread smoothly over the valve (at most 0.5 mm per mm)
    so that its two faces move together; at most 2.5 mm. Now none of the pulmonary valve and 0.06 % of the
-   aortic valve lies inside a wall. Done on the source before step 6 (`valvefix2.py`, `apply_fix.mjs`);
+   aortic valve lies inside a wall. Done on the source before step 6 (`valvefix.py` and `tool/apply_fix.mjs` in the heart3d build);
    every other part of the rebuilt file decodes identically to the old one.
 
 9. **A tunnel in the right atrium's wall plugged** (26 September 2026). Low on the back of the right

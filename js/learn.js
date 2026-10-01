@@ -4,8 +4,9 @@
    The generic ones — finder, table, photo — are the shared js/widgets.js. What this file adds:
      video        one of the lesson videos, with its poster, played on demand
      watch        a film on YouTube, loaded only when pressed
-     curio        "Did you know?": one strange true thing, fenced off from the exam
+     curio        "Did you know?": one strange true thing, beyond the syllabus (an exam question can still use it)
      labelphoto   a photograph labelled the way a drawing is, leaders ruled level
+     figure       a picture that must be read, set large
    and the topic's own widgets, each introduced where it is defined below.
    Also exported for the questions: svgFor (the drawings), so a hotspot can use one.
    ============================================================ */
@@ -77,10 +78,11 @@
     return f;
   }
 
-  /* ---------- curio: one strange true thing, fenced off from the exam ----------
+  /* ---------- curio: one strange true thing, fenced off from the syllabus ----------
      Daniel asked for these in the Plants Lab ("there are all these kind of weird things ... just
      display that"). A photograph, a short story in plain sentences, and the paper it comes from.
-     Every card says, in its own head, that it is not on either syllabus. ---------- */
+     Every card says, in its own head, that it is beyond both syllabuses, and that an exam question can
+     still use it (Daniel, 28 Sep 2026: never "not examined"). ---------- */
   function curio(spec) {
     /* ~like this~ is italic. The lab's own _like this_ means "underline this exam word", which is
        not what a scientific name or a journal title wants, and Terms.mark would escape a raw tag. */
@@ -93,7 +95,7 @@
     var box = h('section', 'curio' + (spec.shape === 'tall' ? ' curio--tall' : '') + (spec.img && !right ? '' : ' curio--text') + (spec.pics ? ' curio--pics' : ''));
     box.appendChild(h('div', 'curio__head',
       '<span class="curio__pill">Did you know?</span>' +
-      '<span class="curio__fence">Not in 0610 or the IB guide. Nothing here is examined.</span>'));
+      '<span class="curio__fence">Beyond 0610 and the IB guide — an exam question can still use it.</span>'));
     var body = h('div', 'curio__body');
     if (spec.img) {
       var P = W.picture({ img: spec.img, alt: spec.alt || '' });
