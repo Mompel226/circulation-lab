@@ -15,8 +15,9 @@
      table     a comparison table, its words marked by the lab's Terms
      photo     a photograph with its caption and credit, opening full size on a click
      head      a widget's heading line and the sentence that asks for something
-   The Classification Lab still carries its own copy of the first five inside its
-   js/learn.js, from before this file existed; the two are the same code.
+   The Classification Lab keeps an OLDER copy of the first five inside its js/learn.js, from
+   before this file existed. Only table is still the same code; the others have diverged, so
+   moving that lab over to this file needs a side-by-side check first.
    ============================================================ */
 (function (global) {
   'use strict';

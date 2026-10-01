@@ -4,7 +4,8 @@
    lab does with it: a station lights the parts it is about and flies the camera to them, opens
    the magnified heart for the heart stations, and sets the heart rate; a part clicked on the body
    opens the station that teaches it. The tools above the plate zoom, pull back to the whole
-   body, and show the names. A station may also stand a bench in place of the body (none does).
+   body, and show the names. A station may also stand a bench in place of the body (the vessels
+   station stands the capillary bed, js/w-capbed.js, there).
    ============================================================ */
 (function (global) {
   'use strict';

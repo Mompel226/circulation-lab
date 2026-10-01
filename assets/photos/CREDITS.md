@@ -62,7 +62,7 @@ in that deck.
 | `blood-layers-*` | a tube of blood before and after spinning, labelled | 9.4 Blood | 5 |
 | `blood-smear-*` | a stained blood smear | `L7.Blood/To Print/Cells.png` | — |
 
-### Worth checking before the lab is published
+### Still to check (the lab is live)
 
 These look like pictures from commercial sources, and the slides do not say where they came from:
 

@@ -199,7 +199,7 @@
   };
 
   /* ---------- the five stages: the words ----------
-     text: sentences; a sentence marked 1 is Supplement (Paper 4), shown with an S.
+     text: sentences; a sentence marked 1 is Supplement (the Extended papers, 2 and 4), shown with an S.
      Each stage's main text is kept to about 25 words, one idea to a sentence. */
   var STAGES = [
     { key: 'artery', name: 'Artery', t: 0, dur: 12,

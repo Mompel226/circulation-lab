@@ -4,12 +4,15 @@
      node tools/build.mjs [password]
 
    Reads   ../circulation-lab-source/stations.master.js   (has the answers)
+           ../circulation-lab-source/past-syllabus.json   (the old-syllabus badges)
    Writes  js/data/stations.js    presentation + salted hashes, NO answers
+           js/data/syllabus.js, js/data/syllabus-older.js   the syllabus text, for the IGCSE 0610 badge
            js/data/glossary.js    the shared definitions
            js/data/photos.js      the pixel size of every picture, and which have a 1400 twin
-           js/engine.js, js/marking.js, js/sync.js, js/widgets.js   copied from labs-shared/engine/
+           js/engine.js, js/marking.js, js/sync.js, js/homework.js, js/syllabus.js, js/widgets.js   copied from labs-shared/engine/
            js/signin.js                                           copied from labs-shared/ (one sign-in for the whole site)
-           index.html             every ?v= stamped
+           js/w-heart3d.js        its heart.glb?r=<hash>, when the 3D model changes
+           index.html             every ?v= stamped; version.txt the same stamp
            sw.js                  the offline worker, from labs-shared/sw.template.js
            ../../labs-shared/labs.json   this lab's station and question counts
 
@@ -124,7 +127,7 @@ if (!SHARED) {
   process.exit(1);
 }
 for (const [from, to] of [['engine/engine.js', 'js/engine.js'], ['engine/marking.js', 'js/marking.js'], ['engine/syllabus.js', 'js/syllabus.js'],
-                          ['engine/sync.js', 'js/sync.js'], ['engine/widgets.js', 'js/widgets.js'], ['signin.js', 'js/signin.js']]) {
+                          ['engine/sync.js', 'js/sync.js'], ['engine/homework.js', 'js/homework.js'], ['engine/widgets.js', 'js/widgets.js'], ['signin.js', 'js/signin.js']]) {
   copyFileSync(resolve(SHARED, from), resolve(REPO, to));
 }
 
