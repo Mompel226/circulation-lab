@@ -36,8 +36,11 @@ questions that say right or wrong — never the answer.
 | 📖 **A shared glossary** | one wording per term, the same in every lab |
 
 > [!NOTE]
-> **The answers are not in the page — at all.** The lab can tell a student they are wrong, but
-> nothing in it knows what *right* is. How that works is explained below.
+> **The right answers are stored only as scrambled fingerprints.** The lab can tell a student they
+> are wrong, but its questions cannot show what *right* is. The explanations of the multiple-choice
+> options are published with the lab, scrambled, for the pupils whose teacher gives them the Accommodation:
+> each sees an explanation after a second wrong try. Someone who unscrambles them could learn an
+> answer. How that works is explained below.
 
 ## Where it sits
 
@@ -57,10 +60,17 @@ every vessel she drew, traced from the drawing itself, and the vessels are named
 of her own labelled version. Red is oxygenated blood and blue is deoxygenated blood, as on every
 diagram, and the lab says that real blood is never blue.
 
-**Why the answers are not in the page.** Each question carries a *scrambled fingerprint* of its
-answer. When a student answers, the page scrambles what they did in the same way and compares the
-two. Scrambling only works one way, so nothing in the page can say what the right answer is — only
+**Why the right answers are not in the page.** Each question carries a *scrambled fingerprint* of
+its answer. When a student answers, the page scrambles what they did in the same way and compares
+the two. Scrambling only works one way, so no fingerprint can say what the right answer is — only
 *not that one*. The real answers live in one file that is never published.
+
+**The one exception: the explanations (since 8 October 2026).** For a pupil whose teacher has
+switched on the Accommodation, the page fetches `js/data/whys.js` and, after a second, different
+wrong try at a multiple-choice question, shows the explanation of each option they chose. That file
+is public like every file here and scrambled with a key the page itself carries, so it is not a
+secret: no other pupil's page fetches it, but someone who unscrambles it by hand could learn which
+options are right.
 
 **What is shared with the other labs.** The question engine, the marking, the saving, the sign-in,
 the widgets and the glossary are kept in one place and copied in whenever a lab is rebuilt, so a fix
