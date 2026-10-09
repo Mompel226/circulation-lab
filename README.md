@@ -7,7 +7,7 @@
 [![Open the lab](https://img.shields.io/badge/▶_Open_the_lab-0969DA?style=for-the-badge&logoColor=white)](https://nlcsbiology.com/circulation-lab/)
 
 ![12 stations](https://img.shields.io/badge/12-stations-A3213A)
-![115 questions](https://img.shields.io/badge/115-questions-8A5A0E)
+![120 questions](https://img.shields.io/badge/120-questions-8A5A0E)
 ![Marks itself](https://img.shields.io/badge/questions-mark_themselves-0B6A8C)
 ![No sign-up](https://img.shields.io/badge/students-no_sign--up_needed-6FA287)
 
@@ -28,11 +28,11 @@ questions that say right or wrong — never the answer.
 |  |  |
 |---|---|
 | 🫀 **12 stations** | the circulatory system · single and double circulation · the heart · one heartbeat · monitoring the heart · exercise and heart rate · your gym investigation · coronary heart disease · arteries, veins and capillaries · the main blood vessels · what blood is made of · clotting |
-| ✍️ **115 questions** | fill the gaps · multiple choice · put in order · match up · sort into groups · **tick a grid** · **click the heart** |
+| ✍️ **120 questions** | fill the gaps · multiple choice · put in order · match up · sort into groups · **tick a grid** · **click the heart** |
 | 🩸 **The body is the map** | a real anatomical drawing of the whole circulation (public domain, from Gray's Anatomy and Sobotta): blood flows along every vessel, away from the heart in the arteries and back in the veins, surging with each beat; each station lights and flies to the part it teaches, the heart stations open a magnified heart that beats, and you can zoom, drag and pull back to the whole body |
 | ▶️ **Animations that wait** | one heartbeat, valve by valve, with the two heart sounds; a journey from artery to vein; a real heart in 3D; blood after a meal, from the gut through the liver; why the heart rate rises in exercise; a blocked coronary artery; a phagocyte at work; a cut clotting — every step holds until **Next step** |
 | 🧭 **Trace the route** | the same body again: click the vessels, chambers and organs in the order the blood passes through them, from a kidney to the lungs or from the small intestine to the heart |
-| 📝 **The gym investigation, not done for them** | the station says what the task is, what is handed in and how it is marked, gives the rules for a perfect results table and graph, and links every part of the report to the Write-Up Lab — but it writes no research question, method, table or graph for them, because those are the assessment |
+| 📝 **The gym investigation, not done for them** | the station says what the task is (the four steps, the A4 notes page written in the gym, the 60-minute write-up from memory), the six parts of the report in order, and how each is marked: press a part to see its criterion, what the mark scheme asks of it and where to learn it. It gives the rules for a perfect results table (and, as practice, a graph), links every part to the Write-Up Lab, and its questions ask where to find each thing — but it writes no research question, method, table or graph for them, because those are the assessment |
 | 📖 **A shared glossary** | one wording per term, the same in every lab |
 
 > [!NOTE]
