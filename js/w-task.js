@@ -63,7 +63,7 @@
   var PARTS = [
     { name: 'Research question', say: 'What a focused research question contains, and a tool that builds one part by part.',
       links: [['part/question', 'Research question'], ['tool/rq-builder', 'Question builder']] },
-    { name: 'Background knowledge, ending with your hypothesis', say: 'Only the biology your question needs, explained with cause and effect, then your hypothesis.',
+    { name: 'Background knowledge, ending with your hypothesis', say: 'Only the biology your question needs, explained with cause and effect, then your hypothesis. The Background page is written for the IB: in this report you cite no sources.',
       links: [['part/background', 'Background'], ['part/hypothesis', 'Hypothesis']] },
     { name: 'Variables', say: 'The independent, dependent and controlled variables, and how to write each one so it earns its mark.',
       links: [['part/variables', 'Variables']] },
