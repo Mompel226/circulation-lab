@@ -1442,6 +1442,24 @@ picture{display:block;line-height:0}
 @media (max-width:700px){.rm__wrap{grid-template-columns:minmax(0,1fr)}}
 .rm{container-type:inline-size}   /* stacks by its own width too: the station column is narrow on a 1024 px screen (audit, 9 Oct 2026) */
 @container (max-width:540px){.rm__wrap{grid-template-columns:minmax(0,1fr)}}
+/* the four steps (taskmap, 10 Oct 2026): the parts panel's layout, in the lab's green */
+.tm .rm__btn{border-left-color:var(--green-2)}.tm .rm__btn.is-on{background:var(--green-tint)}
+.tm__panel{border-top-color:var(--green-2)}.tm .rm__chip{background:var(--green-2)}
+.tm__row{margin:0 0 4px;font-size:14px}
+.tm__k{display:inline-block;min-width:3.4em;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--grey,#6B6B6B)}
+
+/* rules to follow, set apart from the green of what to know (10 Oct 2026: the perfect results table and graph):
+   a cream sheet with a brown edge, each rule beside an empty box, and where to practise them */
+.exam-part--rules{background:#FFFDF6;border-top:1px solid #E5DCC6;border-bottom:1px solid #E5DCC6;box-shadow:inset 6px 0 0 #8A6A2F}
+.exam-part--rules .exam-part__h{color:#7A5A1F}
+.exam-part--rules .exam-list > li::before{background:#8A6A2F;box-shadow:0 0 0 3px #F3EAD6}
+.exam-part--rules .exam-steps{list-style:none;padding-left:0;margin:8px 0 0}
+.exam-part--rules .exam-steps > li{position:relative;padding-left:28px;margin:0 0 7px}
+.exam-part--rules .exam-steps > li::before{content:"";position:absolute;left:1px;top:.28em;width:13px;height:13px;border:2px solid #8A6A2F;border-radius:3px;background:#fff}
+.exam-links{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 0}
+.exam-link{font-size:13.5px;font-weight:600;color:#6B4E17;border:1.5px solid #8A6A2F;border-radius:var(--r-pill);padding:5px 13px;text-decoration:none;background:#fff;min-height:36px;display:inline-flex;align-items:center;gap:5px}
+.exam-link:hover{background:#F3EAD6}
+.exam-link:focus-visible{outline:2px solid #8A6A2F;outline-offset:2px}
 .rl__list{list-style:none;margin:6px 0 0;padding:0;border-top:1px solid var(--edge)}
 .rl__item{display:flex;gap:12px;padding:11px 2px;border-bottom:1px solid var(--edge)}
 .rl__num{flex:none;width:26px;height:26px;border-radius:50%;background:var(--k-health);color:#fff;font-weight:700;font-size:12.5px;display:grid;place-items:center;margin-top:1px}

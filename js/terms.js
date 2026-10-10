@@ -58,7 +58,7 @@
              'coronary heart disease', 'CHD', 'atheroma', 'plaque', 'thrombus', 'risk factor', 'risk factors', 'genetic predisposition', 'cholesterol', 'saturated fat', 'saturated fats',
              'lactic acid', 'oxygen debt', 'aerobic respiration', 'anaerobic respiration',
              'independent variable', 'dependent variable', 'control variable', 'control variables', 'controlled variable', 'controlled variables',
-             'hypothesis', 'research question', 'trial', 'trials', 'anomalous result', 'anomalous results', 'mean', 'range', 'results table', 'line graph', 'bar chart', 'risk assessment'],
+             'hypothesis', 'research question', 'method', 'trial', 'trials', 'anomalous result', 'anomalous results', 'mean', 'range', 'results table', 'line graph', 'bar chart', 'risk assessment'],
     plain:  ['diffusion', 'diffuse', 'diffuses', 'concentration gradient', 'respiration', 'respire', 'respires', 'glucose', 'oxygen', 'carbon dioxide', 'urea', 'hormone', 'hormones',
              'ion', 'ions', 'nutrient', 'nutrients', 'pathogen', 'pathogens', 'nucleus', 'nuclei', 'cell membrane', 'mitochondrion', 'mitochondria', 'surface area',
              'organ', 'organs', 'tissue', 'tissues', 'enzyme', 'enzymes', 'vertebrate', 'vertebrates', 'mammal', 'mammals', 'fish',
@@ -201,7 +201,10 @@
     'range':    [{ after: /^\s+of\s+(activities|exercises|things|ways|foods|sizes|shapes)/i }],
     'pump':     [{ before: /\b(to|can|will|must|they|it|and|ones)\s+$/i }, { after: /^\s+(blood|it|them)\b/i }],
     'pulse':    [{ after: /^\s+(of|through)\b/i }],
-    'plaque':   [{ before: /\b(dental|tooth|teeth)\s+$/i }, { after: /^\s+on\s+(the\s+)?(teeth|tooth)/i }]
+    'plaque':   [{ before: /\b(dental|tooth|teeth)\s+$/i }, { after: /^\s+on\s+(the\s+)?(teeth|tooth)/i }],
+    /* the method of a lab report, a part as important as the research question (Daniel, 10 Oct 2026: "the method is a
+       critical part"): marked like it, in the gym station only; elsewhere "a method" is everyday English */
+    'method':   [{ unlessWhole: /(?!)/, orStation: 'plan' }]
   };
   function wrongSense(low, before, after, whole) {
     var rules = NOT_HERE[low];
