@@ -279,7 +279,7 @@
      other wrote. And paintPanel runs on the tab bar, on both glossary known-word toggles, on a
      sync and on Reset: rebuilding there would throw away a half-finished experiment because the
      student looked up a word. */
-  var SIM_NOT = { photo: 1, figure: 1, video: 1, watch: 1, finder: 1, table: 1, curio: 1, sound: 1, tasklist: 1, reportlinks: 1, reportmap: 1, labelphoto: 1 };   /* pictures, recordings, stories and lists are not simulations to try beside the questions; the report map would also show the answers */
+  var SIM_NOT = { photo: 1, figure: 1, video: 1, watch: 1, finder: 1, table: 1, curio: 1, sound: 1, tasklist: 1, reportlinks: 1, reportmap: 1, taskmap: 1, labelphoto: 1 };   /* pictures, recordings, stories and lists are not simulations to try beside the questions; the report map would also show the answers */
   var simView = null, simOpen = {}, simPick = {},
       simWide = window.matchMedia ? window.matchMedia('(min-width: 1001px)') : { matches: true, addEventListener: function () {} };
 
@@ -450,7 +450,9 @@
       if (!offK && part !== partName) {
         partName = part;
         list = document.createElement('ul'); list.className = 'exam-list';
-        if (part) { var wrap = document.createElement('div'); wrap.className = 'exam-part'; wrap.innerHTML = '<div class="exam-part__h">' + esc(part) + '</div>'; wrap.appendChild(list); card.appendChild(wrap); }
+        /* a part's first sentence may give the part its own look: `look: 'rules'` for a set of rules to follow, set apart from
+           the green of what to know (Daniel, 10 Oct 2026: the perfect results table and the perfect graph) */
+        if (part) { var wrap = document.createElement('div'); wrap.className = 'exam-part' + (typeof b === 'object' && b.look ? ' exam-part--' + String(b.look).replace(/[^a-z]/g, '') : ''); wrap.innerHTML = '<div class="exam-part__h">' + esc(part) + '</div>'; wrap.appendChild(list); card.appendChild(wrap); }
         else card.appendChild(list);
       }
       var li = document.createElement('li');
@@ -510,6 +512,14 @@
           ol.appendChild(s2);
         });
         li.appendChild(ol);
+      }
+      /* where to practise it: Write-Up Lab pages or tools, each in a new tab (10 Oct 2026: the table fixer and the graph
+         chooser under the perfect table and graph). `links: [['part/tables', 'words'], …]`, paths of the Write-Up Lab. */
+      if (typeof b === 'object' && b.links) {
+        li.insertAdjacentHTML('beforeend', '<p class="exam-links">' + b.links.map(function (l) {
+          return '<a class="exam-link" href="' + esc('https://nlcsbiology.com/write-up-lab/?lv=g#/' + l[0]) + '" target="_blank" rel="noopener">' + esc(l[1]) +
+            ' <span aria-hidden="true">\u2197</span><span class="rl__sr"> (opens in a new tab)</span></a>';
+        }).join('') + '</p>');
       }
       /* Run AFTER the nested list is in place, or a (1) inside one of the numbered facts is
          still plain text when the walk goes past. */
