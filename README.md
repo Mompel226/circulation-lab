@@ -80,6 +80,8 @@ reaches every lab at once. What belongs to this lab alone is its content and its
 the answers in it and writes out the published version with only the fingerprints. It refuses to
 finish unless every answer still marks correctly.
 
+The `tools/` named here stay on Daniel's computer: they are not in this repository (since 18 Oct 2026).
+
 ```
 node tools/build.mjs
 ```
