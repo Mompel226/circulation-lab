@@ -13,6 +13,8 @@
 Citation requested by the publisher:
 Browne, Kristen, and Heidi Schlehlein. 2024. "3D Reference Organ for Heart, Male v1.3."
 https://doi.org/10.48539/HBM564.WKNG.249
+Since October 2026 the DOI leads to a "Not Found" page on the atlas's side, and the atlas's 3D library
+lists the organ: https://humanatlas.io/3d-reference-library.
 Licence: Creative Commons Attribution 4.0 International (CC BY 4.0). Funder: National Institutes of Health.
 File used: `https://cdn.humanatlas.io/digital-objects/ref-organ/heart-male/v1.3/assets/3d-vh-m-heart.glb`
 (4,071,772 bytes, SHA-256 `689df039c8bc264ea06a44cd926762976f0666c0ff2dc532d046409b185e6b0c`).
@@ -22,7 +24,8 @@ Made from the Visible Human Male data of the US National Library of Medicine (Sp
 **The great vessels and coronary arteries.** HuBMAP Human Reference Atlas, *3D Reference Organ for Blood
 Vasculature, Male*, version 1.3, from the same body and in the same coordinate frame.
 Browne, Kristen, and Heidi Schlehlein. 2024. "3D Reference Organ for Blood Vasculature, Male v1.3."
-https://doi.org/10.48539/HBM473.XTPP.725 — CC BY 4.0.
+https://doi.org/10.48539/HBM473.XTPP.725 — CC BY 4.0. Since October 2026 this DOI also leads to a
+"Not Found" page; the 3D library above lists the organ.
 Only the heart's own vessels were taken, by HTTP range requests on their data (1.77 MB of the 18 MB file):
 ascending aorta, aortic arch, the first segments of the brachiocephalic, left common carotid and left
 subclavian arteries, the upper descending aorta, the pulmonary trunk and the right and left pulmonary
