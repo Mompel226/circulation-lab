@@ -107,19 +107,24 @@
     return d;
   }
 
+  /* `alts`: other points on the same part, where a crowded name moves instead of bending its line (w-common.js).
+     Found from the drawing itself (18 Oct 2026): points whose part, with the moving blood cells hidden, is the same
+     as at the label's own point at every moment of the beat, 1.5 units in from its edge. The valves swing, so they
+     keep their own point; the lower pulmonary vein is the upper one's other point. */
   var LABELS = [
-    { id: 'vc', text: 'vena cava', x: 104, y: 6, side: 'L' },
-    { id: 'pa', text: 'pulmonary artery', x: 160, y: 118, side: 'L' },
-    { id: 'slp', text: 'semilunar valve', x: 158, y: 200, side: 'L', cls: 'is-valve sl' },
-    { id: 'ra', text: 'right atrium', x: 82, y: 232, side: 'L' },
+    { id: 'vc', text: 'vena cava', x: 104, y: 6, side: 'L', alts: [[104, 20], [104, 32], [104, 44]] },
+    { id: 'pa', text: 'pulmonary artery', x: 160, y: 118, side: 'L', alts: [[160, 132], [160, 146], [160, 160], [160, 174]] },
+    { id: 'slp', text: 'semilunar valve', x: 158, y: 200, side: 'L', cls: 'is-valve sl', alts: [[154, 198]] },
+    { id: 'ra', text: 'right atrium', x: 82, y: 232, side: 'L', alts: [[82, 204], [82, 214], [82, 222], [82, 242], [82, 252]] },
     { id: 'avr', text: 'atrioventricular valve', x: 74, y: 290, side: 'L', cls: 'is-valve av' },
-    { id: 'rv', text: 'right ventricle', x: 146, y: 324, side: 'L' },        /* inside the cavity however far it squeezes */
-    { id: 'ao', text: 'aorta', x: 290, y: 36, side: 'R' },
-    { id: 'pv', text: 'pulmonary vein', x: 402, y: 190, side: 'R' },
-    { id: 'sla', text: 'semilunar valve', x: 244, y: 216, side: 'R', cls: 'is-valve sl' },
-    { id: 'la', text: 'left atrium', x: 332, y: 244, side: 'R' },
-    { id: 'avl', text: 'atrioventricular valve', x: 336, y: 292, side: 'R', cls: 'is-valve av' },
-    { id: 'lv', text: 'left ventricle', x: 290, y: 370, side: 'R' }
+    { id: 'rv', text: 'right ventricle', x: 146, y: 324, side: 'L', alts: [[146, 300], [146, 310], [138, 340], [138, 348], [146, 356], [146, 362]] },        /* inside the cavity however far it squeezes */
+    { id: 'ao', text: 'aorta', x: 290, y: 36, side: 'R', alts: [[298, 50], [302, 64], [302, 78], [306, 92]] },
+    { id: 'pv', text: 'pulmonary vein', x: 402, y: 190, side: 'R', alts: [[390, 194], [386, 238], [402, 242], [414, 244]] },
+    /* the valves on the right also stand on the left: when the right margin is full, they are the ones left out */
+    { id: 'sla', text: 'semilunar valve', x: 244, y: 216, side: 'R', cls: 'is-valve sl', alts: [[248, 214]], pri: -1 },
+    { id: 'la', text: 'left atrium', x: 332, y: 244, side: 'R', alts: [[332, 204], [332, 214], [332, 224], [332, 234], [332, 252]] },
+    { id: 'avl', text: 'atrioventricular valve', x: 336, y: 292, side: 'R', cls: 'is-valve av', pri: -1 },
+    { id: 'lv', text: 'left ventricle', x: 290, y: 370, side: 'R', alts: [[298, 356], [282, 340], [282, 328], [274, 384], [274, 396]] }
   ];
 
   function cycle(spec) {
@@ -195,7 +200,9 @@
         var B = L.pinBand(P.order, NV.x + 14, NV.y + 8, NV.w - 28, Math.round(fontPx * .92), 2);
         gLab.innerHTML = '<rect x="' + NV.x + '" y="' + NV.y + '" width="' + NV.w + '" height="' + n2(bandH) + '" fill="#0D1A22"/>' + B.svg + P.svg;
       } else {
-        gLab.innerHTML = L.labels({ items: items, left: -22, right: 432, font: fontPx, width: 150, top: VB.y + 6, bottom: VB.y + VB.h - 6, gap: 6 });
+        /* names 4 units apart (6 until 18 Oct 2026): on a laptop the right margin's pulmonary vein, semilunar valve and left
+           atrium then each stand on their own level line, where 6 left the valve 1.2 units short of a row */
+        gLab.innerHTML = L.labels({ items: items, left: -22, right: 432, font: fontPx, width: 150, top: VB.y + 6, bottom: VB.y + VB.h - 6, gap: 4 });
       }
       /* sound: only when a step is playing forwards through the moment */
       if (soundOn && t > lastT) {

@@ -554,11 +554,11 @@
           path: [[277, 575], [269, 573], [264, 568], [262, 560], [262, 446], [262, 406]], P0: .1, P1: .04, O0: 0, O1: 0 }
       ],
       labels: [
-        { id: 'gills', text: 'gills', x: 287, y: 60, side: 'L' },
-        { id: 'heart', text: 'heart', x: 226, y: 296, side: 'L' },
-        { id: 'ventricle', text: 'ventricle', x: 247, y: 334, side: 'L' },
-        { id: 'atrium', text: 'atrium', x: 250, y: 414, side: 'L' },
-        { id: 'body', text: 'body', x: 466, y: 602, side: 'R' }
+        { id: 'gills', text: 'gills', x: 287, y: 60, side: 'L', alts: [[287, 48], [287, 72], [287, 100], [287, 112]] },
+        { id: 'heart', text: 'heart', x: 226, y: 296, side: 'L', alts: [[250, 274], [238, 278], [226, 312], [226, 328], [226, 344]] },
+        { id: 'ventricle', text: 'ventricle', x: 247, y: 334, side: 'L', alts: [[247, 304], [247, 314], [247, 322], [247, 344]] },
+        { id: 'atrium', text: 'atrium', x: 250, y: 414, side: 'L', alts: [[250, 392], [250, 402], [250, 424]] },
+        { id: 'body', text: 'body', x: 466, y: 602, side: 'R', alts: [[466, 588], [466, 560], [466, 546]] }
       ]
     },
     mammal: {
@@ -585,20 +585,23 @@
           path: [[277, 575], [262, 575], [216, 575], [209, 572], [206, 565], [206, 302], [209, 295], [216, 292], [276, 292], [302, 290]], P0: .18, P1: .04, O0: 0, O1: 0 }
       ],
       labels: [
-        { id: 'lungs', text: 'lungs', x: 290, y: 52, side: 'L' },
-        { id: 'pa', text: 'pulmonary artery', x: 262, y: 146, side: 'L' },
-        { id: 'ra', text: 'right atrium', x: 296, y: 274, side: 'L' },
-        { id: 'rv', text: 'right ventricle', x: 300, y: 372, side: 'L' },
-        { id: 'vc', text: 'vena cava', x: 206, y: 470, side: 'L' },
-        { id: 'pv', text: 'pulmonary vein', x: 484, y: 140, side: 'R' },
-        { id: 'heart', text: 'heart', x: 455, y: 274, side: 'R' },
-        { id: 'la', text: 'left atrium', x: 426, y: 302, side: 'R' },
-        { id: 'lv', text: 'left ventricle', x: 414, y: 360, side: 'R' },
-        { id: 'ao', text: 'aorta', x: 510, y: 470, side: 'R' },
-        { id: 'body', text: 'body', x: 466, y: 602, side: 'R' }
+        { id: 'lungs', text: 'lungs', x: 290, y: 52, side: 'L', alts: [[290, 64], [290, 76], [290, 100], [290, 112]] },
+        { id: 'pa', text: 'pulmonary artery', x: 262, y: 146, side: 'L', alts: [[262, 120], [262, 132], [262, 160], [262, 172]] },
+        { id: 'ra', text: 'right atrium', x: 296, y: 274, side: 'L', alts: [[296, 284], [296, 294], [296, 304]] },
+        { id: 'rv', text: 'right ventricle', x: 300, y: 372, side: 'L', alts: [[300, 352], [300, 362], [300, 384], [304, 392]] },
+        { id: 'vc', text: 'vena cava', x: 206, y: 470, side: 'L', alts: [[210, 440], [210, 456], [210, 486], [210, 500]] },
+        { id: 'pv', text: 'pulmonary vein', x: 484, y: 140, side: 'R', alts: [[488, 110], [488, 126], [488, 156], [484, 172]] },
+        { id: 'heart', text: 'heart', x: 455, y: 274, side: 'R', alts: [[447, 260], [439, 252], [435, 250], [455, 290], [455, 306], [455, 322]] },
+        { id: 'la', text: 'left atrium', x: 426, y: 302, side: 'R', alts: [[426, 276], [426, 284], [426, 292], [426, 310]] },
+        { id: 'lv', text: 'left ventricle', x: 414, y: 360, side: 'R', alts: [[414, 346], [414, 374], [414, 388], [414, 400]] },
+        { id: 'ao', text: 'aorta', x: 510, y: 470, side: 'R', alts: [[514, 440], [514, 456], [514, 486], [514, 500]] },
+        { id: 'body', text: 'body', x: 466, y: 602, side: 'R', alts: [[466, 588], [466, 560], [466, 546]] }
       ]
     }
   };
+  /* each label's `alts`: other points on the same part (w-common.js), found from the drawing (18 Oct 2026): the chambers,
+     heart wall, gills, lungs and body where the part under the label's own point lies at every moment, 1.5 units in
+     from its edge (the moving cell hidden); the vessels along their own centre lines */
   /* timing: at least one second of animation for every four words of the step's words */
   ['fish', 'mammal'].forEach(function (k) {
     var t = 0;
@@ -892,7 +895,9 @@
       labels: [
         { id: 'fing', text: 'two fingertips', x: 399, y: 236, side: 'L' },
         { id: 'art', text: 'carotid artery', x: 421, y: 207, side: 'R' },
-        { id: 'jaw', text: 'jaw', x: 436, y: 190, side: 'R' }],
+        /* on the left: 17 units above the carotid artery's name there is no free row for it on the right, and the
+           photograph gives neither part another point that is plainly on it (18 Oct 2026) */
+        { id: 'jaw', text: 'jaw', x: 436, y: 190, side: 'L' }],
       aria: 'A photograph of a nurse feeling her own carotid pulse: the tips of her index and middle fingers are pressed into the side of her neck, just below the jaw. A student\u2019s hand rests along her jaw. A red glow under her fingertips throbs with each beat.',
       note: 'The carotid artery runs up the side of the neck, beside the windpipe; you feel it just below the angle of the jaw. Press gently, on one side only. ' }
   };

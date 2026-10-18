@@ -634,8 +634,10 @@
       var o = '', P = c.pts, step = 10;
       function d(a, b) { return 'M' + P.slice(Math.max(0, a), Math.min(P.length, b + 1)).map(function (q) { return n2(q[0]) + ' ' + n2(q[1]); }).join('L'); }
       for (var i = 0; i < P.length - 1; i += step) {
-        var e = Math.min(P.length - 1, i + step);
-        o += '<path d="' + d(i ? i + 4 : 0, e) + '" stroke="#5E3429" stroke-width="12.2"/>' +
+        var e = Math.min(P.length - 1, i + step), wall = d(i ? i + 4 : 0, e);
+        /* a last length shorter than the wall's overlap has no wall of its own (it wrote d="M", an error in the
+           console on every load, 18 Oct 2026) */
+        o += (wall.length > 1 ? '<path d="' + wall + '" stroke="#5E3429" stroke-width="12.2"/>' : '') +
              '<path d="' + d(i - 3, e) + '" stroke="#C68A78" stroke-width="9.6"/>' +
              '<path d="' + d(i - 3, e) + '" stroke="#F3D2BE" stroke-opacity=".28" stroke-width="2.6" transform="translate(-1,-1.6)"/>';
       }
@@ -1088,7 +1090,46 @@
        RENDER — the whole picture at time t
        ================================================================ */
     var LB = [];                                  /* the labels this frame, collected by each scene */
-    function lab(text, side, sx, sy, op, cls) { if (op > .01) LB.push({ text: text, side: side, sx: sx, sy: sy, op: op, cls: cls || '' }); }
+    function lab(text, side, sx, sy, op, cls, alts) {
+      if (op > .01) LB.push({ text: text, side: side, sx: sx, sy: sy, op: op, cls: cls || '', alts: alts, keep: /is-tracer/.test(cls || '') });
+    }
+    /* Other points for a crowded name (w-common.js moves it there instead of bending its line, 18 Oct 2026), in the
+       model: further along its own vessel or organ line, inside its own organ, or in its own heart chamber (the
+       points the heart cycle found on the same drawing). */
+    var ALONG = [-40, -28, -16, 16, 28, 40];
+    function alongC(c, s0) { var o = []; ALONG.forEach(function (d) { var sx = s0 + d; if (sx > 4 && sx < c.total - 4) { var q = at(c, sx); o.push([q.x, q.y]); } }); return o; }
+    function onC(c) { return function (x, y) { return alongC(c, nearest(c, x, y)); }; }
+    function onV(keys) {
+      return function (x, y) {
+        var best = null, bd = Infinity;
+        keys.forEach(function (k) { var v = VI[k]; if (!v) return; var sx = nearest(v.c, x, y), q = at(v.c, sx), dd = Math.hypot(q.x - x, q.y - y); if (dd < bd) { bd = dd; best = [v.c, sx]; } });
+        return best ? alongC(best[0], best[1]) : [];
+      };
+    }
+    function inside(curves) {
+      return function (x, y) {
+        var c = curves.filter(function (k) { return inPoly(k.pts, x, y); })[0] || curves[0], o = [], cx = 0, cy = 0;
+        c.pts.forEach(function (q) { cx += q[0]; cy += q[1]; }); cx /= c.pts.length; cy /= c.pts.length;
+        for (var k = 0; k < 8; k++) {
+          var q = at(c, c.total * k / 8), px = cx + .55 * (q.x - cx), py = cy + .55 * (q.y - cy);
+          if ([[0, 0], [6, 0], [-6, 0], [0, 6], [0, -6]].every(function (d) { return inPoly(c.pts, px + d[0], py + d[1]); })) o.push([px, py]);
+        }
+        return o;
+      };
+    }
+    function inHeart(list) { return function () { return list.map(function (q) { return [hx(q[0]), hy(q[1])]; }); }; }
+    var BODY_ALTS = {
+      'aorta': onV(['aoAbd']), 'hepatic artery': onV(['hepA']), 'renal artery': onV(['renAR', 'renAL']), 'mesenteric artery': onV(['sma']),
+      'to the legs': onV(['iliacAR', 'iliacAL', 'iliacVR', 'iliacVL']),
+      'to the head and arms': onV(['bcA', 'carAR', 'subAR', 'carAL', 'subAL', 'jugR', 'subVR', 'bcvR', 'jugL', 'subVL', 'bcvL']),
+      'small intestine': onC(ORG.si), 'large intestine': onC(ORG.colon), 'hepatic portal vein': onV(['portal']),
+      'hepatic veins': onV(['hepVR', 'hepVM', 'hepVL']), 'vena cava': onV(['ivcAbd']), 'diaphragm': onC(ORG.diaph),
+      'renal vein': onV(['renVR', 'renVL']), 'ureter': onV(['ureR', 'ureL']),
+      'kidney': inside([ORG.kidL, ORG.kidR]), 'lung': inside([ORG.lungL, ORG.lungR]), 'liver': inside([ORG.liver]),
+      'right atrium': inHeart([[82, 204], [82, 214], [82, 242], [82, 252]]), 'right ventricle': inHeart([[146, 300], [146, 310], [138, 340], [146, 356]]),
+      'left atrium': inHeart([[332, 204], [332, 214], [332, 224], [332, 252]]), 'left ventricle': inHeart([[298, 356], [282, 340], [282, 328], [274, 384]]),
+      'pulmonary vein': inHeart([[390, 194], [386, 238], [402, 242], [414, 244]])
+    };
     var beat = global.CircDraw && global.CircDraw.beatState;
     var lastStep = -1;
 
@@ -1235,7 +1276,7 @@
 
       /* labels, in the body */
       var li = [];
-      function L2(text, side, x, y, a0, b0, cls, f) { var op = win(t, a0, b0, f || .45) * vis; if (op > .01) li.push([text, side, x, y, op, cls]); }
+      function L2(text, side, x, y, a0, b0, cls, f) { var op = win(t, a0, b0, f || .45) * vis; if (op > .01) li.push([text, side, x, y, op, cls, BODY_ALTS[text] ? BODY_ALTS[text](x, y) : null]); }
       L2('left ventricle', 'R', hx(292), hy(372), .3, 8.6);
       L2('aorta', 'R', 689, 806, .5, 8.6);
       L2('hepatic artery', 'R', 622, 848, 1.5, 8.6);
@@ -1272,12 +1313,14 @@
       L2('vena cava', 'L', 637, 892, 71.6, 78.6);
       /* step 10 */
       L2('to the legs', 'L', 611, 1188, 78.6, 81);
-      li.forEach(function (q) { var s = toScreen(cam, q[2], q[3]); lab(q[0], q[1], s[0], s[1], q[4], q[5]); });
+      li.forEach(function (q) { var s = toScreen(cam, q[2], q[3]); lab(q[0], q[1], s[0], s[1], q[4], q[5], q[6] && q[6].map(function (a) { return toScreen(cam, a[0], a[1]); })); });
       /* the followed molecules, named where they are */
       function tl(txt, pos, side, a0, b0) { if (!pos) return; var op = win(t, a0, b0, .4) * vis; var s = toScreen(cam, pos.x, pos.y); lab(txt, side, s[0], s[1], op, 'is-tracer'); }
-      tl('glucose', g, 'R', 27.4, 34.6); tl('amino acid', a, 'R', 27.4, 34.6);
-      tl('glucose', g, 'R', 53.4, 60.6); tl('urea', u, 'R', 53.4, 60.6);
-      tl('glucose', g, 'R', 60.6, 68.6); tl('urea', u, 'R', 60.6, 68.6);
+      /* two molecules that travel together stand in opposite margins: a few units apart, their names could not
+         both have a level line on one side (18 Oct 2026) */
+      tl('glucose', g, 'R', 27.4, 34.6); tl('amino acid', a, 'L', 27.4, 34.6);
+      tl('glucose', g, 'R', 53.4, 60.6); tl('urea', u, 'L', 53.4, 60.6);
+      tl('glucose', g, 'R', 60.6, 68.6); tl('urea', u, 'L', 60.6, 68.6);
       tl('urea', u, 'R', 70.4, 78.6); tl('glucose', g, 'L', 71.4, 78.6);
       tl('glucose', g, 'R', 78.6, 80.8);
     }
@@ -1346,20 +1389,30 @@
       });
       /* labels */
       var vis = seg(M.k, .7, 1);
-      function L3(text, side, x, y, a0, b0, cls) { var op = win(t, a0, b0, .4) * vis; if (op > .01) { var s = S2(x, y); lab(text, side, s[0], s[1], op, cls); } }
-      L3('villus', 'R', 213, 170, 10, 25.6);
-      L3('epithelium', 'L', 81, 238, 10.4, 25.6);
-      var rq = atF(VIL.rungs[1], .2); L3('capillary', 'R', rq.x, rq.y, 10.8, 25.6);
-      L3('arteriole', 'R', 194, 516, 11.2, 25.6);
-      L3('to the hepatic portal vein', 'L', 106, 522, 11.6, 25.6);
-      L3('lacteal', 'R', 157, 420, 18.2, 25.6);
-      L3('microvilli', 'L', 120, 94, 17.4, 25.6);
-      L3('lumen of the small intestine', 'R', 252, 372, 17.4, 25.6);
+      function L3(text, side, x, y, a0, b0, cls, alts) { var op = win(t, a0, b0, .4) * vis; if (op > .01) { var s = S2(x, y); lab(text, side, s[0], s[1], op, cls, alts && alts.map(function (a) { return S2(a[0], a[1]); })); } }
+      /* other points: the epithelium and the villus further down their own side, the microvilli along the edge,
+         the other capillary rungs, the arteriole, the venule and the lacteal further along, the lumen lower down */
+      var OP = VIL.outer.pts, tipI = 0;
+      OP.forEach(function (q, i) { if (q[1] < OP[tipI][1]) tipI = i; });
+      function sideX(y, right) {
+        var ps = right ? OP.slice(tipI) : OP.slice(0, tipI + 1);
+        for (var i = 1; i < ps.length; i++) { var a = ps[i - 1], b = ps[i]; if ((a[1] - y) * (b[1] - y) <= 0 && a[1] !== b[1]) return lerp(a[0], b[0], (y - a[1]) / (b[1] - a[1])); }
+        return null;
+      }
+      function edgePts(ys, right, dx) { return ys.map(function (y) { var x = sideX(y, right); return x == null ? null : [x + dx, y]; }).filter(Boolean); }
+      L3('villus', 'R', 213, 170, 10, 25.6, '', edgePts([230, 290, 340, 400, 460], true, -6));
+      L3('epithelium', 'L', 81, 238, 10.4, 25.6, '', edgePts([180, 210, 270, 310, 350, 400], false, 6));
+      var rq = atF(VIL.rungs[1], .2); L3('capillary', 'R', rq.x, rq.y, 10.8, 25.6, '', [0, 2, 3, 4, 5].map(function (k) { var q = atF(VIL.rungs[k], .2); return [q.x, q.y]; }));
+      L3('arteriole', 'R', 194, 516, 11.2, 25.6, '', [.08, .16, .24, .32].map(function (f) { var q = atF(VIL.art, f); return [q.x, q.y]; }));
+      L3('to the hepatic portal vein', 'L', 106, 522, 11.6, 25.6, '', [.68, .76, .84, .92].map(function (f) { var q = atF(VIL.ven, f); return [q.x, q.y]; }));
+      L3('lacteal', 'R', 157, 420, 18.2, 25.6, '', [260, 330, 380, 470, 510].map(function (y) { return [150, y]; }));
+      L3('microvilli', 'L', 120, 94, 17.4, 25.6, '', edgePts([130, 160, 200, 250, 300], false, -2));
+      L3('lumen of the small intestine', 'R', 252, 372, 17.4, 25.6, '', [300, 330, 420, 460, 500].map(function (y) { return [252, y]; }));
       if (oo > .01) L3('oxygen', 'R', po[0], po[1], 11, 13.6);
       if (oc > .01) L3('carbon dioxide', 'L', pc[0], pc[1], 13.4, 16.3);
       var g = fG.__p, a = fA.__p;
       if (g) L3('glucose', 'L', g[0], g[1], 17.9, 25.6, 'is-tracer');
-      if (a) L3('amino acid', 'L', a[0], a[1], 18.6, 25.6, 'is-tracer');
+      if (a) L3('amino acid', 'R', a[0], a[1], 18.6, 25.6, 'is-tracer');
     }
     function tracerB(f, p, op) {
       var tr = TRB[f.tracer];
@@ -1475,14 +1528,14 @@
       if (dT.__u) place(TRC.U.ring, dT.__u[0], dT.__u[1], 12, 0, .9 * seg(t, 47.4, 47.9)); else place(TRC.U.ring, 0, 0, 1, 0, 0);
       /* labels */
       var vis = seg(M.k, .7, 1);
-      function L3(text, side, x, y, a0, b0, cls) { var op = win(t, a0, b0, .4) * vis; if (op > .01) { var s = S2(x, y); lab(text, side, s[0], s[1], op, cls); } }
-      L3('liver cell', 'L', 30, 330, 36, 51.6);
+      function L3(text, side, x, y, a0, b0, cls, alts) { var op = win(t, a0, b0, .4) * vis; if (op > .01) { var s = S2(x, y); lab(text, side, s[0], s[1], op, cls, alts && alts.map(function (a) { return S2(a[0], a[1]); })); } }
+      L3('liver cell', 'L', 30, 330, 36, 51.6, '', [[30, 137], [30, 232], [30, 417]]);       /* the other liver cells on this side */
       L3(meal ? 'glucose → glycogen' : 'glycogen → glucose', 'R', FOCUS.gx + 36, FOCUS.gy - 2, 36.6, 43.4);
       L3('glycogen', 'R', FOCUS.gx + 36, FOCUS.gy - 2, 43.4, 51.6);
       if (roo > .01) L3('oxygen', 'R', rpo[0], rpo[1], 36.5, 38.9);
       if (rco > .01) L3('carbon dioxide', 'R', rpc[0], rpc[1], 38.9, 41.8);
       L3('blood from the hepatic portal vein', 'L', 34, 492, 36.2, 51.6);
-      L3('blood from the hepatic artery', 'R', 246, 521, 36.4, 51.6);
+      L3('blood from the hepatic artery', 'R', 246, 521, 36.4, 51.6, '', [[246, 517.5]]);   /* higher in its band (515-527), for a three-line name near the bottom */
       L3('blood to the hepatic vein', 'R', 262, 56, 36.8, 51.6);
       if (gop > .01) L3('glucose', 'L', 146, gy, 36.8, 45, 'is-tracer');
       if (chainOn) L3('protein: fibrinogen', 'R', cx + 20, cy - 5, 46.2, 51.6);
@@ -1516,17 +1569,19 @@
       place(TRD.co2a, lerp(tg[0] - 4, 156, ec), lerp(tg[1] - 6, tg[1] - 40, ec), 5.6, 0, t > a3 + .2 ? 1 : 0);
       place(TRD.co2b, lerp(tg[0] + 6, 146, ec), lerp(tg[1] + 6, tg[1] - 16, ec), 5.6, 0, t > a3 + .3 ? 1 : 0);
       var vis = seg(M.k, .7, 1);
-      function L3(text, side, x, y, a0, b0, cls) { var op = win(t, a0, b0, .4) * vis; if (op > .01) { var s = S2(x, y); lab(text, side, s[0], s[1], op, cls); } }
-      L3('capillary', 'L', 137, 430, 80.8, 99);            /* clear of the equation along the bottom */
-      L3('muscle cell', 'L', 26, 214, 81, 99);
-      L3('mitochondrion', 'R', tg[0] + 15, tg[1] + 4, 81.4, 99);
+      function L3(text, side, x, y, a0, b0, cls, alts) { var op = win(t, a0, b0, .4) * vis; if (op > .01) { var s = S2(x, y); lab(text, side, s[0], s[1], op, cls, alts && alts.map(function (a) { return S2(a[0], a[1]); })); } }
+      L3('capillary', 'L', 137, 430, 80.8, 99, '', [250, 320, 380, 470].map(function (y) { return [137, y]; }));            /* clear of the equation along the bottom */
+      L3('muscle cell', 'L', 26, 214, 81, 99, '', [150, 280, 350, 420].map(function (y) { return [26, y]; }));
+      L3('mitochondrion', 'R', tg[0] + 15, tg[1] + 4, 81.4, 99, '', MUS.mito.filter(function (q) { return q[0] > 200 && q !== tg; }).map(function (q) { return [q[0] + 15, q[1] + 4]; }));
       L3('glycogen', 'R', 236 + 36, 180, 81.8, 99);
       if (gop > .01) L3('glucose', 'L', gx, gyy, 81, a3 + .3, 'is-tracer');
       L3('carbon dioxide', 'R', lerp(tg[0] + 6, 146, ec) + 6, lerp(tg[1] + 6, tg[1] - 16, ec), a4, 99);
     }
 
     /* ================================================================
-       LABELS — in the two margins, each level with its part, on a ruled leader
+       LABELS — in the two margins, each on ONE level line from its part (CircLearn.placeRows, 18 Oct 2026):
+       a crowded name moves to another point on its own part (`alts`) or, finding no free row, is left out
+       (beyond 0610 first, then one still fading in or out; the followed molecules last); no line is ever bent
        ================================================================ */
     var cvs = null, widths = {};
     function textW(s, fs, wt) {
@@ -1562,26 +1617,15 @@
           var inX = Math.min(x.sx - G.VX, G.VX + G.VW - x.sx), inY = Math.min(x.sy - G.VY, G.VY + G.VH - x.sy);
           if (inX < 3 || inY < 3) return false;
           x.op *= Math.min(1, inX / 14, inY / 14);
+          if (x.alts) x.alts = x.alts.filter(function (q) { return Math.min(q[0] - G.VX, G.VX + G.VW - q[0]) >= 14 && Math.min(q[1] - G.VY, G.VY + G.VH - q[1]) >= 14; });
           return x.op > .01;
         });
-        it.sort(function (a, b) { return a.sy - b.sy; });
-        /* two parts at the same height on one side would share a line: part them by a unit */
-        for (var i = 1; i < it.length; i++) if (it[i].sy - it[i - 1].sy < 1.2) it[i].sy = it[i - 1].sy + 1.2;
-        it.forEach(function (x) { x.lines = wrap(x.text, G.room); x.h = x.lines.length * lh; x.ly = x.sy; });
-        /* Two labels keep their full distance once both are half showing. While one fades in or out, the
-           other slides to or from its own part, instead of jumping there in one frame. */
-        function room(p, q) { return (p.h / 2 + gap + q.h / 2) * Math.min(1, Math.min(p.op, q.op) * 2); }
-        var top = 5, bot = G.H - 5;
-        if (it.length && it[0].ly - it[0].h / 2 < top) it[0].ly = top + it[0].h / 2;
-        for (i = 1; i < it.length; i++) { var lo = it[i - 1].ly + room(it[i - 1], it[i]); if (it[i].ly < lo) it[i].ly = lo; }
-        for (i = it.length - 1; i >= 0; i--) {
-          var hi = i === it.length - 1 ? bot - it[i].h / 2 : it[i + 1].ly - room(it[i], it[i + 1]);
-          if (it[i].ly > hi) it[i].ly = hi;
-        }
+        it.forEach(function (x) { x.lines = wrap(x.text, G.room); x.h = x.lines.length * lh; x.x = x.sx; x.y = x.sy; });
+        it = L.placeRows(it, 5, G.H - 5, gap).kept;
+        it.forEach(function (x) { x.sx = x.x; x.sy = x.ly = x.y; });
         it.forEach(function (x) {
           var edge = side === 'L' ? G.VX : G.VX + G.VW, dir = side === 'L' ? -1 : 1;
-          var jog = Math.abs(x.ly - x.sy) > .5;
-          var d = 'M' + n2(x.sx) + ' ' + n2(x.sy) + 'L' + n2(edge + dir * 2) + ' ' + n2(x.sy) + (jog ? 'L' + n2(edge + dir * 7) + ' ' + n2(x.ly) : '') + 'L' + n2(edge + dir * 10) + ' ' + n2(x.ly);
+          var d = 'M' + n2(x.sx) + ' ' + n2(x.sy) + 'L' + n2(edge + dir * 10) + ' ' + n2(x.sy);
           var tx = edge + dir * 14, anchor = side === 'L' ? 'end' : 'start', y0 = x.ly - x.h / 2 + F * .86;
           out += '<g class="lb bf__lb ' + x.cls + '" opacity="' + n2(Math.min(1, x.op)) + '">' +
             '<path class="lb__halo" d="' + d + '"/><path class="lb__lead" d="' + d + '"/>' +
@@ -1589,7 +1633,7 @@
             '<text class="lb__txt" x="' + n2(tx) + '" y="' + n2(y0) + '" text-anchor="' + anchor + '" style="font-size:' + F + 'px">' +
             x.lines.map(function (ln, k) { return '<tspan x="' + n2(tx) + '" dy="' + (k ? n2(lh) : 0) + '">' + esc(ln) + '</tspan>'; }).join('') + '</text></g>';
           var wmax = 0; x.lines.forEach(function (ln) { wmax = Math.max(wmax, textW(ln, F)); });
-          drawn.push({ text: x.text, side: side, op: x.op, anchor: [x.sx, x.sy], lead: [[x.sx, x.sy], [edge + dir * 2, x.sy]].concat(jog ? [[edge + dir * 7, x.ly]] : []).concat([[edge + dir * 10, x.ly]]),
+          drawn.push({ text: x.text, side: side, op: x.op, anchor: [x.sx, x.sy], lead: [[x.sx, x.sy], [edge + dir * 10, x.sy]],
                        box: side === 'L' ? [tx - wmax, x.ly - x.h / 2, tx, x.ly + x.h / 2] : [tx, x.ly - x.h / 2, tx + wmax, x.ly + x.h / 2] });
         });
       });

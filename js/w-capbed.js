@@ -275,18 +275,25 @@
     function labels() {
       var D = svg.getBoundingClientRect().width || 700, fl = fitLab(D), f = fl.f;
       svg.setAttribute('viewBox', n1(-fl.mL) + ' -34 ' + n1(DW + fl.mL + fl.mR) + ' 664');
+      /* `alts`: other points on the same part, where a crowded name moves instead of bending its line (w-common.js,
+         18 Oct 2026): the artery and the vein further along their straight tubes, the other two arterioles and
+         venules, other tissue cells, the same capillary in the other two beds */
       var items = [
-        { id: 'artery', text: 'artery', x: AX - AR, y: 36, side: 'L' },
-        { id: 'arteriole', text: 'arteriole', x: AX + 44, y: BEDS[1] + 1, side: 'L', cls: 'is-ext' },
+        { id: 'artery', text: 'artery', x: AX - AR, y: 36, side: 'L', alts: [150, 210, 360, 420, 540].map(function (y) { return [AX - AR, y]; }) },
+        { id: 'arteriole', text: 'arteriole', x: AX + 44, y: BEDS[1] + 1, side: 'L', cls: 'is-ext', alts: [[AX + 44, BEDS[0] + 1], [AX + 44, BEDS[2] + 1]] },
         { id: 'cells', text: 'tissue cells', x: 0, y: 0, side: 'L' },
         { id: 'caps', text: 'capillaries', x: 0, y: 0, side: 'R' },
-        { id: 'venule', text: 'venule', x: X1 + 38, y: BED[2].yv - 4, side: 'R', cls: 'is-ext' },
-        { id: 'vein', text: 'vein', x: VX + VR, y: 560, side: 'R' }
+        { id: 'venule', text: 'venule', x: X1 + 38, y: BED[2].yv - 4, side: 'R', cls: 'is-ext', alts: [[X1 + 38, BED[0].yv - 4], [X1 + 38, BED[1].yv - 4]] },
+        { id: 'vein', text: 'vein', x: VX + VR, y: 560, side: 'R', alts: [120, 200, 330, 410, 470].map(function (y) { return [VX + VR, y]; }) }
       ];
       /* the tissue cell and the capillary named: points found on them */
       /* from the drawing's own numbers, not measured: a hidden drawing measures as nothing */
-      var cc = CELLC[Math.round(CELLC.length * .78)]; if (cc) { items[2].x = cc[0]; items[2].y = cc[1]; }
-      var cp = sampleCurve(BED[0].caps[0], 8), qc = cp[Math.round(cp.length * .7)]; items[3].x = qc[0]; items[3].y = qc[1];
+      var cc = CELLC[Math.round(CELLC.length * .78)];
+      if (cc) { items[2].x = cc[0]; items[2].y = cc[1];
+                items[2].alts = [.15, .3, .45, .6, .9].map(function (f) { return CELLC[Math.round((CELLC.length - 1) * f)]; }).filter(Boolean).map(function (q) { return [q[0], q[1]]; }); }
+      function capAt(b) { var cq = sampleCurve(BED[b].caps[0], 8); return cq[Math.round(cq.length * .7)]; }
+      var qc = capAt(0); items[3].x = qc[0]; items[3].y = qc[1];
+      items[3].alts = [1, 2].map(function (b) { var q = capAt(b); return [q[0], q[1]]; });
       gLabs.innerHTML = L.labels({ items: items.filter(function (q) { return q.side === 'L'; }), left: -10, right: 430, font: f, width: fl.mL - 22, top: -20, bottom: 610, gap: 6 }) +
         L.labels({ items: items.filter(function (q) { return q.side === 'R'; }), left: -10, right: 430, font: f, width: fl.mR - 22, top: -20, bottom: 610, gap: 6 });
     }

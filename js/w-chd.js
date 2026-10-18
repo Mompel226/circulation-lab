@@ -670,33 +670,63 @@
 
       /* labels, in the margins, leaders ruled level: the heart's first, then the artery's */
       var hItems = [], aItems = [], vb = lay.vb, f = lay.f;
-      function addA(id, text, mx, my, side, op) {
+      /* `alts`: other points on the same part, in the model (w-common.js moves a crowded name there instead of
+         bending its line, 18 Oct 2026); those outside the window are dropped */
+      function addA(id, text, mx, my, side, op, alts) {
         if (mx < pan + 6 || mx > pan + AR.W - 6) return;             /* out of the window */
-        var p = toScreen(mx, my); aItems.push({ id: id, text: text, x: p[0], y: p[1], side: side, op: op == null ? 1 : op });
+        var p = toScreen(mx, my), it = { id: id, text: text, x: p[0], y: p[1], side: side, op: op == null ? 1 : op };
+        if (alts) it.alts = alts.filter(function (q) { return q[0] >= pan + 6 && q[0] <= pan + AR.W - 6; }).map(function (q) { return toScreen(q[0], q[1]); });
+        aItems.push(it);
       }
-      function addH(id, text, hxp, hyp, side, op) { var p = heartPt(hxp, hyp); hItems.push({ id: id, text: text, x: p[0], y: p[1], side: side, op: op == null ? 1 : op }); }
+      /* a point in the open lumen at x: below the lining, above the deposit and the clot, 6 units clear of each */
+      function inLumen(x, y) { return y > AR.yLum + 6 && y < (x < FORK.x0 ? top(x) - C_(x, C) : carTop(x)) - 6; }
+      function along(x0, dxs, yOf) { return dxs.map(function (dx) { return [x0 + dx, yOf(x0 + dx)]; }); }
+      function addH(id, text, hxp, hyp, side, op, alts) {
+        var p = heartPt(hxp, hyp), it = { id: id, text: text, x: p[0], y: p[1], side: side, op: op == null ? 1 : op };
+        if (alts) it.alts = alts.map(function (q) { return heartPt(q[0], q[1]); });
+        hItems.push(it);
+      }
       addH('aorta', 'aorta', 86, 62, 'L');
-      addH('cor', 'coronary artery', 181, 171, 'L');
+      /* other points up the same artery: the middle of the drawing's own outline of the anterior descending branch
+         (CHD_HEART.lad), between the label's point and where the branch begins */
+      addH('cor', 'coronary artery', 181, 171, 'L', null, [[173.9, 166.3], [169.4, 162.3], [165.5, 157.8], [162.2, 152.8], [158.6, 148.5]]);
       /* the ring's name: on the left in the wide layout, where the magnified circle leaves the right side free of
          leaders; the patch beyond the ring is named by the circle's own caption */
-      addH('ring', pf > .5 ? 'a small branch, cut open below' : 'cut open below', lay.tall ? rx + BLK_R : rx - BLK_R, ry, lay.tall ? 'R' : 'L');
+      addH('ring', pf > .5 ? 'a small branch, cut open below' : 'cut open below', lay.tall ? rx + BLK_R : rx - BLK_R, ry, lay.tall ? 'R' : 'L', null,
+        [30, -30].map(function (a) { var c = Math.cos(a * Math.PI / 180) * (lay.tall ? 1 : -1); return [rx + c * BLK_R, ry + Math.sin(a * Math.PI / 180) * BLK_R]; }));
+      /* when the heart's margin cannot hold both, the coronary artery (the exam's word) stays and the ring's name goes */
+      hItems[hItems.length - 1].pri = -1;
       /* the wall, the lining and the lumen are the same all along: named on the right, near the end; the deposit
          and the clot on the left (Daniel, 27 Sep: every name on the left side was cluttered). A phone keeps
          its own sides. */
       var xp = AR.xc + (lay.tall ? 26 : -62), xk = AR.xc + (lay.tall ? -20 : -28);
+      /* the other points: wide, the layers run level, so the wall and the lining have theirs in the lower wall, cut
+         through; on a phone the section stands upright, so every layer has them further along its length */
+      var XS = [-48, -32, -16, 16, 32, 48, 64];
       if (pf <= .5) {           /* down at the branch, the names are the branch, the piece and the lumen */
-        addA('wall', 'wall of artery', (lay.tall ? 24 : 610) + pan, (AR.yMed + AR.yIel) / 2, lay.tall ? 'L' : 'R');
-        addA('lining', 'lining', (lay.tall ? 64 : 610) + pan, AR.yLum - 2, lay.tall ? 'L' : 'R');
+        var xw = (lay.tall ? 24 : 610) + pan, xl = (lay.tall ? 64 : 610) + pan;
+        addA('wall', 'wall of artery', xw, (AR.yMed + AR.yIel) / 2, lay.tall ? 'L' : 'R', null,
+          lay.tall ? along(xw, XS, function () { return (AR.yMed + AR.yIel) / 2; }) : [[xw, (AR.yIel2 + AR.yMed2) / 2]]);
+        addA('lining', 'lining', xl, AR.yLum - 2, lay.tall ? 'L' : 'R', null,
+          lay.tall ? along(xl, XS, function () { return AR.yLum - 2; }) : [[xl, AR.yLum2 + 2]]);
       }
-      addA('lumen', 'lumen', (lay.tall ? 104 : 610) + pan, lay.tall ? 148 : 124, lay.tall ? 'L' : 'R');
+      var xm = (lay.tall ? 104 : 610) + pan, ym = lay.tall ? 148 : 124;
+      addA('lumen', 'lumen', xm, ym, lay.tall ? 'L' : 'R', null,
+        (lay.tall ? along(xm, XS, function () { return ym; }) : [104, 114, 136, 150, 168, 186].map(function (y) { return [xm, y]; }))
+          .filter(function (q) { return inLumen(q[0], q[1]); }));
       if (pf > .5) {
-        var xb = X_LODGE - 150;
-        addA('branch', 'a smaller branch', xb, carBot(xb) + wLow(xb) / 2, lay.tall ? 'R' : 'L', clamp01((pf - .5) * 4));
+        var xb = X_LODGE - 150, yb = function (x) { return carBot(x) + wLow(x) / 2; };
+        addA('branch', 'a smaller branch', xb, yb(xb), lay.tall ? 'R' : 'L', clamp01((pf - .5) * 4),
+          along(xb, [-90, -60, -30, 30, 60], yb).filter(function (q) { return wLow(q[0]) > 12; }));
         if (t > FR.tb) { var xq = fragX(t); addA('piece', 'a piece of the clot', xq + 10, fragY(xq), 'R', clamp01((pf - .5) * 4)); }
       }
-      var pth = P_(xp, P); if (pth > 5) addA('dep', 'fatty deposit (plaque)', xp, AR.yIel2 - pth / 2 + 1, lay.tall ? 'R' : 'L', clamp01((pth - 5) / 6));
+      var pth = P_(xp, P);
+      if (pth > 5) addA('dep', 'fatty deposit (plaque)', xp, AR.yIel2 - pth / 2 + 1, lay.tall ? 'R' : 'L', clamp01((pth - 5) / 6),
+        along(xp, [-72, -48, -24, 24, 48, 72], function (x) { return AR.yIel2 - P_(x, P) / 2 + 1; }).filter(function (q) { return P_(q[0], P) > 10; }));
       var cth = Math.min(C_(xk, C), lumenW(xk, P, 0)), cbot = top(xk) - 4;
-      if (cth > 5) addA('clot', 'blood clot', xk, cbot - cth / 2, lay.tall ? 'R' : 'L', clamp01((cth - 5) / 5));
+      function clotTh(x) { return Math.min(C_(x, C), lumenW(x, P, 0)); }
+      if (cth > 5) addA('clot', 'blood clot', xk, cbot - cth / 2, lay.tall ? 'R' : 'L', clamp01((cth - 5) / 5),
+        along(xk, [-32, -16, 16, 32], function (x) { return top(x) - 4 - clotTh(x) / 2; }).filter(function (q) { return clotTh(q[0]) > 10; }));
       var hTop = vb.y + 6, hBot = lay.ySec - 8, aTop = lay.ySec + 4, aBot = vb.y + vb.h - 6;
       /* while the view follows the piece of clot, it says so: extension, and less common */
       var pillOp = clamp01((pf - .3) * 3), pill2 = '';

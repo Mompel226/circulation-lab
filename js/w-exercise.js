@@ -269,10 +269,16 @@
     var LAB = [
       { id: 'cell', text: 'muscle cell', x: 300, y: 172, side: 'L' },
       { id: 'mito', text: 'mitochondrion', x: 0, y: 0, side: 'L' },
-      { id: 'wall', text: 'capillary wall, one cell thick', x: 262, y: CAP.y + 2.5, side: 'L' },
-      { id: 'in', text: 'blood from an arteriole', x: WIN.x + 10, y: CAP.y + CAP.h / 2, side: 'L' },
+      /* `alts`: other points on the same part (w-common.js), found from the drawing (18 Oct 2026): the capillary's
+         lower wall is the same wall, cut through; the blood can be named anywhere down the lumen at either end.
+         `pri`: when the left margin cannot hold both the wall and the blood (a 70-unit capillary, the names two and
+         three lines tall on a laptop), the wall stays: 0610 9.3 names it; arterioles and venules only 14.4 (S) */
+      { id: 'wall', text: 'capillary wall, one cell thick', x: 262, y: CAP.y + 2.5, side: 'L', alts: [[262, CAP.y + CAP.h - 2.5]] },
+      { id: 'in', text: 'blood from an arteriole', x: WIN.x + 10, y: CAP.y + CAP.h / 2, side: 'L',
+        alts: [13, 21, 27, 43, 49, 55].map(function (d) { return [WIN.x + 10, CAP.y + d]; }), pri: -1 },
       { id: 'nuc', text: 'nucleus', x: 0, y: MEM1 - 8.5, side: 'R' },
-      { id: 'out', text: 'on to a venule', x: WIN.x + WIN.w - 10, y: CAP.y + CAP.h / 2, side: 'R' },
+      { id: 'out', text: 'on to a venule', x: WIN.x + WIN.w - 10, y: CAP.y + CAP.h / 2, side: 'R',
+        alts: [15, 23, 43, 51, 59].map(function (d) { return [WIN.x + WIN.w - 10, CAP.y + d]; }), pri: -1 },
       { id: 'cell2', text: 'muscle cell', x: 660, y: 420, side: 'R' }
     ];
     /* the mitochondrion's and the nucleus's dots stay on theirs as the fibre shortens (only across:

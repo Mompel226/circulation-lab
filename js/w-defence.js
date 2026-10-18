@@ -512,7 +512,7 @@
 
       /* step 7: pieces of the bacterium's antigens, carried in small sacs from the vacuole to the membrane and
          held on its outer surface by a protein of the cell */
-      var ag = '', agShown = null;
+      var ag = '', agShown = null, agAll = [];
       if (t > 54.2) AG_OUT.forEach(function (a, k) {
         var fin = ease(seg(t, 54.3, 55.1)), mv = ease(seg(t, a.t0, a.t0 + 3)), land = ease(seg(t, a.t0 + 2.6, a.t0 + 3.4));
         var rm = PH.R + wob(a.th, t), nx = Math.cos(a.th), ny = Math.sin(a.th);
@@ -525,36 +525,68 @@
         if (land > 0) ag += '<path class="ph__agc" transform="translate(' + n1(cx0 + nx * rm) + ' ' + n1(St.cy + ny * rm) + ') rotate(' + n1(a.th * 180 / Math.PI) + ') scale(' + n1(land) + ')" d="' + AG_HOLD + '"/>';
         ag += '<path class="ph__agn" transform="translate(' + n1(x) + ' ' + n1(y) + ') rotate(' + n1(rot * 180 / Math.PI) + ') scale(' + sc + ')" opacity="' + n1(fin) + '" d="' + AG_SHOWN + '"/>';
         if (k === 3) agShown = [ex + nx * 8, ey + ny * 8, land];
+        else if (land > .5) agAll.push([ex + nx * 8, ey + ny * 8]);
       });
       gAg.innerHTML = ag;
 
       /* labels */
       var items = [], T = lay.tall, cx = St.cx, cy = St.cy;
-      function add(id, text, x, y, side, op) { var p = lay.to(x, y); items.push({ id: id, text: text, x: p[0], y: p[1], side: side, op: op == null ? 1 : op }); }
+      /* `alts`: other points on the same part, in the model (w-common.js moves a crowded name there instead of
+         bending its line, 18 Oct 2026): another enzyme, product or antigen piece, another lobe of the nucleus,
+         further along the rod, round the vacuole, the membrane at another height, and the cytoplasm wherever it is
+         clear of the nucleus, the vacuole and the sacs. Only points at most 30 units further from the name's margin
+         than its own. */
+      /* `pri`: when the margin by the vacuole cannot hold every name, the bacterium and what the step adds stay and the
+         vacuole and the chemicals go first; on the left, the cytoplasm goes before the phagocyte's own name */
+      var PRI = { chem: -1, vac: -1, cyt: -1, pha: 1, bac: 1, enz: 2, pro: 2, ag: 2 };
+      function add(id, text, x, y, side, op, alts) {
+        var p = lay.to(x, y), it = { id: id, text: text, x: p[0], y: p[1], side: side, op: op == null ? 1 : op, pri: PRI[id] || 0 };
+        if (alts) it.alts = alts.filter(function (q) { return q[0] >= lay.win.x0 + 6 && q[0] <= lay.win.x1 - 6 && q[1] >= lay.win.y0 + 6 && q[1] <= lay.win.y1 - 6; })
+          .map(function (q) { return lay.to(q[0], q[1]); }).filter(function (q) { return side === 'R' ? q[0] >= p[0] - 30 : q[0] <= p[0] + 30; });
+        items.push(it);
+      }
+      var ox = cx - 4 * St.inw, lobes = LOBES.map(function (l) { return [ox + l[0], cy + l[1]]; });
+      function inCell(q, m) { return f(q[0], q[1]) < -m && holeSdf(q[0], q[1], St, sacs) > 6; }
+      function clearOfNucleus(q) { return lobes.every(function (l) { return len(q[0] - l[0], q[1] - l[1]) > 32; }); }
+      var grid = [];
+      for (var gx = -100; gx <= 100; gx += 20) for (var gy = -100; gy <= 100; gy += 20) grid.push([cx + gx, cy + gy]);
+      var cytAlts = grid.filter(function (q) { return inCell(q, 8) && clearOfNucleus(q); });
+      var phaAlts = grid.filter(function (q) { return inCell(q, 6); });
+      var ca = Math.cos(St.al * Math.PI / 180), sa = Math.sin(St.al * Math.PI / 180), sk = 1 - .45 * St.dig;
+      var rodAlts = [-14, -7, 7, 14].map(function (u) { return [St.bx + u * sk * ca, St.by + u * sk * sa]; });
+      var vr = (St.rv - 7) * .9, ring = [], chemRing = [];
+      for (var dg = 0; dg < 360; dg += 30) {
+        ring.push([St.bx + Math.cos(dg * Math.PI / 180) * vr, St.by + Math.sin(dg * Math.PI / 180) * vr]);
+        chemRing.push([St.bx + Math.cos(dg * Math.PI / 180) * 56, St.by + Math.sin(dg * Math.PI / 180) * 56]);
+      }
+      var enzAlts = enzPos.slice(), proAlts = prodPos.filter(function (q) { return q[2] > .5; });
+      function lobesBut(k) { return lobes.filter(function (l, i) { return i !== k; }); }
       if (!T) {
-        add('pha', 'phagocyte', cx - 40, cy - 92, 'L');
-        add('nuc', 'lobed nucleus', cx - 74 - 4 * St.inw, cy - 4, 'L');
+        add('pha', 'phagocyte', cx - 40, cy - 92, 'L', null, phaAlts);
+        add('nuc', 'lobed nucleus', cx - 74 - 4 * St.inw, cy - 4, 'L', null, lobesBut(1));
         var xs = outer ? crossings(outer, 'y', cy + 62).filter(function (v) { return v < cx; }) : [];
-        if (xs.length) add('mem', 'cell membrane', Math.min.apply(null, xs), cy + 62, 'L');
-        add('cyt', 'cytoplasm', cx - 20, cy + 92, 'L');
-        if (cg > .05) add('chem', 'chemicals', St.bx - 6, St.by - 56, 'R', clamp01(cg * 1.5));
-        if (bop > .25) add('bac', 'bacterium', St.bx, St.by, 'R', clamp01((bop - .25) * 3));
-        if (t > 21.8) add('vac', 'vacuole', St.bx + Math.sin(St.al * Math.PI / 180) * (St.rv - 7) * .9, St.by - Math.cos(St.al * Math.PI / 180) * (St.rv - 7) * .9, 'R', clamp01((t - 21.8) / .8));
-        if (t > 31.8 && t < 55) add('enz', 'enzymes', enzPos[0][0], enzPos[0][1], 'R', clamp01((t - 31.8) / .8) * clamp01((55 - t) / .8));
-        if (t > 42.6 && t < 55 && prodPos[0]) add('pro', 'soluble products', prodPos[0][0], prodPos[0][1], 'R', clamp01((t - 42.6) / .8) * clamp01((55 - t) / .8));
-        if (agShown && agShown[2] > 0) add('ag', 'antigen from the bacterium', agShown[0], agShown[1], 'R', agShown[2]);
+        var memAlts = outer ? [-62, -30, 30, 46, 78].map(function (dy) { var v = crossings(outer, 'y', cy + dy).filter(function (q) { return q < cx; }); return v.length ? [Math.min.apply(null, v), cy + dy] : null; }).filter(Boolean) : [];
+        if (xs.length) add('mem', 'cell membrane', Math.min.apply(null, xs), cy + 62, 'L', null, memAlts);
+        add('cyt', 'cytoplasm', cx - 20, cy + 92, 'L', null, cytAlts);
+        if (cg > .05) add('chem', 'chemicals', St.bx - 6, St.by - 56, 'R', clamp01(cg * 1.5), chemRing);
+        if (bop > .25) add('bac', 'bacterium', St.bx, St.by, 'R', clamp01((bop - .25) * 3), rodAlts);
+        if (t > 21.8) add('vac', 'vacuole', St.bx + Math.sin(St.al * Math.PI / 180) * (St.rv - 7) * .9, St.by - Math.cos(St.al * Math.PI / 180) * (St.rv - 7) * .9, 'R', clamp01((t - 21.8) / .8), ring);
+        if (t > 31.8 && t < 55) add('enz', 'enzymes', enzPos[0][0], enzPos[0][1], 'R', clamp01((t - 31.8) / .8) * clamp01((55 - t) / .8), enzAlts);
+        if (t > 42.6 && t < 55 && prodPos[0]) add('pro', 'soluble products', prodPos[0][0], prodPos[0][1], 'R', clamp01((t - 42.6) / .8) * clamp01((55 - t) / .8), proAlts);
+        if (agShown && agShown[2] > 0) add('ag', 'antigen from the bacterium', agShown[0], agShown[1], 'R', agShown[2], agAll);
       } else {
-        add('pha', 'phagocyte', cx - 92, cy - 40, 'L');
-        add('nuc', 'lobed nucleus', cx - 44 - 4 * St.inw, cy - 56, 'L');
+        add('pha', 'phagocyte', cx - 92, cy - 40, 'L', null, phaAlts);
+        add('nuc', 'lobed nucleus', cx - 44 - 4 * St.inw, cy - 56, 'L', null, lobesBut(0));
         var ys = outer ? crossings(outer, 'x', cx - 10).filter(function (v) { return v < cy; }) : [];
-        if (ys.length) add('mem', 'cell membrane', cx - 10, Math.min.apply(null, ys), 'L');
-        add('cyt', 'cytoplasm', cx + 40, cy + 90, 'R');
-        if (cg > .05) add('chem', 'chemicals', St.bx - 56, St.by + 26, 'R', clamp01(cg * 1.5));
-        if (bop > .25) add('bac', 'bacterium', St.bx, St.by, 'R', clamp01((bop - .25) * 3));
-        if (t > 21.8) add('vac', 'vacuole', St.bx - Math.sin(St.al * Math.PI / 180) * (St.rv - 7) * .9, St.by + Math.cos(St.al * Math.PI / 180) * (St.rv - 7) * .9, 'R', clamp01((t - 21.8) / .8));
-        if (t > 31.8 && t < 55) add('enz', 'enzymes', enzPos[1][0], enzPos[1][1], 'R', clamp01((t - 31.8) / .8) * clamp01((55 - t) / .8));
-        if (t > 42.6 && t < 55 && prodPos[0]) add('pro', 'soluble products', prodPos[0][0], prodPos[0][1], 'R', clamp01((t - 42.6) / .8) * clamp01((55 - t) / .8));
-        if (agShown && agShown[2] > 0) add('ag', 'antigen from the bacterium', agShown[0], agShown[1], 'R', agShown[2]);
+        var memAltsT = outer ? [-62, -30, 30, 46, 78].map(function (dx) { var v = crossings(outer, 'x', cx + dx).filter(function (q) { return q < cy; }); return v.length ? [cx + dx, Math.min.apply(null, v)] : null; }).filter(Boolean) : [];
+        if (ys.length) add('mem', 'cell membrane', cx - 10, Math.min.apply(null, ys), 'L', null, memAltsT);
+        add('cyt', 'cytoplasm', cx + 40, cy + 90, 'R', null, cytAlts);
+        if (cg > .05) add('chem', 'chemicals', St.bx - 56, St.by + 26, 'R', clamp01(cg * 1.5), chemRing);
+        if (bop > .25) add('bac', 'bacterium', St.bx, St.by, 'R', clamp01((bop - .25) * 3), rodAlts);
+        if (t > 21.8) add('vac', 'vacuole', St.bx - Math.sin(St.al * Math.PI / 180) * (St.rv - 7) * .9, St.by + Math.cos(St.al * Math.PI / 180) * (St.rv - 7) * .9, 'R', clamp01((t - 21.8) / .8), ring);
+        if (t > 31.8 && t < 55) add('enz', 'enzymes', enzPos[1][0], enzPos[1][1], 'R', clamp01((t - 31.8) / .8) * clamp01((55 - t) / .8), enzAlts);
+        if (t > 42.6 && t < 55 && prodPos[0]) add('pro', 'soluble products', prodPos[0][0], prodPos[0][1], 'R', clamp01((t - 42.6) / .8) * clamp01((55 - t) / .8), proAlts);
+        if (agShown && agShown[2] > 0) add('ag', 'antigen from the bacterium', agShown[0], agShown[1], 'R', agShown[2], agAll);
       }
       gLab.innerHTML = drawLabels(lay, items, { enz: 1.5, pro: 1.3, chem: 1.5, ag: 1.5 });
       var state = t < 11 ? ['free in the tissue', 'warn'] : t < 21.6 ? ['being surrounded', 'warn'] : t < 37.6 ? ['in a vacuole', 'ok'] : t < 44.5 ? ['being digested', 'ok'] : t < 54.5 ? ['digested', 'ok'] : ['digested; its antigens displayed', 'ok'];
@@ -902,13 +934,13 @@
 
       /* platelets collect at the break in the vessel, stick to the damaged wall and to each other, and release
          chemicals */
-      var st = '', plt0 = null;
+      var st = '', plt0 = null, pltAll = [];
       STICK.forEach(function (p, k) {
         var m = ease(seg(t, p.t0, p.t0 + 1.8)), act = ease(seg(t, p.t0 + 1.5, p.t0 + 2.4));
         var x = lerp(p.fx, p.tx, m), y = lerp(p.fy, p.ty, m);
         if (m < .01) { x += .6 * Math.sin(t + p.fx); y += .6 * Math.cos(t + p.fy); }
         var op = m > .5 ? fadeIn(x, y, 2) : 1;
-        if (k === 0) plt0 = [x, y, op];
+        if (k === 0) plt0 = [x, y, op]; else if (op > .5) pltAll.push([x, y]);
         if (op < .05) return;
         st += platelet(x, y, act, op < .99 ? ' opacity="' + n1(op) + '"' : '');
         if (act > .5 && t < 27) for (var j = 0; j < 3; j++) {
@@ -1018,19 +1050,37 @@
 
       /* labels: each on a part that is there at this moment */
       var items = [], wide = !lay.narrow;
-      function add(id, text, x, y, side, op) { var p = lay.to(x, y); items.push({ id: id, text: text, x: p[0], y: p[1], side: side, op: op == null ? 1 : op }); }
+      /* `alts`: other points on the same part, in the model (w-common.js moves a crowded name there instead of
+         bending its line, 18 Oct 2026): another red blood cell, fibrinogen rod, platelet, grown fibrin thread
+         or pathogen; the vessel wall further round its ring; elsewhere in the white blood cell. Only points at most
+         30 units further from the name's margin than its own. */
+      /* `pri`: inside the vessel ring there is room for two names at most when the lettering is large (a phone, the
+         column at 1024 px): the white blood cell goes before the wall and the red blood cell, which the clot traps */
+      var PRI_CL = { wbc: -1 };
+      function add(id, text, x, y, side, op, alts) {
+        var p = lay.to(x, y), it = { id: id, text: text, x: p[0], y: p[1], side: side, op: op == null ? 1 : op, pri: PRI_CL[id] || 0 };
+        if (alts) it.alts = alts.filter(function (q) { return q[0] >= lay.win.x0 + 6 && q[0] <= lay.win.x1 - 6 && q[1] >= lay.win.y0 + 6 && q[1] <= lay.win.y1 - 6; })
+          .map(function (q) { return lay.to(q[0], q[1]); }).filter(function (q) { return side === 'R' ? q[0] >= p[0] - 30 : q[0] <= p[0] + 30; });
+        items.push(it);
+      }
       var mb = ease(seg(t, 37.5, 41.5));
-      if (t > 37.2 && fall < .2) add('bug', 'pathogens', lerp(BUGS[3][0], 356, mb), lerp(BUGS[3][1], domeY(356, hD) - 2.4, mb), 'R', Math.min(clamp01((t - 37.2) / .8), 1 - seg(fall, 0, .2)));
+      if (t > 37.2 && fall < .2) add('bug', 'pathogens', lerp(BUGS[3][0], 356, mb), lerp(BUGS[3][1], domeY(356, hD) - 2.4, mb), 'R', Math.min(clamp01((t - 37.2) / .8), 1 - seg(fall, 0, .2)),
+        BUGS.slice(0, 3).map(function (b) { return [b[0], b[1]]; }));
       add('skin', 'skin', wide ? 80 : 214, 128, 'L');
       /* the names on the left a clear gap apart: the wall named high on the ring, the red blood cell on one
          half-way down, the white blood cell at the bottom */
-      add('wall', 'blood vessel wall', CL.vx + Math.cos(-2.09) * (CL.vi + CL.vw / 2), CL.vy + Math.sin(-2.09) * (CL.vi + CL.vw / 2), 'L');
-      add('rbc', 'red blood cell', RBC_L[0], RBC_L[1], 'L');
-      add('wbc', 'white blood cell', 286, 462, 'L');
-      if (plt0 && plt0[2] > .3) add('plt', 'platelet', plt0[0], plt0[1], 'R', clamp01((plt0[2] - .3) / .5));
-      add('fgn', 'fibrinogen (soluble)', LUM.rods[0][0], LUM.rods[0][1], 'R');
+      var rw = CL.vi + CL.vw / 2;
+      add('wall', 'blood vessel wall', CL.vx + Math.cos(-2.09) * rw, CL.vy + Math.sin(-2.09) * rw, 'L', null,
+        /* higher up the ring too, short of the cut (at most -97 to -82 degrees): -110 and -105 degrees */
+        [-1.92, -1.83, -2.4, -2.7, -3.0, 2.95, 2.65, 2.35, 2.05].map(function (a) { return [CL.vx + Math.cos(a) * rw, CL.vy + Math.sin(a) * rw]; }));
+      add('rbc', 'red blood cell', RBC_L[0], RBC_L[1], 'L', null, LUM.cells.filter(function (c) { return c !== RBC_L; }).map(function (c) { return [c[0], c[1]]; }));
+      add('wbc', 'white blood cell', 286, 462, 'L', null, [[286, 454], [286, 470], [279, 462], [293, 458]]);
+      if (plt0 && plt0[2] > .3) add('plt', 'platelet', plt0[0], plt0[1], 'R', clamp01((plt0[2] - .3) / .5),
+        pltAll.concat(LUM.plts.map(function (q) { return [q[0], q[1]]; })));
+      add('fgn', 'fibrinogen (soluble)', LUM.rods[0][0], LUM.rods[0][1], 'R', null, LUM.rods.slice(1).map(function (q) { return [q[0], q[1]]; }));
       var th0 = FIB_L, fo = Math.min(fadeIn(th0.mx, th0.my, 2), fibOp);
-      if (t > th0.g0 + th0.dur * .55 && fo > .3) add('fib', 'fibrin (insoluble threads)', th0.mx, th0.my, 'R', Math.min(clamp01((t - th0.g0 - th0.dur * .55) / .6), clamp01((fo - .3) / .5)));
+      if (t > th0.g0 + th0.dur * .55 && fo > .3) add('fib', 'fibrin (insoluble threads)', th0.mx, th0.my, 'R', Math.min(clamp01((t - th0.g0 - th0.dur * .55) / .6), clamp01((fo - .3) / .5)),
+        THREADS.filter(function (th) { return th !== th0 && t > th.g0 + th.dur * .55 && Math.min(fadeIn(th.mx, th.my, 2), fibOp) > .5; }).map(function (th) { return [th.mx, th.my]; }));
       var co = fadeIn(306, 262, 2);
       if (ck > .3 && co > .3) add('clot', 'clot', 306, 262, 'R', Math.min(clamp01((ck - .3) * 3), clamp01((co - .3) / .5)));
       if (sk > .3 && fall < .2) add('scab', 'scab', 296, 62, 'L', Math.min(clamp01((sk - .3) * 3), 1 - seg(fall, 0, .2)));

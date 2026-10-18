@@ -15,13 +15,14 @@
        them, for a widget whose drawing stands in the plate's column (Daniel, 26 Sep: "make the different
        stages smaller, and more compacted ... you can still click them. But you see the text on the right")
 
-   CircLearn.labels(opts)   labels in two margins, each at its own part's height, joined to it by a
-                            ruled horizontal leader. Horizontal leaders at different heights cannot
-                            cross; labels that would collide are nudged apart in the order of their
-                            parts, so the order never changes and the short jogs never cross either.
-                            (Daniel: "never ever cross the labelling lines".)
+   CircLearn.labels(opts)   labels in two margins, each joined to its part by ONE ruled level line that ends
+                            on the part (Daniel: "never ever cross the labelling lines"; one level line per
+                            label, 25 Sep and 18 Oct 2026). A crowded name moves to another point on its
+                            own part (an item's `alts`); a name that finds no free row is left out, never
+                            bent: names beyond 0610 first (`opt`, or the classes is-ext / is-beyond).
    CircLearn.pinLabels(o)   the same labels on a phone: numbered discs on ruled leaders; and
    CircLearn.pinBand(...)   the numbered words, in a band above the drawing.
+   CircLearn.placeRows(...) the placing itself, for a widget that draws its own labels (w-bodyflow.js).
    CircLearn.thump(kind)    a heart sound, made in the browser: 'lub' or 'dub'. No recording needed.
    ============================================================ */
 (function (global) {
@@ -148,8 +149,121 @@
     };
   }
 
+  /* ---------- each name on ONE level line (the Cells Lab's level rows, 18 Oct 2026) ----------
+     it: one margin's names, each { x, y, h, alts?, off?, opt?, keep?, pri? }. `alts` are other points ON the same part, [[x, y], …];
+     `off` says the item's own point is not to be used. levelRows: each name keeps its own point when the names fit;
+     otherwise the choice of points that moves the names least, in the order given, each a full row (h/2 + gap + h/2)
+     from the next and inside top…bottom. Returns that choice's cost, or -1 when no choice fits; with `apply`, sets
+     each item's x, y and ly to its point. */
+  function levelRows(it, top, bot, gap, apply) {
+    var n = it.length, i, j, k;
+    if (!n) return 0;
+    var C = it.map(function (x) {
+      var c = x.off ? [] : [{ x: x.x, y: x.y, c: 0 }];
+      (x.alts || []).forEach(function (p) { c.push({ x: p[0], y: p[1], c: Math.abs(p[1] - x.y) + 0.5 }); });
+      return c.filter(function (p) { return p.y - x.h / 2 >= top - 1e-6 && p.y + x.h / 2 <= bot + 1e-6; })
+              .sort(function (a, b) { return a.y - b.y; });
+    });
+    var best = [], from = [];
+    for (i = 0; i < n; i++) {
+      if (!C[i].length) return -1;
+      best[i] = []; from[i] = [];
+      var P = C[i - 1], s = i ? it[i - 1].h / 2 + gap + it[i].h / 2 : 0, m = Infinity, mk = -1;
+      k = 0;
+      for (j = 0; j < C[i].length; j++) {
+        if (!i) { best[i][j] = C[i][j].c; from[i][j] = -1; continue; }
+        while (k < P.length && P[k].y <= C[i][j].y - s + 1e-6) { if (best[i - 1][k] < m) { m = best[i - 1][k]; mk = k; } k++; }
+        best[i][j] = m + C[i][j].c; from[i][j] = mk;
+      }
+    }
+    var jb = -1;
+    for (j = 0; j < C[n - 1].length; j++) if (best[n - 1][j] < Infinity && (jb < 0 || best[n - 1][j] < best[n - 1][jb])) jb = j;
+    if (jb < 0) return -1;
+    var cost = best[n - 1][jb];
+    if (apply) for (i = n - 1; i >= 0; i--) { var pt = C[i][jb]; it[i].x = pt.x; it[i].y = it[i].ly = pt.y; jb = from[i][jb]; }
+    return cost;
+  }
+  /* The cheapest way to stand these names on level lines: in their parts' order first; when that cannot fit, in any
+     order (level lines never cross, so the order is free; up to 7 names, every order is tried). { cost, order } or null. */
+  function bestRows(it, top, bot, gap) {
+    var c = levelRows(it, top, bot, gap, false);
+    if (c >= 0) return { cost: c, order: it };
+    if (it.length > 7) return null;
+    var a = it.slice(), n = a.length, ix = [], i = 1, best = null, t;
+    function look() { var q = levelRows(a, top, bot, gap, false); if (q >= 0 && (!best || q < best.cost)) best = { cost: q, order: a.slice() }; }
+    for (t = 0; t < n; t++) ix[t] = 0;
+    look();
+    while (i < n) {   /* Heap's algorithm: every order of the names, one swap at a time */
+      if (ix[i] < i) { t = i % 2 ? ix[i] : 0; var sw = a[t]; a[t] = a[i]; a[i] = sw; look(); ix[i]++; i = 1; }
+      else { ix[i] = 0; i++; }
+    }
+    return best;
+  }
+  /* A name beyond 0610 is the first to go when a margin is full. */
+  function isOpt(x) { return !!x.opt || /(^|\s)is-(ext|beyond)(\s|$)/.test(x.cls || ''); }
+  /* The names of one margin, each on a level line: all of them when some choice of points fits; otherwise the fewest
+     left out (Daniel, 25 Sep 2026: "a name that finds no free row is left out, not squeezed in"): beyond 0610 first,
+     then a name still fading in or out, then whichever leaves the others the cheapest fit; a `keep` name (the
+     molecule a picture follows) only when nothing else is left. Returns
+     { kept: the names to draw, top to bottom, each with ly = y, out: the names left out }. Nothing is ever nudged. */
+  var PLACED = {}, PLACED_N = 0;
+  function placeRows(it, top, bot, gap) {
+    var key = top + '|' + bot + '|' + gap + '|' + it.map(function (x) {
+      return [x.id, x.text, Math.round(x.x * 10), Math.round(x.y * 10), Math.round(x.h * 10), x.off ? 1 : 0, isOpt(x) ? 1 : 0, x.op < .99 ? 1 : 0, x.keep ? 1 : 0, x.pri || 0,
+              (x.alts || []).map(function (p) { return Math.round(p[0] * 10) + ',' + Math.round(p[1] * 10); }).join(';')].join(':');
+    }).join('/');
+    var hit = PLACED[key];
+    if (!hit) {
+      /* at most 10 other points a name, so a moving picture stays quick: the nearest first, each a twelfth of the
+         points' whole spread from the others (at least 3 units), so the far ones are still there to choose */
+      it.forEach(function (x) {
+        if (!x.alts || x.alts.length <= 10) return;
+        var ys = x.alts.map(function (p) { return p[1]; }), gapY = Math.max(3, (Math.max.apply(null, ys) - Math.min.apply(null, ys)) / 12), kept = [];
+        x.alts.slice().sort(function (p, q) { return Math.abs(p[1] - x.y) - Math.abs(q[1] - x.y); }).forEach(function (p) {
+          if (kept.length < 10 && kept.every(function (q) { return Math.abs(q[1] - p[1]) >= gapY; })) kept.push(p);
+        });
+        x.alts = kept;
+      });
+      /* a name with no point inside top…bottom can never stand: it goes first, whatever it is */
+      var canStand = function (x) {
+        return (x.off ? [] : [[x.x, x.y]]).concat(x.alts || []).some(function (p) { return p[1] - x.h / 2 >= top - 1e-6 && p[1] + x.h / 2 <= bot + 1e-6; });
+      };
+      var cur = it.filter(canStand), out = it.filter(function (x) { return !canStand(x); }), fit = null;
+      while (cur.length && !(fit = bestRows(cur, top, bot, gap))) {
+        var free = cur.filter(function (x) { return !x.keep; });    /* `keep`: what the picture follows, left out last */
+        if (!free.length) free = cur;
+        var pool = free.filter(isOpt);
+        if (!pool.length) pool = free.filter(function (x) { return x.op < .99; });
+        if (!pool.length) pool = free;
+        /* `pri`: a widget's own order, lowest first (a name that also stands elsewhere in the picture, say) */
+        var lo = Math.min.apply(null, pool.map(function (x) { return x.pri || 0; }));
+        pool = pool.filter(function (x) { return (x.pri || 0) === lo; });
+        var drop = null, dc = Infinity;
+        pool.forEach(function (x) {
+          var f = bestRows(cur.filter(function (y) { return y !== x; }), top, bot, gap);
+          if (f && f.cost < dc) { dc = f.cost; drop = x; }
+        });
+        /* no single name frees the rest: leave out the one with the fewest points to stand on, the last of those */
+        if (!drop) drop = pool.slice().sort(function (p, q) { return ((p.alts || []).length - (q.alts || []).length) || (q.y - p.y); })[0];
+        out.push(drop); cur = cur.filter(function (y) { return y !== drop; });
+      }
+      var pos = {};
+      if (fit) { var tmp = fit.order.map(function (x) { return { x: x.x, y: x.y, h: x.h, alts: x.alts, off: x.off }; }); levelRows(tmp, top, bot, gap, true);
+                 fit.order.forEach(function (x, i) { pos[it.indexOf(x)] = [tmp[i].x, tmp[i].y]; }); }
+      hit = { pos: pos, out: out.map(function (x) { return it.indexOf(x); }) };
+      if (++PLACED_N > 400) { PLACED = {}; PLACED_N = 0; }
+      PLACED[key] = hit;
+    }
+    var kept = [];
+    it.forEach(function (x, i) { var p = hit.pos[i]; if (p) { x.x = p[0]; x.y = x.ly = p[1]; kept.push(x); } });
+    var gone = hit.out.map(function (i) { return it[i]; });
+    /* for the headless check (tools/audit/labellines.mjs): which names were left out */
+    if (L.leftOut) gone.forEach(function (x) { var k = x.text || x.id; L.leftOut[k] = (L.leftOut[k] || 0) + 1; });
+    return { kept: kept.sort(function (p, q) { return p.ly - q.ly; }), out: gone };
+  }
+
   /* ---------- labels in two margins, leaders ruled level ----------
-     opts: { items: [{ id, text, x, y, side: 'L'|'R' }], left: x of the left margin's inner edge,
+     opts: { items: [{ id, text, x, y, side: 'L'|'R', alts?, off?, opt?, pri?, keep? }], left: x of the left margin's inner edge,
              right: x of the right margin's inner edge, font, top, bottom, gap }
      returns the SVG markup. Text wraps to `width` units. */
   function labels(o) {
@@ -163,20 +277,14 @@
     ['L', 'R'].forEach(function (side) {
       var it = o.items.filter(function (x) { return x.side === side && !x.hidden; }).map(function (x) {
         var lines = wrap(x.text, o.width || 110);
-        return { x: x.x, y: x.y, ly: x.y, lines: lines, h: lines.length * lh, id: x.id, cls: x.cls || '', op: x.op == null ? 1 : x.op };
+        return { x: x.x, y: x.y, ly: x.y, lines: lines, h: lines.length * lh, id: x.id, text: x.text, cls: x.cls || '', op: x.op == null ? 1 : x.op,
+                 alts: x.alts, off: x.off, opt: x.opt, pri: x.pri, keep: x.keep };
       }).sort(function (a, b) { return a.y - b.y; });
-      var i;
       var top = o.top == null ? -1e9 : o.top, bot = o.bottom == null ? 1e9 : o.bottom;
-      if (it.length && it[0].ly - it[0].h / 2 < top) it[0].ly = top + it[0].h / 2;
-      for (i = 1; i < it.length; i++) { var lo = it[i - 1].ly + it[i - 1].h / 2 + gap + it[i].h / 2; if (it[i].ly < lo) it[i].ly = lo; }
-      for (i = it.length - 1; i >= 0; i--) {
-        var hi = i === it.length - 1 ? bot - it[i].h / 2 : it[i + 1].ly - it[i + 1].h / 2 - gap - it[i].h / 2;
-        if (it[i].ly > hi) it[i].ly = hi;
-      }
+      it = placeRows(it, top, bot, gap).kept;
       it.forEach(function (x) {
         var edge = side === 'L' ? o.left : o.right, dir = side === 'L' ? -1 : 1;
-        var jog = Math.abs(x.ly - x.y) > .5;
-        var d = 'M' + f2(x.x) + ' ' + f2(x.y) + 'L' + f2(edge) + ' ' + f2(x.y) + (jog ? 'L' + f2(edge + dir * 6) + ' ' + f2(x.ly) : '') + 'L' + f2(edge + dir * 9) + ' ' + f2(x.ly);
+        var d = 'M' + f2(x.x) + ' ' + f2(x.y) + 'L' + f2(edge + dir * 9) + ' ' + f2(x.y);
         var tx = edge + dir * 13, anchor = side === 'L' ? 'end' : 'start', y0 = x.ly - x.h / 2 + font * .84;
         out += '<g class="lb ' + x.cls + '" data-lab="' + esc(x.id || '') + '" opacity="' + x.op + '">' +
           '<path class="lb__halo" d="' + d + '"/><path class="lb__lead" d="' + d + '"/><circle class="lb__dot" cx="' + f2(x.x) + '" cy="' + f2(x.y) + '" r="' + (font * .16).toFixed(2) + '"/>' +
@@ -199,16 +307,15 @@
     var font = o.font || 18, r = font * .72, gap = o.gap == null ? 4 : o.gap, out = '', order = [];
     ['L', 'R'].forEach(function (side) {
       var it = o.items.filter(function (x) { return x.side === side && !x.hidden; }).map(function (x) {
-        return { x: x.x, y: x.y, ly: x.y, h: 2 * r, id: x.id, text: x.text, cls: x.cls || '', op: x.op == null ? 1 : x.op };
+        return { x: x.x, y: x.y, ly: x.y, h: 2 * r, id: x.id, text: x.text, cls: x.cls || '', op: x.op == null ? 1 : x.op,
+                 alts: x.alts, off: x.off, opt: x.opt, pri: x.pri, keep: x.keep };
       }).sort(function (a, b) { return a.y - b.y; });
-      var i, top = o.top == null ? -1e9 : o.top, bot = o.bottom == null ? 1e9 : o.bottom;
-      if (it.length && it[0].ly - r < top) it[0].ly = top + r;
-      for (i = 1; i < it.length; i++) { var lo = it[i - 1].ly + 2 * r + gap; if (it[i].ly < lo) it[i].ly = lo; }
-      for (i = it.length - 1; i >= 0; i--) { var hi = i === it.length - 1 ? bot - r : it[i + 1].ly - 2 * r - gap; if (it[i].ly > hi) it[i].ly = hi; }
+      var top = o.top == null ? -1e9 : o.top, bot = o.bottom == null ? 1e9 : o.bottom;
+      it = placeRows(it, top, bot, gap).kept;
       it.forEach(function (x) {
         var n = order.length + 1, edge = side === 'L' ? o.left : o.right, dir = side === 'L' ? -1 : 1;
-        var jog = Math.abs(x.ly - x.y) > .5, cx = edge + dir * (r + 8);
-        var d = 'M' + f2(x.x) + ' ' + f2(x.y) + 'L' + f2(edge) + ' ' + f2(x.y) + (jog ? 'L' + f2(edge + dir * 5) + ' ' + f2(x.ly) : '') + 'L' + f2(cx - dir * r) + ' ' + f2(x.ly);
+        var cx = edge + dir * (r + 8);
+        var d = 'M' + f2(x.x) + ' ' + f2(x.y) + 'L' + f2(cx - dir * r) + ' ' + f2(x.y);
         out += '<g class="lb lb--pin ' + x.cls + '" data-lab="' + esc(x.id || '') + '" opacity="' + x.op + '">' +
           '<path class="lb__halo" d="' + d + '"/><path class="lb__lead" d="' + d + '"/><circle class="lb__dot" cx="' + f2(x.x) + '" cy="' + f2(x.y) + '" r="' + (font * .16).toFixed(2) + '"/>' +
           '<circle class="lb__pin" cx="' + f2(cx) + '" cy="' + f2(x.ly) + '" r="' + f2(r) + '"/>' +
@@ -252,6 +359,7 @@
   L.stepper = stepper;
   L.labels = labels;
   L.pinLabels = pinLabels;
+  L.placeRows = placeRows;
   L.pinBand = pinBand;
   L.thump = thump;
   L.clamp01 = clamp01;
