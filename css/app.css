@@ -903,6 +903,9 @@ picture{display:block;line-height:0}
 .hs__stage{position:relative;line-height:0;border-radius:var(--r);overflow:hidden;background:#1B2226;margin-bottom:8px}
 .hs__stage img,.hs__stage svg{width:100%;height:auto;display:block}
 .hs__stage svg{background:#fff}
+/* a drawing to press on is shown at most 400 px wide, as in the Cells Lab: its rings are a share of its width, so a small
+   ring on a thin part (a valve, a filament) stays the same size on a laptop and on a phone (tools/hotspots.mjs, 25 Oct 2026) */
+.hs__stage:has(> svg){max-width:min(100%,400px);margin-left:auto;margin-right:auto}
 .hs__pt{position:absolute;transform:translate(-50%,-50%);aspect-ratio:1/1;height:auto;border-radius:50%;border:2px solid rgba(255,255,255,.9);background:rgba(255,255,255,.18);cursor:pointer;padding:0;transition:.14s;box-shadow:0 0 0 1px rgba(0,0,0,.35)}
 .hs__stage svg ~ .hs__pt{border-color:rgba(20,87,43,.7);background:rgba(20,87,43,.12)}
 .hs__pt:hover{background:rgba(255,255,255,.45)}
