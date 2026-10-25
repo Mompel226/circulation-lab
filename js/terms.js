@@ -15,6 +15,8 @@
      a magnifying glass   a picture opens where you are
      a faint dotted rule  the definition opens where you are
      an arrow             you are taken to another station
+     a dotted rule and ↓  you go down to the word's key-word card in this station: each key word has ONE card
+                          in the lab, in the station that first teaches it (25 Oct 2026)
    The arrow is only for a journey with something at the other end; one arrow per
    destination per station; never a word inside a negative.
 
@@ -100,12 +102,14 @@
   jump(['single circulation', 'double circulation', 'gills'], 'double');
   jump(['atrium', 'atria', 'left atrium', 'right atrium', 'ventricle', 'ventricles', 'left ventricle', 'right ventricle', 'septum', 'muscular wall', 'cardiac muscle',
         'atrioventricular valve', 'atrioventricular valves', 'semilunar valve', 'semilunar valves', 'valve', 'valves'], 'heart');
+  /* the coronary arteries are a part of the heart (9.2.1), named in Inside the heart, where their key-word card is (25 Oct 2026) */
+  jump(['coronary artery', 'coronary arteries'], 'heart');
   jump(['cardiac cycle', 'systole', 'diastole', 'pacemaker', 'sinoatrial node'], 'beat');
   jump(['pulse', 'pulse rate', 'ECG', 'electrocardiogram', 'stethoscope'], 'monitor');
   jump(['heart rate', 'physical activity', 'lactic acid', 'oxygen debt', 'aerobic respiration', 'anaerobic respiration'], 'exercise');
   jump(['independent variable', 'dependent variable', 'control variable', 'control variables', 'controlled variable', 'controlled variables', 'hypothesis', 'research question',
         'trial', 'trials', 'anomalous result', 'anomalous results', 'results table', 'line graph', 'bar chart', 'risk assessment'], 'plan');
-  jump(['coronary heart disease', 'CHD', 'coronary artery', 'coronary arteries', 'atheroma', 'plaque', 'thrombus', 'risk factor', 'risk factors', 'genetic predisposition', 'cholesterol', 'saturated fat', 'saturated fats'], 'chd');
+  jump(['coronary heart disease', 'CHD', 'atheroma', 'plaque', 'thrombus', 'risk factor', 'risk factors', 'genetic predisposition', 'cholesterol', 'saturated fat', 'saturated fats'], 'chd');
   jump(['artery', 'arteries', 'vein', 'veins', 'capillary', 'capillaries', 'arteriole', 'arterioles', 'venule', 'venules', 'lumen', 'elastic fibres', 'blood pressure', 'tissue fluid'], 'vessels');
   jump(['aorta', 'vena cava', 'pulmonary artery', 'pulmonary arteries', 'pulmonary vein', 'pulmonary veins', 'renal artery', 'renal arteries', 'renal vein', 'renal veins',
         'hepatic artery', 'hepatic vein', 'hepatic veins', 'hepatic portal vein'], 'routes');
@@ -160,6 +164,12 @@
    'clotting', 'fibrinogen', 'fibrin'].forEach(function (w) { GOES_THERE[w] = true; });
 
   var here = null, seen = null, quiet = false, wentTo = null, teaching = false, arrowed = false;
+  /* this station's key-word cards (the flip cards at the bottom of its Learn tab), by the word in lower case. Each key word
+     has ONE card in the lab, in the station that first teaches it (Daniel, 25 Oct 2026: "please do not repeat keywords"),
+     and in that station the word's first mention leads down to its card ("should then link to the flashcard at the
+     bottom of it"), never away to another station. KW_OFF: the cards a
+     mention outside What you need to know has been marked for */
+  var KW = {}, KW_OFF = {};
   var NEVER_DOTTED = { heart: 1, hearts: 1 };
   /* The pictures this station is about to put on the page. A magnifier that opens one of
      them shows the reader what is already in front of them — worst where the caption of a
@@ -168,7 +178,10 @@
      to give. */
   var SHOWN = {};
   function setShown(m) { SHOWN = m || {}; }
-  function setStation(id) { here = id; seen = Object.create(null); quiet = false; wentTo = Object.create(null); }
+  function setStation(id) {
+    here = id; seen = Object.create(null); quiet = false; wentTo = Object.create(null); KW = {}; KW_OFF = {};
+    (global.STATIONS || []).forEach(function (s) { if (s.id === id) (s.keywords || []).forEach(function (w) { KW[String(w.term).toLowerCase()] = w.term; }); });
+  }
   /* a widget built afresh (its reset) marks its words as it did the first time: forget what it introduced */
   function unsee(words, jumps) {
     if (seen) (words || []).forEach(function (w) { var low = String(w).toLowerCase(), d = defined(low); delete seen[low]; if (d) delete seen[d.toLowerCase()]; });
@@ -233,17 +246,28 @@
       if (wrongSense(low, before, String(whole).slice(at + m.length).replace(/<[^>]*>/g, ''), String(whole).replace(/<[^>]*>/g, ''))) return m;
       var cat = e[1], act = '', cls = '';
       var def = defined(low), idea = def ? def.toLowerCase() : low;     /* "clots" and "blood clot" are one idea */
-      var first = !quiet && !(seen && (seen[low] || seen[idea]));
-      if (seen) { seen[low] = true; seen[idea] = true; }
+      var ctx = (CONTEXT[here] || {})[low];
+      var pk0 = ctx || PEEK[low];
+      var card = KW[low] || KW[idea], keep = false;
+      /* a word whose key-word card is in this station leads down to it from What you need to know. Elsewhere (a widget,
+         a caption, the card below) it is marked as before, once, without using up that way down, unless it opens a picture */
+      if (card && !quiet && !teaching && !(pk0 && !SHOWN[pk0[0]])) {
+        if (KW_OFF[card] || (seen && (seen[low] || seen[idea]))) return m;
+        KW_OFF[card] = keep = true;
+      }
+      var first = keep || (!quiet && !(seen && (seen[low] || seen[idea])));
+      if (seen && !keep) { seen[low] = true; seen[idea] = true; }
       if (!first) return m;
       if (NEVER_DOTTED[low]) def = null;
-      var ctx = (CONTEXT[here] || {})[low];
       var canJump = teaching && !arrowed;
-      var pk0 = ctx || PEEK[low];
       if (pk0 && !SHOWN[pk0[0]]) {
         var pk = pk0;
         act = ' data-peek="' + pk[0] + '" data-note="' + esc(pk[1]) + '"' + (pk[2] ? ' data-credit="' + esc(pk[2]) + '"' : '') + ' tabindex="0" role="button"';
         cls = ' is-peek';
+      } else if (teaching && card && def && !KNOWN[def.toLowerCase()]) {
+        /* its key-word card is at the bottom of this station: down to it, not away */
+        act = ' data-kw="' + esc(card.toLowerCase()) + '" tabindex="0" role="button"';
+        cls = ' is-kw';
       } else if (JUMP[low] === here) {
         return '<b class="t t--' + cat + '">' + m + '</b>';
       } else if (canJump && JUMP[low] && GOES_THERE[low] && !(wentTo && wentTo[JUMP[low]])) {
