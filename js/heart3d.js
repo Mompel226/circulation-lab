@@ -413,7 +413,10 @@ vec3 h3beat(vec3 p){ vec3 d = vec3(0.0); for (int i = 0; i < 4; i++) { vec3 q = 
   const SIZE = box.getSize(new THREE.Vector3());
   const DIST = Math.max(SIZE.y, SIZE.x * 1.15) / (2 * Math.tan(THREE.MathUtils.degToRad(15))) * 1.08;
   controls.target.copy(FOCUS);
-  controls.minDistance = DIST * 0.35; controls.maxDistance = DIST * 2.2;
+  /* 6 cm (0.6 units) from the part you zoom toward (see "zooming" below): a valve or the root of a vessel
+     fills the view and still reads as itself; nearer, the model's flat faces show. It was DIST * 0.35, 13 cm
+     from the middle of the heart, so a part off the middle could never be brought close. */
+  controls.minDistance = 0.6; controls.maxDistance = DIST * 2.2;
 
   /* ---------------- the valves that move ----------------
      Each ring comes from the model's own valve (centre, axis, radius; build step valves.py); the cusps
@@ -1509,6 +1512,103 @@ void main() {
      the view is still, so a leader is never drawn to where a part used to be */
   controls.addEventListener('change', () => { idStale = true; if (labelsShown || labelTimer) hideLabels(); kick(); });
   controls.addEventListener('end', () => { moving = false; });
+
+  /* ---------------- zooming: toward what you point at ----------------
+     OrbitControls zooms toward the point it turns about, the middle of the heart, so a pinch or a scroll over
+     the aorta or the apex still went into the middle, and a part off the middle could not be brought close.
+     Daniel (4 Nov 2026) found the same on the Human Body Hub: "it forces me to zoom in one place. So I cannot
+     actually get close to the organs I want." zoomToCursor moves the camera along the line through the pointer,
+     or through the point between two fingers, so what is under them stays under them. At the start of each
+     zoom the turning point also moves along the line of sight to the part under the pointer, the part a press
+     would name (on a cut, the cut face): the view does not move, but the camera now slows as it nears THAT
+     part and stops minDistance from it, and a drag or the arrows then turn the heart about it. A named view
+     (Front, Back, the cut) puts the turning point back where it was. This three.js (r185) already counts a
+     wheel's lines and pages as pixels and no longer halves the speed on a Retina screen; what it still gets
+     wrong is put right below. */
+  controls.zoomToCursor = true;
+  const WHEEL = controls.zoomSpeed;
+  const zRay = new THREE.Raycaster(), zNdc = new THREE.Vector2(), zAhead = new THREE.Vector3(), zP = new THREE.Vector3();
+  const shown = (o) => { for (; o; o = o.parent) if (!o.visible) return false; return true; };
+  function seat(x, y) {
+    if (!controls.enabled) return;                 /* a view is still arriving: it sets the turning point */
+    const b = el.getBoundingClientRect();
+    const hit = idAt(x - b.left, y - b.top);
+    if (!hit) return;                              /* nothing there: zoom toward the pointer as it is */
+    zNdc.set((x - b.left) / b.width * 2 - 1, -(y - b.top) / b.height * 2 + 1);
+    zRay.setFromCamera(zNdc, camera);
+    let p = null;
+    /* a back face where the cut faces are drawn is a cut face, and those lie on the plane */
+    if (hit[1] && capQuads.some((q) => q.visible)) p = zRay.ray.intersectPlane(clipWorld, zP);
+    if (!p) {
+      /* the meshes the picking pass draws this part with; the first point on them the cut leaves standing */
+      const meshes = Object.values(parts).filter((pt) => pt.id === hit[0]).map((pt) => pt.mesh);
+      Object.values(VALVES).forEach((vv) => { if (vv.mesh && byIndex[vv.index] === hit[0]) meshes.push(vv.mesh); });
+      const h = zRay.intersectObjects(meshes.filter(shown), false).find((q) => clipWorld.distanceToPoint(q.point) >= 0);
+      if (h) p = zP.copy(h.point);
+    }
+    if (!p) return;
+    camera.getWorldDirection(zAhead);
+    const depth = zAhead.dot(p.sub(camera.position));
+    if (depth > controls.minDistance) controls.target.copy(camera.position).addScaledVector(zAhead, depth);
+  }
+  const on = (target, type, fn, o) => { target.addEventListener(type, fn, o); disposers.push(() => target.removeEventListener(type, fn, o)); };
+
+  /* A wheel, a mouse's or a trackpad's, starts a new zoom after a pause; the steps of one zoom keep the turning
+     point it started with. Its speed is set here, on the window, before the controls read it:
+     - A trackpad pinch arrives as a wheel with ctrlKey, its deltaY 100 x ln(how far the fingers parted). The
+       controls take it as ten times a scroll at 0.95 per 100, so the heart grew about half as fast as the
+       fingers parted. Now it follows them (fingers twice as far apart, camera twice as close), one step at
+       most 1.5 times. The controls tell a pinch from a real Control key with _controlActive; so does this.
+     - A mouse wheel or a scroll keeps the heart's own speed. */
+  const PINCH = 0.1 / -Math.log(0.95);
+  let lastWheel = 0;
+  on(window, 'wheel', (e) => {
+    if (e.target !== el) return;
+    if (e.timeStamp - lastWheel > 250) seat(e.clientX, e.clientY);
+    lastWheel = e.timeStamp;
+    controls.zoomSpeed = e.ctrlKey && !controls._controlActive ? PINCH * Math.min(1, 40 / (Math.abs(e.deltaY) || 1)) : WHEEL;
+  }, { capture: true, passive: true });
+
+  /* Two fingers on a touch screen. The controls take the point between them from pageX/pageY but measure the
+     canvas with getBoundingClientRect, which leaves out scrolling: in a station scrolled down to the heart, the
+     zoom went toward a point that far below the fingers. So the heart's touch pointers carry their window
+     position in pageX/pageY too, set here before the controls read them (on the window, in the capture phase).
+     Two fingers follow exactly (the controls' speed 1); the second one down seats the turning point. */
+  const fingers = new Map();
+  const onFinger = (e) => {
+    if (e.type === 'pointerdown' && e.target === el) controls.zoomSpeed = e.pointerType === 'touch' ? 1 : WHEEL;
+    if (e.pointerType !== 'touch' || (e.type === 'pointerdown' ? e.target !== el : !fingers.has(e.pointerId))) return;
+    Object.defineProperty(e, 'pageX', { value: e.clientX });
+    Object.defineProperty(e, 'pageY', { value: e.clientY });
+    fingers.set(e.pointerId, [e.clientX, e.clientY]);
+    if (e.type === 'pointerdown' && fingers.size === 2) {
+      const [a, b] = [...fingers.values()];
+      seat((a[0] + b[0]) / 2, (a[1] + b[1]) / 2);
+    }
+  };
+  const offFinger = (e) => { fingers.delete(e.pointerId); };
+  ['pointerdown', 'pointermove'].forEach((type) => on(window, type, onFinger, true));
+  ['pointerup', 'pointercancel'].forEach((type) => on(window, type, offFinger, true));
+
+  /* Safari on a Mac sends a trackpad pinch as "gesture" events, where other browsers send a wheel, so there the
+     pinch zoomed the whole page instead of the heart. Each step is passed on as the wheel the controls already
+     follow (above). Not on a touch screen: there the fingers already arrive as pointers, and this would zoom
+     twice. */
+  if (!navigator.maxTouchPoints) {
+    let last = 1, pinching = false, px = 0, py = 0;
+    on(el, 'pointermove', (e) => { px = e.clientX; py = e.clientY; });
+    on(el, 'gesturestart', (e) => { e.preventDefault(); last = 1; pinching = true; });
+    on(el, 'gesturechange', (e) => {
+      e.preventDefault();
+      const k = e.scale / last; last = e.scale;
+      if (!(k > 0) || !isFinite(k) || k === 1) return;
+      el.dispatchEvent(new WheelEvent('wheel', { deltaY: -100 * Math.log(k), ctrlKey: true, bubbles: true,
+        cancelable: true, clientX: e.clientX ?? px, clientY: e.clientY ?? py }));
+    });
+    on(el, 'gestureend', (e) => { e.preventDefault(); pinching = false; });
+    /* if Safari also sends the pinch as wheels, those would zoom a second time */
+    on(window, 'wheel', (e) => { if (pinching && e.isTrusted) { e.preventDefault(); e.stopPropagation(); } }, { capture: true, passive: false });
+  }
 
   /* ---------------- the loop: only when something moves, only when you can see it ---------------- */
   let raf = 0, last = 0, visible = true, onScreen = true;
