@@ -669,10 +669,7 @@
       s += ciTube('M262 272L262 104L264 96L269 91L277 89', C.deo, C.deoHi, 13);
       s += ciTube('M469 89L477 91L482 96L484 104L484 560L482 568L477 573L469 575', C.oxy, C.oxyHi, 13);
       s += ciArrow(262, 505, -90) + ciArrow(262, 190, -90) + ciArrow(484, 250, 90) + ciArrow(484, 430, 90);
-      /* the heart: one ventricle above one atrium, drawn in section; both hold deoxygenated blood */
-      s += '<path class="ci__mus" fill="url(#' + u + 'mus)" d="M262 272C292 272 306 290 306 314L306 334C306 356 290 368 262 368C234 368 218 356 218 334L218 314C218 290 232 272 262 272Z"/>' +
-           '<path class="ci__mus" fill="url(#' + u + 'mus)" d="M262 370C286 370 296 386 296 404C296 426 282 442 262 442C242 442 228 426 228 404C228 386 238 370 262 370Z"/>' +
-           '<rect x="253" y="350" width="18" height="36" fill="url(#' + u + 'mus)"/>';
+      /* the heart (one ventricle above one atrium) is drawn with its chambers, below (CI_MUS): it moves as they contract */
     } else {
       /* lungs: a soft outline of two lungs behind the capillaries */
       s += '<path class="ci__organ ci__organ--lung" d="M362 44C348 38 312 36 284 46C258 56 248 84 250 108C252 128 270 138 296 136C322 134 346 128 358 118Z"/>' +
@@ -687,25 +684,86 @@
          very realistic and it's a bit misleading") */
       s += ciTube('M367 300L367 172C367 165 372 160 380 160L498 160C505 160 510 165 510 172L510 560C510 568 505 575 496 575L469 575', C.oxy, C.oxyHi, 13);
       s += ciArrow(206, 430, -90) + ciArrow(245, 292, 0) + ciArrow(262, 150, -90) + ciArrow(303, 200, 180) + ciArrow(484, 124, 90) + ciArrow(445, 200, 180) + ciArrow(432, 160, 0) + ciArrow(510, 480, 90);
-      /* the heart, in section as if in the chest of a person facing you: its right side on YOUR left */
-      s += '<path class="ci__mus" fill="url(#' + u + 'mus)" d="M262 300C262 266 282 246 306 246C326 246 340 254 352 262L372 262C384 254 398 246 418 246C444 246 462 266 462 300L462 330C462 384 430 430 386 458C380 462 372 462 366 458C314 426 262 382 262 330Z"/>';
+      /* the heart, in section as if in the chest of a person facing you (its right side on YOUR left), is drawn with
+         its chambers, below (CI_MUS): it moves as they contract */
     }
     return s;
   }
+  /* the heart's muscle, drawn under its chambers. `ch`: which chamber's contraction moves it (the fish's two chambers are
+     two blocks of muscle, joined by a bridge that stays still; the mammal's heart is one outline) */
+  var CI_MUS = {
+    fish: [{ ch: 'v', d: 'M262 272C292 272 306 290 306 314L306 334C306 356 290 368 262 368C234 368 218 356 218 334L218 314C218 290 232 272 262 272Z' },
+           { ch: 'a', d: 'M262 370C286 370 296 386 296 404C296 426 282 442 262 442C242 442 228 426 228 404C228 386 238 370 262 370Z' },
+           { ch: null, d: 'M253 350L271 350L271 386L253 386Z' }],
+    mammal: [{ ch: 'heart', d: 'M262 300C262 266 282 246 306 246C326 246 340 254 352 262L372 262C384 254 398 246 418 246C444 246 462 266 462 300L462 330C462 384 430 430 386 458C380 462 372 462 366 458C314 426 262 382 262 330Z' }]
+  };
+  /* ---- the beat, as a warp of the heart ----
+     Daniel, 8 Nov 2026: in this animation "the atrium and the ventricles" did not look as if they were contracting:
+     only the blood inside a still outline shrank a little. Now the heart contracts as in One beat, one step at a time
+     (heart-art.js; Daniel, 26 Sep: an outline that never changes "might lead to misconceptions"): a contracting chamber
+     narrows and draws in towards its valve, its cavity shrinks about twice as much as the muscle round it, so its wall
+     thickens; the mammal's ventricles shorten, their tip rising towards the valves, and its atria draw down towards
+     theirs. What stays still: the valves, the openings where the vessels join (each stretches to stay joined to its
+     chamber) and the vessels. The red blood cell and the names' points inside a chamber move with it. */
+  function sm(a, b, x) { var q = (x - a) / (b - a); q = q < 0 ? 0 : q > 1 ? 1 : q; return q * q * (3 - 2 * q); }
+  function toward(x, y, cx, cy, kx, ky) { return [cx + (x - cx) * (1 - kx), cy + (y - cy) * (1 - ky)]; }
+  function warpD(d, f) {
+    var nums = d.match(/-?\d+(?:\.\d+)?/g) || [], out = [], k = 0;
+    for (var i = 0; i + 1 < nums.length; i += 2) { var q = f(+nums[i], +nums[i + 1]); out.push(n2(q[0]), n2(q[1])); }
+    return d.replace(/-?\d+(?:\.\d+)?/g, function () { return String(out[k++]); });
+  }
+  /* each chamber: its cavity's box (a point inside it moves with it), how its cavity moves (cav) and how the muscle
+     round it moves (out), for contraction c (0 relaxed … 1 at its strongest) */
+  var CI_BEAT = {
+    fish: {
+      v: { box: [232, 286, 292, 354], cav: function (x, y, c) { return toward(x, y, 262, 320, .38 * c, .06 * c); }, out: function (x, y, c) { return toward(x, y, 262, 320, .2 * c, .05 * c); } },
+      a: { box: [234, 378, 290, 436], cav: function (x, y, c) { return toward(x, y, 262, 406, .36 * c, .06 * c); }, out: function (x, y, c) { return toward(x, y, 262, 406, .19 * c, .05 * c); } }
+    },
+    mammal: {
+      ra: { box: [276, 262, 328, 316], cav: function (x, y, c) { return toward(x, y, 302, 316, .34 * c, .32 * c); } },
+      la: { box: [386, 262, 440, 316], cav: function (x, y, c) { return toward(x, y, 413, 316, .34 * c, .32 * c); } },
+      rv: { box: [278, 328, 350, 420], cav: function (x, y, c) { return toward(x, y, 314, 328, .32 * c, .26 * c); } },
+      lv: { box: [380, 328, 436, 432], cav: function (x, y, c) { return toward(x, y, 408, 328, .32 * c, .26 * c); } },
+      /* the outline: below the valves it narrows towards the middle and its tip rises; above them each side draws in
+         and down towards its atrium's valve */
+      heart: function (x, y, a, v) {
+        var X = x, Y = y;
+        if (v && y > 328) { X = 362 + (X - 362) * (1 - .2 * v * sm(328, 392, y)); Y = 328 + (Y - 328) * (1 - .2 * v); }
+        if (a && y < 322) {
+          var left = x < 357, cx = left ? 302 : 413, w = left ? 1 - sm(330, 352, x) : sm(362, 384, x), k = .2 * a * (1 - sm(300, 322, y)) * w;
+          if (k) { X = cx + (X - cx) * (1 - k); Y = 316 + (Y - 316) * (1 - k); }
+        }
+        return [X, Y];
+      }
+    }
+  };
+  /* which chamber a point is in (its cavity's box), and how much that chamber is contracting now */
+  function ciChamber(animal, x, y) {
+    var B = CI_BEAT[animal];
+    for (var k in B) { var b = B[k].box; if (b && x >= b[0] && x <= b[2] && y >= b[1] && y <= b[3]) return k; }
+    return null;
+  }
+  function ciAmount(k, s) { return k === 'a' || k === 'ra' || k === 'la' ? s.atr : s.ven; }
+  /* a point inside a chamber's cavity, carried by its contraction (the cell, a name's point, an opening's inner end) */
+  function ciCarry(animal, x, y, s) {
+    var k = ciChamber(animal, x, y), c = k ? ciAmount(k, s) : 0;
+    return c ? CI_BEAT[animal][k].cav(x, y, c) : [x, y];
+  }
+
   /* the chambers and valves, which move */
   var CI_CH = {
     fish: {
-      atria: [{ d: 'M262 378C280 378 290 390 290 404C290 422 278 436 262 436C246 436 234 422 234 404C234 390 244 378 262 378Z', c: [262, 406], col: 'd' }],
-      vents: [{ d: 'M262 286C281 286 292 298 292 316L292 332C292 346 280 354 262 354C244 354 232 346 232 332L232 316C232 298 243 286 262 286Z', c: [262, 320], col: 'd' }],
+      atria: [{ k: 'a', d: 'M262 378C280 378 290 390 290 404C290 422 278 436 262 436C246 436 234 422 234 404C234 390 244 378 262 378Z', c: [262, 406], col: 'd' }],
+      vents: [{ k: 'v', d: 'M262 286C281 286 292 298 292 316L292 332C292 346 280 354 262 354C244 354 232 346 232 332L232 316C232 298 243 286 262 286Z', c: [262, 320], col: 'd' }],
       /* openings through the muscle: atrium to ventricle, ventricle to artery, vein to atrium */
       chanD: 'M255.5 350L268.5 350L268.5 382L255.5 382Z M255.5 266L268.5 266L268.5 290L255.5 290Z M255.5 430L268.5 430L268.5 446L255.5 446Z', chanO: '', front: '',
       av: [[255.5, 358, 268.5, 358, -1]], sl: [[255.5, 280, 268.5, 280, -1]]
     },
     mammal: {
-      atria: [{ d: 'M276 316L276 290C276 272 288 262 302 262C318 262 328 272 328 290L328 316Z', c: [302, 292], col: 'd' },
-              { d: 'M386 316L386 290C386 272 398 262 413 262C429 262 440 272 440 290L440 316Z', c: [413, 292], col: 'o' }],
-      vents: [{ d: 'M278 328L350 328L350 392C350 410 340 420 326 416C304 408 280 372 278 328Z', c: [314, 366], col: 'd' },
-              { d: 'M380 328L436 328C436 360 426 396 404 424C396 432 386 430 382 420L380 380Z', c: [406, 366], col: 'o' }],
+      atria: [{ k: 'ra', d: 'M276 316L276 290C276 272 288 262 302 262C318 262 328 272 328 290L328 316Z', c: [302, 292], col: 'd' },
+              { k: 'la', d: 'M386 316L386 290C386 272 398 262 413 262C429 262 440 272 440 290L440 316Z', c: [413, 292], col: 'o' }],
+      vents: [{ k: 'rv', d: 'M278 328L350 328L350 392C350 410 340 420 326 416C304 408 280 372 278 328Z', c: [314, 366], col: 'd' },
+              { k: 'lv', d: 'M380 328L436 328C436 360 426 396 404 424C396 432 386 430 382 420L380 380Z', c: [406, 366], col: 'o' }],
       /* right side (blue): atrium to ventricle, vena cava into the atrium; left side (red): atrium to
          ventricle, pulmonary vein into the atrium, ventricle into the aorta */
       chanD: 'M291 314L321 314L321 331L291 331Z M258 285.5L279 285.5L279 298.5L258 298.5Z',
@@ -794,6 +852,22 @@
       /* the fish has 6 steps and the mammal 8: the heading of the animation's card follows (app.js filmCard) */
       if (global.CustomEvent) box.dispatchEvent(new CustomEvent('film:steps', { bubbles: true }));
     }
+    /* the names' points move with the heart: a chamber's with its cavity, the heart's with its muscle */
+    function ciLabelsAt(items, s) {
+      if (!s.atr && !s.ven) return items;
+      var B = CI_BEAT[animal];
+      function f(id, x, y) {
+        if (id === 'heart') return animal === 'mammal' ? B.heart(x, y, s.atr, s.ven) : B[y < 369 ? 'v' : 'a'].out(x, y, y < 369 ? s.ven : s.atr);
+        return ciCarry(animal, x, y, s);
+      }
+      return items.map(function (it) {
+        var q = f(it.id, it.x, it.y), o = {};
+        for (var key in it) o[key] = it[key];
+        o.x = n2(q[0]); o.y = n2(q[1]);
+        if (it.alts) o.alts = it.alts.map(function (a) { var r = f(it.id, a[0], a[1]); return [n2(r[0]), n2(r[1])]; });
+        return o;
+      });
+    }
     function stepAt(t) { var st = CI[animal].steps, k = 0; for (var i = 0; i < st.length; i++) if (t >= st[i].t - 1e-6) k = i; return k; }
     /* everything at time t: where the cell is, the heart, the gauge, the counter */
     function at(t) {
@@ -813,15 +887,23 @@
       return { i: i, st: st, k: k, P: P, O: O, atr: atr, ven: ven, av: av, sl: sl, passes: done };
     }
     function render(t) {
-      var s = at(t), A = CI[animal], ch = CI_CH[animal], u = g.u;
-      /* the heart: chambers shrink as they contract, and glow while they do; valves follow */
-      var hs = (ch.chanD ? '<path class="ci__chan ci__chan--d" d="' + ch.chanD + '"/>' : '') + (ch.chanO ? '<path class="ci__chan ci__chan--o" d="' + ch.chanO + '"/>' : '');
-      function cav(c, kx, ky, on) {
-        var tr = 'translate(' + c.c[0] + ',' + c.c[1] + ') scale(' + n2(kx) + ',' + n2(ky) + ') translate(' + (-c.c[0]) + ',' + (-c.c[1]) + ')';
-        return '<path d="' + c.d + '" fill="url(#' + u + c.col + ')" transform="' + tr + '" class="ci__cav' + (on > .03 ? ' is-on' : '') + '" stroke-opacity="' + n2(Math.min(1, .3 + on)) + '"/>';
+      var s = at(t), A = CI[animal], ch = CI_CH[animal], B = CI_BEAT[animal], u = g.u;
+      /* the heart: the muscle and the chambers contract together (CI_BEAT), and a contracting chamber glows; the
+         openings keep their outer ends and stretch to their chambers; the valves stay where they are */
+      var hs = '';
+      CI_MUS[animal].forEach(function (m) {
+        var d = !m.ch ? m.d : m.ch === 'heart' ? warpD(m.d, function (x, y) { return B.heart(x, y, s.atr, s.ven); })
+          : warpD(m.d, function (x, y) { return B[m.ch].out(x, y, ciAmount(m.ch, s)); });
+        hs += '<path class="ci__mus" fill="url(#' + u + 'mus)" d="' + d + '"/>';
+      });
+      function carry(x, y) { return ciCarry(animal, x, y, s); }
+      hs += (ch.chanD ? '<path class="ci__chan ci__chan--d" d="' + warpD(ch.chanD, carry) + '"/>' : '') + (ch.chanO ? '<path class="ci__chan ci__chan--o" d="' + warpD(ch.chanO, carry) + '"/>' : '');
+      function cav(c) {
+        var on = ciAmount(c.k, s), d = on ? warpD(c.d, function (x, y) { return B[c.k].cav(x, y, on); }) : c.d;
+        return '<path d="' + d + '" fill="url(#' + u + c.col + ')" class="ci__cav' + (on > .03 ? ' is-on' : '') + '" stroke-opacity="' + n2(Math.min(1, .3 + on)) + '"/>';
       }
-      ch.atria.forEach(function (c) { hs += cav(c, 1 - .14 * s.atr, 1 - .18 * s.atr, s.atr); });
-      ch.vents.forEach(function (c) { hs += cav(c, 1 - .16 * s.ven, 1 - .1 * s.ven, s.ven); });
+      ch.atria.forEach(function (c) { hs += cav(c); });
+      ch.vents.forEach(function (c) { hs += cav(c); });
       if (ch.front) hs += ciTube(ch.front, C.deo, C.deoHi, 13);
       if (ch.frontO) hs += ciTube(ch.frontO, C.oxy, C.oxyHi, 13);
       var vd = ''; ch.av.forEach(function (v) { vd += ciValve(v, s.av); }); ch.sl.forEach(function (v) { vd += ciValve(v, s.sl); });
@@ -829,11 +911,12 @@
       g.heart.innerHTML = hs;
       /* the cell, with a ring so the eye can follow it */
       var pt = s.st.tr.at(s.k * s.st.tr.total), dr = s.st.tr.dir(s.k * s.st.tr.total), ang = Math.atan2(dr[1], dr[0]) * 180 / Math.PI;
+      pt = ciCarry(animal, pt[0], pt[1], s);          /* inside a contracting chamber, the cell moves with it */
       var col = mix(C.deoHi, C.oxyHi, s.O), edge = mix('#1B3570', '#7A1E21', s.O);
       g.cell.innerHTML = '<circle cx="' + n2(pt[0]) + '" cy="' + n2(pt[1]) + '" r="15" class="ci__halo"/>' +
         '<g transform="translate(' + n2(pt[0]) + ',' + n2(pt[1]) + ') rotate(' + n2(ang) + ')"><ellipse rx="9.5" ry="6" fill="' + col + '" stroke="' + edge + '" stroke-width="1.6"/>' +
         '<ellipse rx="4.6" ry="2.4" fill="' + edge + '" opacity=".28"/></g>';
-      g.lab.innerHTML = L.labels({ items: A.labels, left: 176, right: 544, font: fontPx, width: 156, top: 8, bottom: CI_H - 8, gap: 6 });
+      g.lab.innerHTML = L.labels({ items: ciLabelsAt(A.labels, s), left: 176, right: 544, font: fontPx, width: 156, top: 8, bottom: CI_H - 8, gap: 6 });
       /* the read-outs */
       gauge.style.width = (s.P * 100).toFixed(1) + '%';
       gmark.style.left = (s.P * 100).toFixed(1) + '%';

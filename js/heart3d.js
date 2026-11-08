@@ -1229,8 +1229,12 @@ void main() {
   let anim = null;
   const REST = { tri: 1, mit: 1, pul: 0, aor: 0 };
   function setValvesNow(vs) { Object.keys(VALVES).forEach((k) => { const o = vs[k] ? 1 : 0; if (VALVES[k].open !== o) { VALVES[k].open = o; VALVES[k].dirty = true; } }); }
+  /* how far each chamber squeezes: 0.25 for the atria and 0.23 for the ventricles at their strongest (Daniel, 8 Nov 2026:
+     "when the ventricle or the atria contract, you see them contracting"; at 0.15 and 0.14 the glass walls hardly
+     moved). The field stays smooth and one-to-one at these amounts (its stretch along a line from a centre,
+     1 − w·e^(−kr²)(1 − 2kr²), is above zero for any w below 1), so walls, valves and blood still move together. */
   function setContraction(a, v) {
-    beatC[0].w = 0.15 * a; beatC[1].w = 0.15 * a; beatC[2].w = 0.14 * v; beatC[3].w = 0.14 * v;
+    beatC[0].w = 0.25 * a; beatC[1].w = 0.25 * a; beatC[2].w = 0.23 * v; beatC[3].w = 0.23 * v;
     Object.values(VALVES).forEach((vv) => { vv.dirty = true; });
   }
   function applyAt(t) {

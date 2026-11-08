@@ -359,15 +359,33 @@
       wires[i].pulse = el; wires[i].len = len || 100;
       el.setAttribute('stroke-dasharray', '26 ' + n1(wires[i].len * 2 + 60));
     });
-    var pins = Array.prototype.map.call(svg.querySelectorAll('.es__pin'), function (el, i) { return { el: el, on: PINS[i].on, key: svg.querySelector('.es__key[data-n="' + PINS[i].n + '"]'), hkey: hkey.querySelector('[data-n="' + PINS[i].n + '"]') }; });
+    var pins = Array.prototype.map.call(svg.querySelectorAll('.es__pin'), function (el, i) { return { el: el, on: PINS[i].on, at: PINS[i].at, line: el.querySelector('line'), key: svg.querySelector('.es__key[data-n="' + PINS[i].n + '"]'), hkey: hkey.querySelector('[data-n="' + PINS[i].n + '"]') }; });
     var hn = art ? art.nodes(svg.querySelector('.es__heart') || svg) : {};
     /* the muscle, as soft cells: each fades out at its edge, so together they show the signal as a wave
        sweeping through it (a blur filter did the same at a third of the frame rate) */
     var cells = (global.ECG_CELLS || []).map(function (c) {
       var d = sv('circle', { cx: c[0], cy: c[1], r: 12.5, 'class': 'es__cell' });
       g.cells.appendChild(d);
-      return { el: d, t: c[3], r: c[4], s: -1 };
+      return { el: d, x: c[0], y: c[1], t: c[3], r: c[4], s: -1 };
     });
+
+    /* what is drawn on the walls, carried by the beat */
+    var condBase = Array.prototype.map.call(svg.querySelectorAll('.es__c'), function (el, i) { return { a: el, b: svg.querySelectorAll('.es__p')[i], d: WIRES[i].d }; });
+    var beatMoved = false;
+    function carryOverlays(bs) {
+      function at(x, y) { return art.warpPoint(x, y, bs); }
+      function nr(v) { return Math.round(v * 10) / 10; }
+      cells.forEach(function (c) { var q = at(c.x, c.y); c.el.setAttribute('cx', nr(q[0])); c.el.setAttribute('cy', nr(q[1])); });
+      condBase.forEach(function (w) {
+        var nums = w.d.match(/-?\d+(?:\.\d+)?/g), out = [], k = 0;
+        for (var i = 0; i + 1 < nums.length; i += 2) { var q = at(+nums[i], +nums[i + 1]); out.push(nr(q[0]), nr(q[1])); }
+        var d = w.d.replace(/-?\d+(?:\.\d+)?/g, function () { return String(out[k++]); });
+        w.a.setAttribute('d', d); w.b.setAttribute('d', d);
+      });
+      var qs = at(COND.sa[0], COND.sa[1]), qa = at(COND.av[0], COND.av[1]);
+      g.sa.setAttribute('cx', nr(qs[0])); g.sa.setAttribute('cy', nr(qs[1])); g.av.setAttribute('cx', nr(qa[0])); g.av.setAttribute('cy', nr(qa[1]));
+      pins.forEach(function (p) { var q = at(p.at[0], p.at[1]); p.line.setAttribute('x1', nr(q[0])); p.line.setAttribute('y1', nr(q[1])); });
+    }
 
     var leadId = 'II', freeAng = 60, ms = 0, sp = null, dragging = false;
     function curAng() { if (leadId === 'free') return freeAng; for (var i = 0; i < LEADS.length; i++) if (LEADS[i].id === leadId) return LEADS[i].ang; return 60; }
@@ -431,10 +449,14 @@
       g.av.classList.toggle('is-on', ms >= 40 && ms < 152);
       g.av.style.opacity = ms >= 40 && ms < 152 ? n1(0.65 + 0.35 * Math.sin((ms - 40) / 9)) : '';
       pins.forEach(function (p) { var on = ms >= p.on[0] && ms < p.on[1]; p.el.classList.toggle('is-on', on); if (p.key) p.key.classList.toggle('is-on', on); if (p.hkey) p.hkey.classList.toggle('is-on', on); });
-      /* the heart contracting behind it all */
+      /* the heart contracting behind it all, as much as in One beat, one step at a time (Daniel, 8 Nov 2026: "when the
+         ventricle or the atria contract, you see them contracting"; it was held at 0.4 of the squeeze so that what is drawn
+         on the walls stayed on them). The muscle cells, the conduction paths, the two nodes and the pins' points now move
+         with the walls (HeartArt.warpPoint, as One beat moves its blood cells). */
       if (art && hn.outer) {
-        /* at 0.4 of the full squeeze: the muscle cells and the conduction paths drawn over the walls stay on them */
-        art.update(hn, art.paths(beatState(ms), { k: .4 }));
+        var bs = beatState(ms);
+        art.update(hn, art.paths(bs));
+        if (bs.atria || bs.vent || beatMoved) { carryOverlays(bs); beatMoved = !!(bs.atria || bs.vent); }
       }
       /* the direction the signal is moving now */
       var v = vecAt(ms), mag = Math.hypot(v[0], v[1]), proj = volt(ms, ang), vs = '';
