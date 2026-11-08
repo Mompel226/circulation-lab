@@ -492,39 +492,41 @@
   /* ================================================================
      THE STEPS
      ================================================================ */
+  /* every step's words IGCSE: each tag names its 0610 statement; what goes further is the step's own closed
+     "Beyond the syllabus" line (beyond), not a level part */
   var STEP_DEF = [
     { t: T.s1, h: 'The aorta', tag: 'C 9.3.3',
-      p: 'The left ventricle pumps oxygenated blood into the aorta. Each organ of the body receives its own branch of the aorta.',
+      p: [['ig', 'The left ventricle pumps oxygenated blood into the aorta. Each organ of the body receives its own branch of the aorta.']],
       beyond: 'The arteries to the intestine are the mesenteric arteries. They reach it through the mesentery, a thin sheet of membrane that holds the small intestine in place. The hepatic artery branches from a short artery, the coeliac artery, which also supplies the stomach and the spleen.' },
     { t: T.s2, h: 'In a villus: oxygen', tag: 'C 9.3.2',
-      p: 'Blood flows through the capillaries of each villus. Oxygen diffuses from the blood into the respiring cells of the villus, and carbon dioxide diffuses from the cells into the blood. The blood becomes deoxygenated.',
+      p: [['ig', 'Blood flows through the capillaries of each villus. Oxygen diffuses from the blood into the respiring cells of the villus, and carbon dioxide diffuses from the cells into the blood. The blood becomes deoxygenated.']],
       beyond: 'Villus cells absorb some of the glucose and amino acids by active transport, which uses energy from respiration. So they respire fast: they use a lot of oxygen and make a lot of carbon dioxide.' },
     { t: T.s3, h: 'In a villus: absorption', tag: 'S 7.5.5',
-      p: 'Glucose and amino acids are absorbed into the blood in the capillaries. Most fat is absorbed into the lacteal instead.',
-      later: 'Hours after a meal, the food has already been digested and absorbed. Few glucose and amino acid molecules are left to absorb.',
+      p: [['ig', 'Glucose and amino acids are absorbed into the blood in the capillaries. Most fat is absorbed into the lacteal instead.']],
+      later: [['ig', 'Hours after a meal, the food has already been digested and absorbed. Few glucose and amino acid molecules are left to absorb.']],
       beyond: 'Inside the epithelial cells, fatty acids are rebuilt into fat, in tiny droplets. The droplets enter the lacteal and travel in the lymph. The lymph joins the blood in a large vein at the base of the neck, so this fat does not pass through the liver first. Glycerol dissolves in water and enters the capillaries.' },
     { t: T.s4, h: 'The hepatic portal vein', tag: 'S 9.3.6',
-      p: 'Veins from the intestine join to form the hepatic portal vein. After a meal, its deoxygenated blood is very rich in glucose and amino acids.',
-      later: 'Veins from the intestine join to form the hepatic portal vein. Hours after a meal, its deoxygenated blood carries much less glucose and fewer amino acids.',
+      p: [['ig', 'Veins from the intestine join to form the hepatic portal vein. After a meal, its deoxygenated blood is very rich in glucose and amino acids.']],
+      later: [['ig', 'Veins from the intestine join to form the hepatic portal vein. Hours after a meal, its deoxygenated blood carries much less glucose and fewer amino acids.']],
       beyond: 'The veins from the intestine are the mesenteric veins. The hepatic portal vein also collects blood from the stomach, the large intestine, the pancreas and the spleen.' },
     { t: T.s5, h: 'In the liver: glucose', tag: 'S 9.3.6 · S 14.4.4',
-      p: 'The hepatic artery also brings oxygenated blood. Liver cells use the oxygen in respiration, and carbon dioxide diffuses into the blood. After a meal, liver cells convert excess glucose to glycogen and store it.',
-      later: 'The hepatic artery also brings oxygenated blood. Liver cells use the oxygen in respiration, and carbon dioxide diffuses into the blood. Between meals, liver cells convert glycogen to glucose and release it into the blood.',
+      p: [['ig', 'The hepatic artery also brings oxygenated blood. Liver cells use the oxygen in respiration, and carbon dioxide diffuses into the blood. After a meal, liver cells convert excess glucose to glycogen and store it.']],
+      later: [['ig', 'The hepatic artery also brings oxygenated blood. Liver cells use the oxygen in respiration, and carbon dioxide diffuses into the blood. Between meals, liver cells convert glycogen to glucose and release it into the blood.']],
       beyond: 'The liver removes only part of the glucose absorbed after a meal, roughly a quarter to a third. The muscles store much of the rest as glycogen. So the glucose concentration in the hepatic vein still rises after a meal, but less than in the hepatic portal vein.' },
     { t: T.s6, h: 'In the liver: amino acids', tag: 'S 13.1.6–13.1.8',
-      p: 'Liver cells assimilate some amino acids by converting them to proteins, such as fibrinogen. Excess amino acids cannot be stored, so liver cells deaminate them: they remove the nitrogen-containing part, which forms urea.',
+      p: [['ig', 'Liver cells assimilate some amino acids by converting them to proteins, such as fibrinogen. Excess amino acids cannot be stored, so liver cells deaminate them: they remove the nitrogen-containing part, which forms urea.']],
       beyond: 'Deamination removes the nitrogen-containing part of the amino acid as ammonia, which is toxic. Liver cells convert the ammonia to urea. The rest of the amino acid is respired, or converted to glucose or fat.' },
     { t: T.s7, h: 'Back to the heart', tag: 'S 9.3.6 · C 9.3.3',
-      p: 'The hepatic veins carry the blood into the vena cava, which returns it to the right atrium. The right ventricle pumps it into the pulmonary artery.',
+      p: [['ig', 'The hepatic veins carry the blood into the vena cava, which returns it to the right atrium. The right ventricle pumps it into the pulmonary artery.']],
       beyond: 'There are two venae cavae. Blood from the liver, the kidneys and the legs returns in the inferior vena cava.' },
     { t: T.s8, h: 'Through the lungs', tag: 'C 9.3.3 · C 13.1.1',
-      p: 'In the lungs, oxygen diffuses into the blood, and carbon dioxide diffuses out of the blood and is excreted. The pulmonary veins carry the oxygenated blood to the left atrium.',
+      p: [['ig', 'In the lungs, oxygen diffuses into the blood, and carbon dioxide diffuses out of the blood and is excreted. The pulmonary veins carry the oxygenated blood to the left atrium.']],
       beyond: 'Each lung receives its own pulmonary artery. Usually four pulmonary veins, two from each lung, return the blood to the left atrium.' },
     { t: T.s9, h: 'Urea to the kidneys', tag: 'C 9.3.3 · C 13.1.2',
-      p: 'The aorta and the renal arteries bring urea to the kidneys. The kidneys excrete it in urine, so the renal veins carry less urea.',
+      p: [['ig', 'The aorta and the renal arteries bring urea to the kidneys. The kidneys excrete it in urine, so the renal veins carry less urea.']],
       beyond: 'About a fifth of the blood that the heart pumps to the body flows through the kidneys.' },
     { t: T.s10, h: 'Glucose to the respiring cells', tag: 'C 9.3.2 · C 12.2.2',
-      p: 'In the capillaries of every organ, glucose and oxygen diffuse into the respiring cells. The cells use them in aerobic respiration to release energy, and carbon dioxide diffuses into the blood.',
+      p: [['ig', 'In the capillaries of every organ, glucose and oxygen diffuse into the respiring cells. The cells use them in aerobic respiration to release energy, and carbon dioxide diffuses into the blood.']],
       beyond: 'Muscle cells store glycogen too, but they use it themselves. The liver is the organ that releases glucose from glycogen into the blood.' }
   ];
 
@@ -1664,9 +1666,9 @@
     cap.setAttribute('aria-hidden', 'true');          /* the step is already read out by the player */
     function paintCap(k) {
       if (k == null) k = capK; capK = k; if (k < 0) return;
-      var d = STEP_DEF[k], txt = STEPS[k].p.replace(/_/g, '');
+      var d = STEP_DEF[k];
       cap.innerHTML = '<span class="bf__capn">' + (k + 1) + '</span><div class="bf__capt"><b>' + esc(d.h) + '</b> <span class="sp__tag">' + esc(d.tag) + '</span>' +
-        '<span class="bf__capp">' + esc(txt) + '</span>' +
+        '<span class="bf__capp">' + L.stepWords(STEPS[k].p) + '</span>' +
         (d.beyond ? '<details class="bf__beyond bf__beyond--cap"><summary>Beyond the syllabus</summary><p>' + esc(d.beyond) + '</p></details>' : '') + '</div>';
     }
 
@@ -1703,7 +1705,7 @@
       STEP_DEF.forEach(function (d, i) {
         if (!d.later) return;
         STEPS[i].p = meal ? d.p : d.later;
-        var pe = sp.list.children[i].querySelector('.sp__p'); if (pe) pe.innerHTML = L.mk(STEPS[i].p);
+        var pe = sp.list.children[i].querySelector('.sp__p'); if (pe) pe.innerHTML = L.stepWords(STEPS[i].p);
       });
       paintCap();
     }
@@ -1745,7 +1747,7 @@
     pack.appendChild(packT); pack.appendChild(fig); pack.appendChild(cap); pack.appendChild(read);
     /* the key's small pictures use the drawing's own shapes, from its defs */
     left.appendChild(pack); left.appendChild(key);
-    wrapEl.appendChild(left); wrapEl.appendChild(sp.list);
+    wrapEl.appendChild(left); wrapEl.appendChild(sp.side);      /* the steps, with the key to their levels above them */
     box.appendChild(sp.bar);
     box.appendChild(wrapEl);
     box.appendChild(h('p', 'widget__note bf__note', 'Red is oxygenated blood and blue is deoxygenated blood, as on the body; teal is the deoxygenated blood from the gut to the liver. Only the substances each step follows are drawn; blood always carries some glucose, amino acids, urea and carbon dioxide. Molecules are drawn far larger than they are, and a protein as four amino acids: fibrinogen has nearly 3,000. The kidneys are drawn above the small intestine so that both can be seen.'));
@@ -1786,10 +1788,10 @@
          "make the different stages smaller, and more compacted ... But you see the text on the right") */
       sp.compact(inColumn);
       if (inColumn) {
-        if (sp.list.nextSibling !== cap) { wrapEl.insertBefore(sp.list, left); wrapEl.insertBefore(cap, left); }
+        if (sp.side.nextSibling !== cap) { wrapEl.insertBefore(sp.side, left); wrapEl.insertBefore(cap, left); }
       } else {
         if (cap.parentNode !== pack) pack.insertBefore(cap, fig.nextSibling);
-        if (sp.list.parentNode !== wrapEl || sp.list.previousSibling !== left) wrapEl.appendChild(sp.list);
+        if (sp.side.parentNode !== wrapEl || sp.side.previousSibling !== left) wrapEl.appendChild(sp.side);
       }
       cap.classList.toggle('bf__cap--panel', inColumn);
     }

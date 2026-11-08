@@ -31,13 +31,15 @@
   function lerp(a, b, k) { return a + (b - a) * k; }
   function rnd(i, s) { var x = Math.sin(i * 127.1 + s * 311.7) * 43758.5453; return x - Math.floor(x); }
 
+  /* every step IGCSE: 0610 C 9.2.4 and S 9.2.11 (physical activity and the heart rate), C 12.2 (aerobic respiration),
+     S 12.3 (lactic acid and the oxygen debt); the two Supplement steps keep their Supplement tag */
   var STEPS = [
-    { t: 0,  h: 'At rest', p: 'Your leg muscles are relaxed. Blood flows slowly through the capillaries between the muscle cells. Your heart beats about 70 times a minute.' },
-    { t: 6,  h: 'The muscles contract more', p: 'You start to exercise. The muscle cells contract, again and again, to move your legs. Contracting needs energy.' },
-    { t: 12, h: 'They respire faster', p: 'To release more energy, the muscle cells respire faster, in their mitochondria. They absorb more oxygen and glucose from the blood, and release more carbon dioxide into it. All three move by diffusion.' },
-    { t: 19, h: 'The heart beats faster', p: 'Your heart beats faster, and pumps more blood with each beat. So more blood flows through the muscles every minute: oxygen and glucose are delivered faster, and carbon dioxide is removed faster.' },
-    { t: 27, h: 'Hard exercise: not enough oxygen', tag: 'Supplement', p: 'In hard exercise the blood cannot bring oxygen fast enough. Some of the muscle cells respire anaerobically as well. This releases less energy, and it makes lactic acid, which passes into the blood.' },
-    { t: 34, h: 'After exercise: the oxygen debt', tag: 'Supplement', p: 'You stop, but your heart rate stays high for a while. The fast blood flow carries the lactic acid to the liver, where it is broken down by aerobic respiration. This is repaying the oxygen debt. Then the heart rate slowly returns to the resting rate.' }
+    { t: 0,  h: 'At rest', p: [['ig', 'Your leg muscles are relaxed. Blood flows slowly through the capillaries between the muscle cells. Your heart beats about 70 times a minute.']] },
+    { t: 6,  h: 'The muscles contract more', p: [['ig', 'You start to exercise. The muscle cells contract, again and again, to move your legs. Contracting needs energy.']] },
+    { t: 12, h: 'They respire faster', p: [['ig', 'To release more energy, the muscle cells respire faster, in their mitochondria. They absorb more oxygen and glucose from the blood, and release more carbon dioxide into it. All three move by diffusion.']] },
+    { t: 19, h: 'The heart beats faster', p: [['ig', 'Your heart beats faster, and pumps more blood with each beat. So more blood flows through the muscles every minute: oxygen and glucose are delivered faster, and carbon dioxide is removed faster.']] },
+    { t: 27, h: 'Hard exercise: not enough oxygen', tag: 'Supplement', p: [['ig', 'In hard exercise the blood cannot bring oxygen fast enough. Some of the muscle cells respire anaerobically as well. This releases less energy, and it makes lactic acid, which passes into the blood.']] },
+    { t: 34, h: 'After exercise: the oxygen debt', tag: 'Supplement', p: [['ig', 'You stop, but your heart rate stays high for a while. The fast blood flow carries the lactic acid to the liver, where it is broken down by aerobic respiration. This is repaying the oxygen debt. Then the heart rate slowly returns to the resting rate.']] }
   ];
   var END = 42;
 
@@ -340,7 +342,7 @@
     var pack = h('div', 'mx__pack');
     var packT = h('p', 'stg__title', esc(spec.title || 'Why your heart rate rises')); packT.hidden = true;
     pack.appendChild(packT); pack.appendChild(fig);
-    wrap.appendChild(pack); wrap.appendChild(sp.list);
+    wrap.appendChild(pack); wrap.appendChild(sp.side);      /* the steps, with the key to their levels above them */
     box.appendChild(wrap);
     box.appendChild(h('p', 'widget__note', 'A drawing, not a photograph. A muscle cell is about ten times as wide as a capillary and millimetres long, so only the part of each cell next to the capillary is shown. The molecules are shown hugely enlarged, and far fewer than the real billions. Blood is drawn red when it is oxygenated and blue when it is deoxygenated, as on every diagram; real blood is never blue. The story is slowed down: a real heart rate rises within a minute of starting to exercise.'));
 
@@ -366,7 +368,7 @@
     }
     var ro = global.ResizeObserver ? new ResizeObserver(function () { if (!box.isConnected) { ro.disconnect(); return; } fit(); }) : null;
     if (ro) { ro.observe(wrap); ro.observe(fig); }
-    var stg = L.stage ? L.stage({ box: box, spec: spec, pack: pack, home: wrap, before: function () { return sp.list; }, watch: function () { return box; },
+    var stg = L.stage ? L.stage({ box: box, spec: spec, pack: pack, home: wrap, before: function () { return sp.side; }, watch: function () { return box; },
       onPlace: function (inColumn) { staged = inColumn; packT.hidden = !inColumn; box.classList.toggle('mx--staged', inColumn); sp.compact(inColumn); fit(); } }) : null;
     box.__onMove = function () { if (stg) stg.mount(); };
     box.__onReset = function () { sp.stop(); if (ro) ro.disconnect(); if (stg) stg.detach(); };

@@ -341,8 +341,9 @@
     else if (tab !== 'do' || !sims.length) {
       dropSim();
       if (btn) btn.hidden = true;
-      /* A widget marked onStage keeps its drawing in the column and shows it only while the
-         reader is level with it. Start from the body and let the widget decide; the heavy
+      /* A widget marked onStage keeps its drawing in the column and shows it only while its card
+         is open (CircLearn.stage, since 8 Nov 2026; before, while the reader was level with it).
+         Start from the body and let the widget decide; the heavy
          showSim would rebuild the whole station, which the scroll must never do.
 
          A BENCH station must not take showSim either, and for a sharper reason: showSim(false)
@@ -566,10 +567,28 @@
         });
       }
       li.setAttribute('data-i', i);
-      if (offK) offAt[offK].push({ k: typeof b === 'object' && b.near != null ? b.near + 0.5 : i, li: li });
-      else list.appendChild(li);
-      /* the thing to press, drag or count sits under the sentence it belongs to */
-      widgets.filter(function (w) { return w.after === i; }).forEach(function (w) {
+      /* A sentence with a heading is a card: its heading always shows, its words open one card at a time
+         (Daniel, 8 Nov 2026, after the Inheritance Lab: "I would like to apply this system … just to standardize
+         things"; memory explore-dont-scroll). Opening a card shows its part on the body; a part pressed on the body
+         opens its card (openGroup). The Cells Lab's code. */
+      if (typeof b === 'object' && b.head) makeCard(li, b.head);
+      /* a film stands in a card of its own, before or after its sentence (as in the Inheritance, Immunity and Cells
+         Labs); beside a sentence in the card below What you need to know, it goes into that card with it (Why an
+         ECG has peaks and troughs: its sentence is beyond the syllabus) */
+      var fb = filmsAt(widgets, 'before', i), fa = filmsAt(widgets, 'after', i);
+      if (offK) {
+        var kk = typeof b === 'object' && b.near != null ? b.near + 0.5 : i;
+        fb.forEach(function (g, j) { offAt[offK].push({ k: kk - .01 * (fb.length - j), li: filmCard(g) }); });
+        offAt[offK].push({ k: kk, li: li });
+        fa.forEach(function (g, j) { offAt[offK].push({ k: kk + .01 * (j + 1), li: filmCard(g) }); });
+      } else {
+        fb.forEach(function (g) { list.appendChild(filmCard(g)); });
+        list.appendChild(li);
+        fa.forEach(function (g) { list.appendChild(filmCard(g)); });
+      }
+      /* the thing to press, drag or count sits under the sentence it belongs to: inside its card, so it shows
+         while the card is open, and only then */
+      widgets.filter(function (w) { return !w.film && w.after === i; }).forEach(function (w) {
         var el = window.Learn.widget(w, WIDGET_CTX);
         if (el && w.anchor && el.setAttribute) el.setAttribute('data-anchor', w.anchor);
         /* A tall, narrow diagram set under the sentence leaves a column of empty paper beside it.
@@ -577,11 +596,12 @@
            margin. Everything else still sits under the sentence it belongs to. */
         /* a tall picture, or a small one, stands beside its sentence (the CSS floats it), so the words wrap
            round it instead of leaving white paper beside it (Daniel, 25 Sep) */
-        if (el && el.classList && (el.classList.contains('photo--portrait') || el.classList.contains('photo--small'))) li.insertBefore(el, li.firstChild);
-        else li.appendChild(el);
+        var into = li.__body || li;
+        if (el && el.classList && (el.classList.contains('photo--portrait') || el.classList.contains('photo--small'))) into.insertBefore(el, into.firstChild);
+        else into.appendChild(el);
       });
     });
-    widgets.filter(function (w) { return w.after == null; }).forEach(function (w) {
+    widgets.filter(function (w) { return w.after == null && w.before == null; }).forEach(function (w) {
       var el = window.Learn.widget(w, WIDGET_CTX);
       if (el && w.anchor && el.setAttribute) el.setAttribute('data-anchor', w.anchor);
       card.appendChild(el);
@@ -939,7 +959,10 @@
     function has(o) { return !!(o && typeof o === 'object' && o.group && [].concat(o.group).indexOf(gid) >= 0); }
     return (st.learn.exam || []).some(function (b) { return has(b) || (b && b.list || []).some(has); });
   }
-  function openGroup(gid) {
+  /* o.stay: the press came from a control on the picture. On a phone the picture sits above the words, so the card
+     opens where it is and the page does not scroll away from the picture (the Cells Lab's). */
+  function openGroup(gid, o) {
+    var stay = !!(o && o.stay) && !!(window.matchMedia && window.matchMedia('(max-width: 1000px)').matches);
     var here = current, id = OWNER[gid];
     var dest = explains(here, gid) ? here : (id && explains(id, gid) ? id : null);
     if (dest && (dest !== here || tab !== 'learn')) {
@@ -955,12 +978,105 @@
     if (window.Plate) window.Plate.focus(gid);
     history.replaceState(null, '', '#' + gid);
     var target = dest ? document.querySelector('#panelInner [data-group~="' + gid + '"]') : null;
-    if (target) {
+    /* the part's sentence is in a card, or is one of the numbered facts inside a card: that card opens, and the body
+       shows the part for as long as it is open (closing it gives the station's picture back: makeCard) */
+    var card = target ? (target.__open ? target : target.closest('.xcard')) : null;
+    if (card && card.__open) card.__open(true, true);
+    if (target && !stay) {
       landOn(target, true);
       target.classList.add('flash');
       setTimeout(function () { target.classList.remove('flash'); }, 2800);
     }
-    if (window.CircLearn && CircLearn.holdPlate) CircLearn.holdPlate(target, function () { if (window.Plate && window.Plate.unfocus) window.Plate.unfocus(); });
+    /* a sentence with no card: the body shows the part until the reader scrolls on from it (CircLearn.holdPlate) */
+    if (!card && window.CircLearn && CircLearn.holdPlate) CircLearn.holdPlate(target, function () { if (window.Plate && window.Plate.unfocus) window.Plate.unfocus(); });
+  }
+
+  /* ---------- a film (a step animation) in a card of its own ----------
+     Daniel, 8 Nov 2026, Inheritance Lab: "put the animation as a different kind of tab that has a different background";
+     "wherever you have a heavy animation … on its own kind of collapsible menu, and then anything else that they need to
+     know … is just text"; then for every lab: "I would like to apply this system … just to standardize things". The
+     card's heading is the film's own title, with its number of steps; it opens and closes like a sentence's card, one open
+     at a time. Spec: { type, film: true, after: i } (or before: i). Films that share a `card` name go into ONE card, in
+     the master's order (none in this lab yet). The Cells Lab's code; a film on its own player (journey, heart3d) gives
+     its steps as box.__filmSteps (a number, or a word such as '3D model'). */
+  function filmsAt(widgets, side, i) {
+    var out = [], named = {};
+    widgets.filter(function (w) { return w.film && w[side] === i; }).forEach(function (w) {
+      if (!w.card) { out.push([w]); return; }
+      if (!named[w.card]) { named[w.card] = []; out.push(named[w.card]); }
+      named[w.card].push(w);
+    });
+    return out;
+  }
+  function filmCard(ws) {
+    var li = document.createElement('li'), title = '';
+    ws.forEach(function (w) {
+      var el = window.Learn.widget(w, WIDGET_CTX);
+      if (!el) return;
+      if (w.anchor && el.setAttribute) el.setAttribute('data-anchor', w.anchor);
+      li.appendChild(el);
+      if (!title && !el.hidden) {
+        /* the heading's own words, without its buttons (Reset) or its "Press play" */
+        var hd = el.querySelector ? el.querySelector('.widget__h') : null;
+        if (hd) { var c = hd.cloneNode(true); Array.prototype.forEach.call(c.querySelectorAll('.widget__try, button'), function (x) { x.remove(); }); title = c.textContent.trim(); }
+      }
+    });
+    makeCard(li, title || 'Animation');
+    li.classList.add('xcard--film');
+    var t = li.querySelector('.xcard__t');
+    t.insertAdjacentHTML('beforebegin', '<span class="xcard__play" aria-hidden="true">\u25B6</span>');
+    var kind = document.createElement('span'); kind.className = 'xcard__kind';
+    t.appendChild(kind);
+    /* "Animation · N steps", N the steps of the animation shown; a widget that changes its steps (the fish and the
+       mammal of Follow one red blood cell) says so with a 'film:steps' event, and the heading follows */
+    function count() {
+      var n = 0, other = null, twins = 0;
+      Array.prototype.forEach.call(li.__body.children, function (el) {
+        if (!el.querySelector) return;
+        var steps = el.querySelector('.sp__steps');
+        if (el.hidden) { if (steps || el.__filmSteps) twins++; return; }
+        if (n || other) return;
+        if (steps) n = steps.children.length;
+        else if (typeof el.__filmSteps === 'number') n = el.__filmSteps;
+        else if (el.__filmSteps) other = el.__filmSteps;
+      });
+      kind.textContent = 'Animation' + (n ? ' \u00b7 ' + n + ' steps' : other ? ' \u00b7 ' + other : '') + (twins ? ' \u00b7 IGCSE or IB version' : '');
+    }
+    count();
+    li.addEventListener('film:steps', count);
+    return li;
+  }
+
+  /* ---------- a sentence as a card ----------
+     The heading is a button; the words under it open on a press, one card at a time in the station. Opening one shows
+     its part on the body (its `group`); closing it gives the station's picture back (Plate.unfocus: in this lab
+     Plate.focus(null) does nothing). The Cells Lab's makeCard. */
+  function makeCard(li, head) {
+    var body = document.createElement('div');
+    body.className = 'xcard__b';
+    while (li.firstChild) body.appendChild(li.firstChild);
+    var btn = document.createElement('button');
+    btn.type = 'button'; btn.className = 'xcard__h'; btn.setAttribute('aria-expanded', 'false');
+    btn.innerHTML = '<span class="xcard__t">' + esc(head) + '</span><span class="xcard__a" aria-hidden="true"></span>';
+    li.classList.add('xcard');
+    li.appendChild(btn); li.appendChild(body);
+    body.hidden = true;
+    li.__body = body;
+    li.__open = function (on, fromPicture) {
+      if (on) Array.prototype.forEach.call(document.querySelectorAll('#panelInner .xcard.is-open'), function (o) { if (o !== li && o.__open) o.__open(false, true); });
+      li.classList.toggle('is-open', !!on);
+      body.hidden = !on;
+      btn.setAttribute('aria-expanded', on ? 'true' : 'false');
+      if (fromPicture || !window.Plate) return;
+      var g0 = on ? (li.getAttribute('data-group') || '').split(' ')[0] : '';
+      if (g0) window.Plate.focus(g0);
+      else if (window.Plate.unfocus) window.Plate.unfocus();
+    };
+    btn.addEventListener('click', function () {
+      var on = !li.classList.contains('is-open');
+      li.__open(on);
+      if (on) showWhole(li, true);
+    });
   }
 
   /* Plurals English refuses to make regularly, and which this lab uses constantly. */

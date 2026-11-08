@@ -110,26 +110,32 @@
   ];
   function leadOf(id) { for (var i = 0; i < LEADS.length; i++) if (LEADS[i].id === id) return LEADS[i]; return null; }
 
-  /* ---------- the steps: ms of the beat each one covers, and its words ---------- */
+  /* ---------- the steps: ms of the beat each one covers, and its words ----------
+     Levels (8 Nov 2026): the 0610 syllabus names the ECG only as a way to monitor the heart (C 9.2.3), not its waves.
+     IB 2025 asks for the SA node: B3.2.15 "pacemaker" and B3.2.16 "the sequence of events … that follow the initiation
+     of the heartbeat by the sinoatrial node" (both Additional Higher Level: ibhl). The guide names no ECG, AV node,
+     bundle of His or Purkinje fibres: those lines are beyond both. */
   var STEPS = [
     { ms: [0, 100], wave: 'P', h: 'The SA node fires',
-      p: 'The beat starts in the _sinoatrial node_ (SA node), the heart’s pacemaker, in the wall of the right atrium. A wave of electrical activity spreads from it across both atria, and they contract. It moves down and to the heart’s left side (on your right in the drawing), towards the ventricles. This wave draws the P wave.' },
+      p: [['ibhl', 'The beat starts in the _sinoatrial node_ (SA node), the heart’s pacemaker, in the wall of the right atrium. A wave of electrical activity spreads from it across both atria, and they contract.'],
+          ['bey', 'It moves down and to the heart’s left side (on your right in the drawing), towards the ventricles. This wave draws the P wave.']] },
     { ms: [100, 150], wave: null, h: 'The AV node holds the signal',
-      p: 'The signal reaches the _atrioventricular node_ (AV node), between the atria and the ventricles, and is held there for about 0.1 s, so the atria finish emptying before the ventricles contract. So little tissue is active that nothing is recorded: the line is flat. This is the PR segment. From the start of P to the start of the next wave is the PR interval, normally 0.12 to 0.20 s.' },
+      p: [['bey', 'The signal reaches the _atrioventricular node_ (AV node), between the atria and the ventricles, and is held there for about 0.1 s, so the atria finish emptying before the ventricles contract. So little tissue is active that nothing is recorded: the line is flat. This is the PR segment. From the start of P to the start of the next wave is the PR interval, normally 0.12 to 0.20 s.']] },
     { ms: [150, 180], wave: 'Q', h: 'The septum goes first',
-      p: 'The signal passes along the _bundle of His_ and down the septum in the two _bundle branches_. The septum is excited from its left side to its right, so this small first wave moves to the right. It moves almost at right angles to lead II, so in lead II the line hardly moves. In aVR, which looks from the right, it draws a small peak.' },
+      p: [['bey', 'The signal passes along the _bundle of His_ and down the septum in the two _bundle branches_. The septum is excited from its left side to its right, so this small first wave moves to the right. It moves almost at right angles to lead II, so in lead II the line hardly moves. In aVR, which looks from the right, it draws a small peak.']] },
     { ms: [180, 212], wave: 'R', h: 'Down to the apex and out through the walls',
-      p: 'At the apex the _Purkinje fibres_ spread the signal over the inside of both ventricles in a moment, and it moves through each wall from the inside to the outside. The left ventricle has far more muscle than the right, so the biggest wave moves down and to the heart’s left side. In lead II this draws the R wave, the tallest peak. In aVR the same wave moves away from the + electrode and draws a deep trough.' },
+      p: [['bey', 'At the apex the _Purkinje fibres_ spread the signal over the inside of both ventricles in a moment, and it moves through each wall from the inside to the outside. The left ventricle has far more muscle than the right, so the biggest wave moves down and to the heart’s left side. In lead II this draws the R wave, the tallest peak. In aVR the same wave moves away from the + electrode and draws a deep trough.']] },
     { ms: [212, 244], wave: 'S', h: 'The top of the ventricles last',
-      p: 'The last muscle to be excited is at the top of the ventricles, near the valves, so the wave now moves up. In lead II this draws the S wave, a small trough. Q, R and S together are the QRS complex, less than 0.12 s long. It is much bigger than the P wave because the ventricles have much more muscle than the atria.' },
+      p: [['bey', 'The last muscle to be excited is at the top of the ventricles, near the valves, so the wave now moves up. In lead II this draws the S wave, a small trough. Q, R and S together are the QRS complex, less than 0.12 s long. It is much bigger than the P wave because the ventricles have much more muscle than the atria.']] },
     { ms: [244, 330], wave: null, h: 'All the ventricle muscle is excited',
-      p: 'Every ventricle cell is excited, and the ventricles are contracting. No wave is moving, so the line is flat again: the ST segment. The atria have recovered by now: the small wave of their recovery was hidden inside the QRS complex.' },
+      p: [['bey', 'Every ventricle cell is excited, and the ventricles are contracting. No wave is moving, so the line is flat again: the ST segment. The atria have recovered by now: the small wave of their recovery was hidden inside the QRS complex.']] },
     { ms: [330, 500], wave: 'T', h: 'The ventricles recover',
-      p: 'The ventricle cells recover, ready for the next beat. Recovery starts at the outside of each wall and moves inwards, the opposite way to the first wave. It also works the other way round: the surface of resting muscle is positive and of excited muscle negative, so recovery has its positive side behind it, where the signal had it in front. That is why recovery moving away from the + electrode makes the line rise. The two reversals cancel, so the T wave usually points the same way as the biggest wave of the QRS complex.' },
+      p: [['bey', 'The ventricle cells recover, ready for the next beat. Recovery starts at the outside of each wall and moves inwards, the opposite way to the first wave. It also works the other way round: the surface of resting muscle is positive and of excited muscle negative, so recovery has its positive side behind it, where the signal had it in front. That is why recovery moving away from the + electrode makes the line rise. The two reversals cancel, so the T wave usually points the same way as the biggest wave of the QRS complex.']] },
     { ms: [500, 800], wave: null, h: 'Rest until the next beat',
-      p: 'The whole heart is at rest and the line is flat: the isoelectric line. Then the SA node fires again. At 75 beats a minute one beat lasts 0.8 s, so the next P wave starts here.' }
+      p: [['bey', 'The whole heart is at rest and the line is flat: the isoelectric line. Then the SA node fires again. At 75 beats a minute one beat lasts 0.8 s, so the next P wave starts here.']] }
   ];
-  function words(s) { return String(s).replace(/_/g, '').split(/\s+/).length; }
+  /* a step's words may be in level parts, [[lv, text], …]: the same words, so the same time */
+  function words(s) { if (Array.isArray(s)) s = s.map(function (q) { return q[1]; }).join(' '); return String(s).replace(/_/g, '').split(/\s+/).length; }
   /* each step plays its part of the beat in 5 to 9 seconds, then holds until Next step, so the words are
      read while it stands still (Daniel: "it takes a very long time to show the whole process"); the
      speed buttons halve or double it */
@@ -500,7 +506,7 @@
     }
     sp = L.stepper({ steps: STEPS.map(function (s) { return { t: s.t, h: s.h, p: s.p }; }), end: STEPS.end, render: render, rate: function () { return speed; }, motion: MOTION.ecgsim });
     barSlot.insertBefore(sp.bar, spd);
-    listSlot.appendChild(sp.list);
+    listSlot.appendChild(sp.side);      /* the steps, with the key to their levels above them */
     pack.appendChild(sp.now);
 
     drawLead(); sp.paint(0);

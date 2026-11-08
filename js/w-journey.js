@@ -1980,6 +1980,7 @@
       return { steps: STAGES.map(function (s) { return s.t; }), end: END, holds: STAGES.map(function (s, i) { return segEnd(i); }) };
     };
     box.__state = function () { return { T: T0, playing: playing, started: started, stopAt: stopAt, G: G }; };
+    box.__filmSteps = STAGES.length;      /* its card's heading: "Animation · 5 steps" (app.js filmCard) */
     box.__render = render;
     box.__frame = function () { return ST; };
 

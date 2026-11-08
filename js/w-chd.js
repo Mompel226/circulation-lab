@@ -158,14 +158,16 @@
      clot carried off to block a smaller branch, is extension and less common (Daniel, 27 Sep: "make clear what is
      extension or less common but still interesting to know"): it has its own step, tagged, so it never blurs the
      main story. */
+  /* levels (8 Nov 2026): steps 1-4, 6 and 7 IGCSE (0610 C 9.2.5, the blockage of the coronary arteries); step 5 beyond
+     both (IB B3.2.6 asks for the causes and consequences of occlusion, not a piece of clot carried to a branch) */
   var AR_STEPS = [
-    { t: 0,  h: 'A healthy coronary artery', p: 'Above: the heart from the front, with its **coronary arteries** on its surface. Below: the part of one coronary artery inside the yellow ring, cut open along its length. Its lining is smooth and its **lumen** is wide, so blood flows freely. The blood brings **oxygen** and **glucose** to the **heart muscle**: in the magnified circle, the muscle cells contract with every beat.' },
-    { t: 12, h: 'Fatty material builds up in the wall', p: 'Over many years, fatty material containing cholesterol builds up in the **wall** of the artery, under the lining: a **fatty deposit**. At first it is small, and blood still flows freely.' },
-    { t: 22, h: 'The lumen becomes narrower', p: 'The fatty deposit grows over more years. It bulges into the lumen, so the **lumen becomes narrower** and **less blood** can flow through it. The wall there is less elastic. During exercise, the heart muscle beyond the narrow part may not receive enough oxygen.' },
-    { t: 35, h: 'A blood clot forms', p: 'The surface of the fatty deposit becomes rough and breaks. **Platelets** stick to the rough surface, and a **blood clot** forms on it.' },
-    { t: 40, h: 'A piece of the clot breaks off', tag: 'Extension', p: 'Less common, and not in the 0610 syllabus: a piece of the clot can break off and be carried along until it reaches a branch too narrow for it. There it sticks and blocks that branch, and the small patch of heart muscle the branch supplies gets less oxygen.' },
-    { t: 46, h: 'The clot blocks the artery', p: 'The clot grows until it **blocks** the artery completely. No blood can flow past it, so the **heart muscle** beyond the blockage receives **no oxygen** and **no glucose**. It cannot **respire aerobically**, so it cannot release the **energy** it needs to **contract**: in the magnified circle, the cells stop contracting within about a minute. They are still alive.' },
-    { t: 55, h: 'Heart muscle cells die: a heart attack', p: 'After 20 to 40 minutes without oxygen, the heart muscle **cells die**. Dead cells can never contract again, even if blood reaches them later. This is a **heart attack**. On the heart, the dead patch turns grey; the muscle before the blockage still receives blood.' }
+    { t: 0,  h: 'A healthy coronary artery', p: [['ig', 'Above: the heart from the front, with its **coronary arteries** on its surface. Below: the part of one coronary artery inside the yellow ring, cut open along its length. Its lining is smooth and its **lumen** is wide, so blood flows freely. The blood brings **oxygen** and **glucose** to the **heart muscle**: in the magnified circle, the muscle cells contract with every beat.']] },
+    { t: 12, h: 'Fatty material builds up in the wall', p: [['ig', 'Over many years, fatty material containing cholesterol builds up in the **wall** of the artery, under the lining: a **fatty deposit**. At first it is small, and blood still flows freely.']] },
+    { t: 22, h: 'The lumen becomes narrower', p: [['ig', 'The fatty deposit grows over more years. It bulges into the lumen, so the **lumen becomes narrower** and **less blood** can flow through it. The wall there is less elastic. During exercise, the heart muscle beyond the narrow part may not receive enough oxygen.']] },
+    { t: 35, h: 'A blood clot forms', p: [['ig', 'The surface of the fatty deposit becomes rough and breaks. **Platelets** stick to the rough surface, and a **blood clot** forms on it.']] },
+    { t: 40, h: 'A piece of the clot breaks off', p: [['bey', 'Less common, and not in the 0610 syllabus: a piece of the clot can break off and be carried along until it reaches a branch too narrow for it. There it sticks and blocks that branch, and the small patch of heart muscle the branch supplies gets less oxygen.']] },
+    { t: 46, h: 'The clot blocks the artery', p: [['ig', 'The clot grows until it **blocks** the artery completely. No blood can flow past it, so the **heart muscle** beyond the blockage receives **no oxygen** and **no glucose**. It cannot **respire aerobically**, so it cannot release the **energy** it needs to **contract**: in the magnified circle, the cells stop contracting within about a minute. They are still alive.']] },
+    { t: 55, h: 'Heart muscle cells die: a heart attack', p: [['ig', 'After 20 to 40 minutes without oxygen, the heart muscle **cells die**. Dead cells can never contract again, even if blood reaches them later. This is a **heart attack**. On the heart, the dead patch turns grey; the muscle before the blockage still receives blood.']] }
   ];
   var AR_END = 66;
   /* the part of each step's time during which its picture moves: written and checked by tools/motion.mjs (CircLearn.stepper motion) */
@@ -765,7 +767,7 @@
     pack.appendChild(packT); pack.appendChild(fig);
     var left = h('div', 'ar__left'); left.appendChild(read); left.appendChild(pack);
     fig.appendChild(sp.now);
-    wrap.appendChild(left); wrap.appendChild(sp.list);
+    wrap.appendChild(left); wrap.appendChild(sp.side);      /* the steps, with the key to their levels above them */
     box.appendChild(wrap);
     box.appendChild(h('p', 'widget__note', 'Not to scale: the red blood cells are drawn hundreds of times larger than real, and far fewer. Time is squeezed: a deposit grows over years, a clot forms in minutes, and heart muscle cells die after 20 to 40 minutes without blood. Dead muscle is drawn grey and breaking down; in a real heart this takes hours to days. Heart: Servier Medical Art, CC BY 4.0.'));
     box.appendChild(h('p', 'widget__note ar__fence', '<b>Beyond 0610.</b> Step 5 is extension: in most heart attacks the clot blocks the artery where it forms, as in step 6. “Plaque” and “atheroma” are other names for the fatty deposit; the chest pain of step 3 is angina; a heart attack is also called a myocardial infarction.'));

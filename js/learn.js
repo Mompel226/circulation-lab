@@ -406,11 +406,24 @@
       if (o.onPlace) o.onPlace(col, col && !!on);
     }
     var claim = STAGE.add({ box: o.box, able: column, watch: o.watch, on: function () { place(true); }, off: function () { place(false); } });
-    /* one observer on the controls, which never change size when the drawing leaves: the band stops
-       a third of the way up from the bottom, as in the Plants Lab */
-    var io = null, LOWER = .35;
+    /* In a card (a sentence of What you need to know that opens, or an animation's own card), the drawing stands in the
+       column for as long as its card is open and the widget is shown (Daniel, 4 Nov 2026: "as long as … is open, I should
+       be able to see the animation"; 8 Nov 2026: the Inheritance Lab's structure in every lab). Elsewhere, one observer
+       on the controls, which never change size when the drawing leaves: the band stops a third of the way up from the
+       bottom, as in the Plants Lab. The Immunity Lab's code. */
+    var io = null, mo = null, card = null, LOWER = .35;
+    function cardWants() { return !!card && card.classList.contains('is-open') && !o.box.hidden && !(o.box.parentNode && o.box.parentNode.closest && o.box.parentNode.closest('[hidden]')); }
     function watch() {
       if (io) { io.disconnect(); io = null; }
+      if (mo) { mo.disconnect(); mo = null; }
+      card = o.box.closest ? o.box.closest('.xcard') : null;
+      if (column() && card && global.MutationObserver) {
+        mo = new MutationObserver(function () { if (o.box.isConnected) STAGE.want(claim, cardWants()); });
+        mo.observe(card, { attributes: true, attributeFilter: ['class'] });
+        mo.observe(o.box, { attributes: true, attributeFilter: ['hidden'] });
+        STAGE.want(claim, cardWants());
+        return;
+      }
       if (!column() || !global.IntersectionObserver) { STAGE.want(claim, false); return; }
       try {
         io = new IntersectionObserver(function (es) {
@@ -430,6 +443,7 @@
     }
     function detach() {
       if (io) { io.disconnect(); io = null; }
+      if (mo) { mo.disconnect(); mo = null; }
       if (wideQ.removeEventListener) wideQ.removeEventListener('change', onWide);
       STAGE.drop(claim);
       if (o.pack.parentNode && o.pack.parentNode === host()) o.pack.parentNode.removeChild(o.pack);

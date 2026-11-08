@@ -72,13 +72,14 @@
     return { atria: atria, vent: vent, av: av, sl: sl };
   }
 
+  /* every step IGCSE: 0610 S 9.2.10 (the atria and ventricles contract, the valves), C 9.2.3 (the sounds of valves closing) */
   var STEPS = [
-    { t: 0,    h: 'The atria fill', p: 'Blood flows into the atria from the veins: from the vena cava on the right, from the pulmonary veins on the left. The atrioventricular valves are open, so some blood already flows into the ventricles.' },
-    { t: 3,    h: 'The atria contract', p: 'Both atria contract together. They push blood through the open atrioventricular valves into the ventricles. The semilunar valves stay shut.' },
-    { t: 5.5,  h: 'The ventricles contract: “lub”', p: 'Both ventricles contract. Their pressure rises and pushes the atrioventricular valves shut, so blood cannot flow back into the atria. That is the first sound, “lub”.' },
-    { t: 7.5,  h: 'Blood leaves the heart', p: 'The pressure pushes the semilunar valves open. Blood is forced out: from the right ventricle into the pulmonary artery, from the left ventricle into the aorta.' },
-    { t: 10.5, h: 'The ventricles relax: “dub”', p: 'The ventricles relax and their pressure falls. Blood in the arteries starts to flow back, fills the pockets of the semilunar valves and shuts them. That is the second sound, “dub”.' },
-    { t: 12.6, h: 'The next beat begins', p: 'Blood from the veins fills the atria again, the atrioventricular valves open, and blood flows into the ventricles. At rest this happens about 70 times a minute.' }
+    { t: 0,    h: 'The atria fill', p: [['ig', 'Blood flows into the atria from the veins: from the vena cava on the right, from the pulmonary veins on the left. The atrioventricular valves are open, so some blood already flows into the ventricles.']] },
+    { t: 3,    h: 'The atria contract', p: [['ig', 'Both atria contract together. They push blood through the open atrioventricular valves into the ventricles. The semilunar valves stay shut.']] },
+    { t: 5.5,  h: 'The ventricles contract: “lub”', p: [['ig', 'Both ventricles contract. Their pressure rises and pushes the atrioventricular valves shut, so blood cannot flow back into the atria. That is the first sound, “lub”.']] },
+    { t: 7.5,  h: 'Blood leaves the heart', p: [['ig', 'The pressure pushes the semilunar valves open. Blood is forced out: from the right ventricle into the pulmonary artery, from the left ventricle into the aorta.']] },
+    { t: 10.5, h: 'The ventricles relax: “dub”', p: [['ig', 'The ventricles relax and their pressure falls. Blood in the arteries starts to flow back, fills the pockets of the semilunar valves and shuts them. That is the second sound, “dub”.']] },
+    { t: 12.6, h: 'The next beat begins', p: [['ig', 'Blood from the veins fills the atria again, the atrioventricular valves open, and blood flows into the ventricles. At rest this happens about 70 times a minute.']] }
   ];
   var END = 15.4;
 
@@ -234,7 +235,7 @@
     var packT = h('p', 'stg__title', esc(spec.title || 'One beat, one step at a time')); packT.hidden = true;
     pack.appendChild(packT); pack.appendChild(fig);
     var left = h('div', 'cy__left'); left.appendChild(top); left.appendChild(pack);
-    wrap.appendChild(left); wrap.appendChild(sp.list);
+    wrap.appendChild(left); wrap.appendChild(sp.side);      /* the steps, with the key to their levels above them */
     box.appendChild(wrap);
     box.appendChild(h('p', 'widget__note', 'Red is oxygenated blood and blue is deoxygenated blood, as on every diagram. Both sides of the heart go through each step at the same moment. The real beat is about fifteen times faster.'));
 

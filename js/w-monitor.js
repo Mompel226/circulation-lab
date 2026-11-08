@@ -121,7 +121,8 @@
     return e;
   }
   function button(cls, html) { var b = h('button', cls, html); b.type = 'button'; return b; }
-  function words(s) { return String(s).replace(/[_~]/g, '').split(/\s+/).filter(Boolean).length; }
+  /* a step's words may be in level parts, [[lv, text], …]: the same words, so the same time */
+  function words(s) { if (Array.isArray(s)) s = s.map(function (q) { return q[1]; }).join(' '); return String(s).replace(/[_~]/g, '').split(/\s+/).filter(Boolean).length; }
   function dist(a, b) { var dx = b[0] - a[0], dy = b[1] - a[1]; return Math.sqrt(dx * dx + dy * dy); }
   function pathD(pts, close) { var d = ''; for (var i = 0; i < pts.length; i++) d += (i ? 'L' : 'M') + n2(pts[i][0]) + ' ' + n2(pts[i][1]); return d + (close ? 'Z' : ''); }
   function arc(cx, cy, r, a0, a1, n) {
@@ -542,17 +543,17 @@
     fish: {
       label: 'A circuit diagram of the single circulation of a fish. The heart, with one atrium and one ventricle, pumps blood to the capillaries of the gills, then on to the capillaries of the body, and back to the heart.',
       steps: [
-        { kind: 'atria', h: 'The atrium contracts', p: 'The cell starts in the _atrium_, in deoxygenated blood. The atrium contracts and pushes the blood into the _ventricle_. The pressure is still low.',
+        { kind: 'atria', h: 'The atrium contracts', p: [['ig', 'The cell starts in the _atrium_, in deoxygenated blood. The atrium contracts and pushes the blood into the _ventricle_. The pressure is still low.']],
           path: [[262, 406], [262, 372], [262, 322]], P0: .05, P1: .07, O0: 0, O1: 0 },
-        { kind: 'vent', h: 'The ventricle contracts', p: 'The ventricle contracts and pumps the blood to the _gills_. The pressure is high as the blood leaves the ventricle. The cell has now passed through the heart once.',
+        { kind: 'vent', h: 'The ventricle contracts', p: [['ig', 'The ventricle contracts and pumps the blood to the _gills_. The pressure is high as the blood leaves the ventricle. The cell has now passed through the heart once.']],
           path: [[262, 322], [262, 268], [262, 104], [264, 96], [269, 91], [277, 89]], exit: [262, 276], P0: .07, Pk: .92, P1: .88, O0: 0, O1: 0 },
-        { kind: 'cap', h: 'Through the gill capillaries', p: 'In the gills, the cell squeezes through a narrow capillary. Oxygen diffuses from the water into the blood, so the blood becomes oxygenated. The blood loses much of its pressure in these narrow vessels.',
+        { kind: 'cap', h: 'Through the gill capillaries', p: [['ig', 'In the gills, the cell squeezes through a narrow capillary. Oxygen diffuses from the water into the blood, so the blood becomes oxygenated. The blood loses much of its pressure in these narrow vessels.']],
           path: [[277, 89], [469, 89]], P0: .88, P1: .5, O0: 0, O1: 1, load: true },
-        { kind: 'vessel', h: 'On to the body', p: 'The blood flows from the gills to the body. No pump raises its pressure again. So it travels to the body at low pressure, and it flows slowly.',
+        { kind: 'vessel', h: 'On to the body', p: [['ig', 'The blood flows from the gills to the body. No pump raises its pressure again. So it travels to the body at low pressure, and it flows slowly.']],
           path: [[469, 89], [477, 91], [482, 96], [484, 104], [484, 560], [482, 568], [477, 573], [469, 575]], P0: .5, P1: .43, O0: 1, O1: 1 },
-        { kind: 'cap', h: 'Through the body capillaries', p: 'In the body, the cell squeezes through another capillary. Oxygen diffuses out of the blood into the respiring cells. The blood is now deoxygenated, and its pressure falls again.',
+        { kind: 'cap', h: 'Through the body capillaries', p: [['ig', 'In the body, the cell squeezes through another capillary. Oxygen diffuses out of the blood into the respiring cells. The blood is now deoxygenated, and its pressure falls again.']],
           path: [[469, 575], [277, 575]], P0: .43, P1: .1, O0: 1, O1: 0 },
-        { kind: 'vessel', h: 'Back to the heart', p: 'The blood returns to the atrium in a vein, at very low pressure. That is one complete circuit of the body, and the cell has passed through the heart once. This is a _single circulation_.',
+        { kind: 'vessel', h: 'Back to the heart', p: [['ig', 'The blood returns to the atrium in a vein, at very low pressure. That is one complete circuit of the body, and the cell has passed through the heart once. This is a _single circulation_.']],
           path: [[277, 575], [269, 573], [264, 568], [262, 560], [262, 446], [262, 406]], P0: .1, P1: .04, O0: 0, O1: 0 }
       ],
       labels: [
@@ -566,24 +567,24 @@
     mammal: {
       label: 'A circuit diagram of the double circulation of a mammal. The right side of the heart pumps blood through the pulmonary artery to the lungs; it returns in the pulmonary vein to the left side, which pumps it through the aorta to the body; it returns in the vena cava to the right side.',
       steps: [
-        { kind: 'atria', h: 'The atria contract', p: 'The cell starts in the _right atrium_, in deoxygenated blood. Both atria contract. The right atrium pushes the blood into the _right ventricle_. The pressure is low.',
+        { kind: 'atria', h: 'The atria contract', p: [['ig', 'The cell starts in the _right atrium_, in deoxygenated blood. Both atria contract. The right atrium pushes the blood into the _right ventricle_. The pressure is low.']],
           path: [[302, 290], [306, 322], [312, 366]], P0: .04, P1: .06, O0: 0, O1: 0 },
-        { kind: 'vent', h: 'The ventricles contract', p: 'Both ventricles contract. The right ventricle pumps the blood into the _pulmonary artery_, to the lungs. Its muscular wall is thinner than the left ventricle’s, so the pressure rises less. The cell has passed through the heart once.',
+        { kind: 'vent', h: 'The ventricles contract', p: [['ig', 'Both ventricles contract. The right ventricle pumps the blood into the _pulmonary artery_, to the lungs. Its muscular wall is thinner than the left ventricle’s, so the pressure rises less. The cell has passed through the heart once.']],
           path: [[312, 366], [332, 346], [343, 330], [343, 222], [340, 211], [333, 203], [322, 200], [284, 200], [273, 197], [265, 189], [262, 178], [262, 104], [264, 96], [269, 91], [277, 89]],
           exit: [343, 318], P0: .06, Pk: .34, P1: .3, O0: 0, O1: 0 },
-        { kind: 'cap', h: 'Through the lung capillaries', p: 'In the lungs, the cell squeezes through a narrow capillary. Oxygen diffuses from the air in the alveoli into the blood. The blood becomes oxygenated, and its pressure falls.',
+        { kind: 'cap', h: 'Through the lung capillaries', p: [['ig', 'In the lungs, the cell squeezes through a narrow capillary. Oxygen diffuses from the air in the alveoli into the blood. The blood becomes oxygenated, and its pressure falls.']],
           path: [[277, 89], [469, 89]], P0: .3, P1: .11, O0: 0, O1: 1, load: true },
-        { kind: 'vessel', h: 'Back to the heart', p: 'The oxygenated blood returns to the heart in the _pulmonary vein_. It enters the _left atrium_ at low pressure. In a fish, this blood would go directly to the body.',
+        { kind: 'vessel', h: 'Back to the heart', p: [['ig', 'The oxygenated blood returns to the heart in the _pulmonary vein_. It enters the _left atrium_ at low pressure. In a fish, this blood would go directly to the body.']],
           path: [[469, 89], [477, 91], [482, 96], [484, 104], [484, 178], [481, 189], [473, 197], [462, 200], [437, 200], [426, 203], [418, 211], [415, 222], [415, 262], [412, 289]],
           P0: .11, P1: .07, O0: 1, O1: 1 },
-        { kind: 'atria', h: 'The atria contract again', p: 'Both atria contract. The left atrium pushes the blood into the _left ventricle_. The _septum_ keeps this oxygenated blood apart from the deoxygenated blood on the right.',
+        { kind: 'atria', h: 'The atria contract again', p: [['ig', 'Both atria contract. The left atrium pushes the blood into the _left ventricle_. The _septum_ keeps this oxygenated blood apart from the deoxygenated blood on the right.']],
           path: [[412, 289], [412, 322], [406, 364]], P0: .07, P1: .09, O0: 1, O1: 1 },
-        { kind: 'vent', h: 'The ventricles contract again', p: 'Both ventricles contract. The left ventricle has the thickest muscular wall, so it pumps the blood into the _aorta_ at high pressure. The heart has raised the pressure a second time, and the cell has passed through the heart twice.',
+        { kind: 'vent', h: 'The ventricles contract again', p: [['ig', 'Both ventricles contract. The left ventricle has the thickest muscular wall, so it pumps the blood into the _aorta_ at high pressure. The heart has raised the pressure a second time, and the cell has passed through the heart twice.']],
           path: [[406, 364], [398, 352], [388, 342], [376, 338], [367, 330], [367, 300], [367, 262], [367, 172], [369, 165], [374, 161], [380, 160], [498, 160], [504, 161], [508, 165], [510, 172], [510, 560], [508, 568], [503, 573], [496, 575], [484, 575], [469, 575]],
           exit: [367, 322], P0: .09, Pk: .96, P1: .88, O0: 1, O1: 1 },
-        { kind: 'cap', h: 'Through the body capillaries', p: 'The blood reaches the body at high pressure, so it flows fast. In a capillary, oxygen diffuses out of the blood into the respiring cells. The blood becomes deoxygenated, and its pressure falls.',
+        { kind: 'cap', h: 'Through the body capillaries', p: [['ig', 'The blood reaches the body at high pressure, so it flows fast. In a capillary, oxygen diffuses out of the blood into the respiring cells. The blood becomes deoxygenated, and its pressure falls.']],
           path: [[469, 575], [277, 575]], P0: .88, P1: .18, O0: 1, O1: 0 },
-        { kind: 'vessel', h: 'Back to the right atrium', p: 'The blood returns to the right atrium in the _vena cava_, at very low pressure. That is one complete circuit of the body, and the cell has passed through the heart twice. This is a _double circulation_.',
+        { kind: 'vessel', h: 'Back to the right atrium', p: [['ig', 'The blood returns to the right atrium in the _vena cava_, at very low pressure. That is one complete circuit of the body, and the cell has passed through the heart twice. This is a _double circulation_.']],
           path: [[277, 575], [262, 575], [216, 575], [209, 572], [206, 565], [206, 302], [209, 295], [216, 292], [276, 292], [302, 290]], P0: .18, P1: .04, O0: 0, O1: 0 }
       ],
       labels: [
@@ -784,12 +785,14 @@
       if (sp) sp.stop();
       sp = L.stepper({ steps: A.steps.map(function (s) { return { t: s.t, h: s.h, p: s.p }; }), end: A.end, render: render, motion: MOTION['circuit ' + animal] });
       barSlot.innerHTML = ''; barSlot.appendChild(sp.bar);
-      var old = wrap.querySelector('.sp__steps'); if (old) wrap.removeChild(old);
-      wrap.appendChild(sp.list);
+      var old = wrap.querySelector('.sp__side'); if (old) wrap.removeChild(old);
+      wrap.appendChild(sp.side);      /* the steps, with the key to their levels above them */
       [fig, wrap].forEach(function (el) { var o = el.querySelector('.sp__now'); if (o) o.parentNode.removeChild(o); });
       fig.appendChild(sp.now);
       sp.compact(staged);
       sp.paint(0);
+      /* the fish has 6 steps and the mammal 8: the heading of the animation's card follows (app.js filmCard) */
+      if (global.CustomEvent) box.dispatchEvent(new CustomEvent('film:steps', { bubbles: true }));
     }
     function stepAt(t) { var st = CI[animal].steps, k = 0; for (var i = 0; i < st.length; i++) if (t >= st[i].t - 1e-6) k = i; return k; }
     /* everything at time t: where the cell is, the heart, the gauge, the counter */

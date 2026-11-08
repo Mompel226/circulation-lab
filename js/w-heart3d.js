@@ -723,6 +723,7 @@
     };
     box.__outcome = outcome;
     box.__start = start;
+    box.__filmSteps = '3D model';         /* its card's heading: "Animation · 3D model" (app.js filmCard) */
 
     /* =====================================================================
        without WebGL: the lab's own 2D section does the same jobs
