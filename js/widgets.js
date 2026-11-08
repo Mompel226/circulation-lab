@@ -95,7 +95,9 @@
     box.appendChild(lines);
     var found = {}, pins = [], items = [], zooms = [], Y = [], order = [];
     var NARROW = 520, MIN_COL = 150;
+    var splitOn = false;
     function stacked() {
+      if (splitOn) return true;
       var b = list.parentNode && list.parentNode.getBoundingClientRect();
       if (b && b.width && b.width < NARROW) return true;
       var sb = stage.getBoundingClientRect(), lb = list.getBoundingClientRect();
@@ -109,6 +111,12 @@
     }
     function layout() {
       var sb = stage.getBoundingClientRect(), lb = list.getBoundingClientRect();
+      /* In a shut card (8 Nov 2026, the sentence cards) nothing can be measured: decide nothing. Deciding then put the
+         names under the picture, and .finder--narrow (one column) kept them there for good, because stacked() then
+         found them under it. So the class comes off before each measurement, and the picture is watched (below):
+         it is laid out again the moment its card opens. The Classification Lab's fix, in the shared code. */
+      if (!sb.width && !sb.height && !lb.width && !lb.height) { drawOver(); return; }
+      if (list.parentNode && !splitOn) { list.parentNode.classList.remove('finder--narrow'); sb = stage.getBoundingClientRect(); lb = list.getBoundingClientRect(); }
       var narrow = stacked();
       if (list.parentNode) list.parentNode.classList.toggle('finder--narrow', narrow);
       if (!sb.width || !sb.height || narrow) {
@@ -182,7 +190,53 @@
       list.style.minHeight = Math.max(sb.height, bottom) + 'px';
       drawLines();
     }
+    /* ---- the picture in another column (split): the names stay here, in a plain list, and the pin just pressed (or the
+       name) is joined to its name by a line ruled across the page, from the pin to a bend past the picture's edge, then to
+       the name. One line, the last pressed: with the names in a list on the other side of the page, several lines would
+       cross as the page scrolls (memory label-lines-never-cross); the others stay lit and numbered. Show every label
+       lights them all, with no line. A line is drawn only while both ends can be seen (not scrolled away, not under the
+       page's sticky bar). Daniel, 8 Nov 2026 (Plants Lab): "put the image on the left … and then you show on the right the
+       root tip, the seed coat, the root hairs". */
+    var over = null, overTick = 0, lastI = null, bulk = false;
+    function seen(el, x, y) {
+      if (x < 0 || y < 0 || x > innerWidth || y > innerHeight) return false;
+      var at = document.elementFromPoint(x, y);
+      return !!at && (at === el || el.contains(at));
+    }
+    function drawOver() {
+      if (!splitOn || !box.isConnected) { if (over) { over.remove(); over = null; } return; }
+      if (!over) {
+        over = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        over.setAttribute('class', 'pins__lines pins__over'); over.setAttribute('aria-hidden', 'true');
+        document.body.appendChild(over);
+      }
+      var W = innerWidth, H = innerHeight, sr = stage.getBoundingClientRect(), out = '';
+      over.setAttribute('viewBox', '0 0 ' + W + ' ' + H); over.style.width = W + 'px'; over.style.height = H + 'px';
+      pins.forEach(function (pin, i) {
+        if (!found[i] || i !== lastI) return;
+        var a = pin.getBoundingClientRect(), c = items[i].getBoundingClientRect();
+        var x1 = a.left + a.width / 2, y1 = a.top + a.height / 2, x2 = c.left - 3, y2 = c.top + Math.min(c.height / 2, 14);
+        if (!seen(pin, x1, y1) || !seen(items[i], c.left + 6, y2)) return;
+        /* as beside the picture: straight from the pin to a bend just past the picture's edge, level with the name, then
+           level into it (so no line runs along another pin's) */
+        var xe = Math.max(sr.right + 12, Math.min(x2 - 12, sr.right + 40));
+        var dx = xe - x1, dy = y2 - y1, len = Math.sqrt(dx * dx + dy * dy) || 1, rr = a.width / 2 + 1;
+        var pts = (x1 + dx / len * rr) + ',' + (y1 + dy / len * rr) + ' ' + xe + ',' + y2 + ' ' + x2 + ',' + y2;
+        out += '<polyline class="pins__halo" points="' + pts + '"/><polyline class="pins__line" points="' + pts + '"/>';
+      });
+      over.innerHTML = out;
+    }
+    function overSoon() { if (!overTick) overTick = requestAnimationFrame(function () { overTick = 0; drawOver(); }); }
+    function split(on) {
+      on = !!on;
+      if (on === splitOn) { layout(); return; }
+      splitOn = on;
+      if (on) { document.addEventListener('scroll', overSoon, { passive: true, capture: true }); window.addEventListener('resize', overSoon); }
+      else { document.removeEventListener('scroll', overSoon, true); window.removeEventListener('resize', overSoon); }
+      layout(); drawOver();
+    }
     function drawLines() {
+      if (splitOn) { lines.innerHTML = ''; drawOver(); return; }
       var b = box.getBoundingClientRect(), out = '';
       if (!b.width) return;
       lines.setAttribute('viewBox', '0 0 ' + b.width + ' ' + b.height);
@@ -219,8 +273,12 @@
       var now = on == null ? !found[i] : !!on;
       if (now === !!found[i]) return;
       if (now) { found[i] = 1; zoomInto(i); } else delete found[i];
+      lastI = bulk ? null : now ? i : (lastI === i ? null : lastI);
       pins[i].classList.toggle('is-found', now); items[i].classList.toggle('is-found', now);
       pins[i].setAttribute('aria-pressed', now ? 'true' : 'false');
+      /* in a split, the name of a pressed pin comes into view: to the middle of the notes, unless it can already be seen
+         whole (not under the page's sticky bars, not scrolled away) */
+      if (now && splitOn && !bulk) { var ir = items[i].getBoundingClientRect(); if (!seen(items[i], ir.left + 6, ir.top + 3) || !seen(items[i], ir.left + 6, ir.bottom - 3)) items[i].scrollIntoView({ block: 'center', behavior: 'smooth' }); }
       layout();
       if (opts.onChange) opts.onChange(Object.keys(found).length, spots.length);
     }
@@ -247,12 +305,19 @@
     LIVE.push({ box: box, layout: layout });
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(layout);
     setTimeout(layout, 50);
-    return { toggle: toggle, layout: layout, count: function () { return Object.keys(found).length; },
-             all: function (on) { spots.forEach(function (sp, i) { toggle(i, on); }); } };
+    if (global.ResizeObserver) {
+      var roTick = 0, ro = new ResizeObserver(function () {
+        if (!box.isConnected && !stage.isConnected) { ro.disconnect(); return; }
+        if (!roTick) roTick = requestAnimationFrame(function () { roTick = 0; layout(); });
+      });
+      ro.observe(stage); ro.observe(list);
+    }
+    return { toggle: toggle, layout: layout, split: split, count: function () { return Object.keys(found).length; },
+             all: function (on) { bulk = true; spots.forEach(function (sp, i) { toggle(i, on); }); bulk = false; lastI = null; drawOver(); } };
   }
 
   /* ---------- finder: a photograph and the features to find on it ---------- */
-  function finder(spec) {
+  function finder(spec, ctx) {
     var box = h('div', 'widget'); if (spec.group) box.setAttribute('data-group', spec.group);
     box.appendChild(head(spec.title || 'Find the features', spec.ask || 'Click a numbered pin on the picture, or its name beside it, and a line is ruled between them — the way a labelled figure is drawn. Click again to take the line away. The small picture beside a name is a close-up of that feature.', spec.tryWord || 'Click the pins'));
     var wrap = h('div', 'finder pins');
@@ -278,6 +343,20 @@
     wrap.appendChild(left); wrap.appendChild(list);
     box.appendChild(wrap);
     if (spec.note) box.appendChild(h('p', 'widget__note', mk(spec.note)));
+    /* The picture (with its pins, its line to Show every label and its credit) may stand somewhere else, a lab's picture
+       column, while its names stay here: box.__split(host) moves it into host, box.__split(null) brings it back. A lab
+       that has such a column offers it through ctx.stageFinder (the Plants Lab, 8 Nov 2026); other labs never call it. */
+    var stub = h('p', 'finder__stub', '<span aria-hidden="true">\u25C0</span> The picture is on the left. Press a numbered pin on it, or a name below.');
+    stub.hidden = true;
+    wrap.insertBefore(stub, list);
+    box.__split = function (host) {
+      if (host) { if (left.parentNode !== host) host.appendChild(left); }
+      else if (left.parentNode !== wrap) wrap.insertBefore(left, stub);
+      wrap.classList.toggle('finder--split', !!host);
+      stub.hidden = !host;
+      ctl.split(!!host);
+    };
+    if (ctx && typeof ctx.stageFinder === 'function') ctx.stageFinder(box, spec);
     return box;
   }
 
