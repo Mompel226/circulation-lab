@@ -465,7 +465,7 @@
         out.forEach(fn);
       }
       var badge = '';
-      if (typeof b === 'object' && b.sup) badge = '<span class="sup tip" tabindex="0" data-tip="Supplement — examined on the Extended papers (2 and 4) only. Core candidates can skip it.">S</span>';
+      if (typeof b === 'object' && b.sup) badge = '<span class="sup tip" tabindex="0" data-tip="Supplement: examined on the Extended papers (2 and 4). Learn it too.">S</span>';
       /* in an older 0610 syllabus: its badge names that syllabus; beyond the syllabus: no badge, its heading says so */
       var pe = st.past && st.past.exam ? st.past.exam[i] : null;
       if (pe != null) badge = pastBadge(pe);

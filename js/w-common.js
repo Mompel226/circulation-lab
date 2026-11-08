@@ -10,7 +10,12 @@
        opts.end     the last moment (s)
        opts.render  render(t) — must be a pure function of t, so any moment can be drawn on demand
        opts.rate    optional: a function returning how fast time runs (1 normal, 2 twice as fast)
-       returns { bar, list, now, paint(t), seek(t), stop(), isStill(), compact(on) }
+       returns { bar, list, now, paint(t), seek(t), stop(), isStill(), compact(on), end }
+       Play all and a single step both play each step's whole span (there is no Play-all skip in this lab), so each
+       band of the step bar is exactly its step's Play-all time, and a single step stops with its band full (the
+       Inheritance Lab's rule, 8 Nov 2026: "make sure that the size of the band indicates the time that it's there";
+       "It should be completely to the end … and then I press next step"). tools/bands.mjs proves it, through
+       bar.__sp (these controls, kept on the bar for it).
        compact(true): the steps become small chips, and the step's words stand in a panel right under
        them, for a widget whose drawing stands in the plate's column (Daniel, 26 Sep: "make the different
        stages smaller, and more compacted ... you can still click them. But you see the text on the right")
@@ -77,7 +82,8 @@
         li.classList.toggle('is-done', started && (i < k || (done && i === k)));
       });
       Array.prototype.forEach.call(prog.children, function (sg, i) {
-        var a = STEPS[i].t, b = stepEnd(i);
+        /* full where a single step stops (0.02 s before the next step's first frame), not 99.8 % */
+        var a = STEPS[i].t, b = segEnd(i);
         sg.firstChild.style.width = (started ? clamp01((t - a) / Math.max(.001, b - a)) * 100 : 0).toFixed(1) + '%';
         sg.classList.toggle('is-on', started && i === k);
       });
@@ -142,11 +148,14 @@
         nowHome = null; nowNext = null;
       }
     }
-    return {
+    var api = {
       bar: bar, list: list, now: now, paint: paint, stop: stop, isStill: still, compact: compact,
       time: function () { return T; },
-      seek: function (t) { stop(); started = t > 0; stopAt = null; T = Math.max(0, Math.min(END, t)); paint(T); return STEPS.map(function (s) { return s.t; }); }
+      seek: function (t) { stop(); started = t > 0; stopAt = null; T = Math.max(0, Math.min(END, t)); paint(T); return STEPS.map(function (s) { return s.t; }); },
+      end: END
     };
+    bar.__sp = api;
+    return api;
   }
 
   /* ---------- each name on ONE level line (the Cells Lab's level rows, 18 Oct 2026) ----------
