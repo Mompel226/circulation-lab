@@ -88,6 +88,8 @@ node tools/build.mjs
 
 Picture, video and sound credits: [`assets/photos/CREDITS.md`](assets/photos/CREDITS.md).
 
+Pronunciation: the 🔊 UK and 🔊 US buttons beside the hard words play the Cambridge Dictionary's own recordings from its website (© Cambridge University Press & Assessment; nothing of theirs is stored here), with Wikimedia Commons recordings as the backup: [`assets/say/CREDITS.md`](assets/say/CREDITS.md).
+
 </details>
 
 Made by **Dr Daniel Mompel Riera** ·
