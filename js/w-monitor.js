@@ -536,6 +536,8 @@
 
   /* the route, stage by stage. kind: atria | vent | cap | vessel. P0/P1 (and Pk, the pressure the
      ventricle reaches) are points on a gauge from low (0) to high (1); O0/O1 the oxygen, 0 to 1 */
+  /* the part of each step's time during which its picture moves: written and checked by tools/motion.mjs (CircLearn.stepper motion) */
+  var MOTION = {"circuit fish":[0.815,0.96,0.96,0.96,0.96,0.96],"circuit mammal":[0.815,0.96,0.96,0.96,0.815,0.96,0.96,0.96]};
   var CI = {
     fish: {
       label: 'A circuit diagram of the single circulation of a fish. The heart, with one atrium and one ventricle, pumps blood to the capillaries of the gills, then on to the capillaries of the body, and back to the heart.',
@@ -780,7 +782,7 @@
       bF.setAttribute('aria-pressed', animal === 'fish' ? 'true' : 'false');
       bM.setAttribute('aria-pressed', animal === 'mammal' ? 'true' : 'false');
       if (sp) sp.stop();
-      sp = L.stepper({ steps: A.steps.map(function (s) { return { t: s.t, h: s.h, p: s.p }; }), end: A.end, render: render });
+      sp = L.stepper({ steps: A.steps.map(function (s) { return { t: s.t, h: s.h, p: s.p }; }), end: A.end, render: render, motion: MOTION['circuit ' + animal] });
       barSlot.innerHTML = ''; barSlot.appendChild(sp.bar);
       var old = wrap.querySelector('.sp__steps'); if (old) wrap.removeChild(old);
       wrap.appendChild(sp.list);

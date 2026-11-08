@@ -138,6 +138,8 @@
     STEPS.forEach(function (st) { st.t = t; st.dur = Math.min(9, Math.max(5, Math.round((words(st.h) + words(st.p)) / 8))); t += st.dur; });
     STEPS.end = t;
   })();
+  /* the part of each step's time during which its picture moves: written and checked by tools/motion.mjs (CircLearn.stepper motion) */
+  var MOTION = {"ecgsim":[0.855,0.855,0.855,0.855,0.855,0.855,0.855,0.855]};
 
   /* ---------- the drawing ----------
      Daniel, 25 Sep, second look: "make it a bit bigger ... more professional, at least the flow of the
@@ -496,7 +498,7 @@
       if (t >= STEPS.end - 1e-6) ms = BEAT;
       paint();
     }
-    sp = L.stepper({ steps: STEPS.map(function (s) { return { t: s.t, h: s.h, p: s.p }; }), end: STEPS.end, render: render, rate: function () { return speed; } });
+    sp = L.stepper({ steps: STEPS.map(function (s) { return { t: s.t, h: s.h, p: s.p }; }), end: STEPS.end, render: render, rate: function () { return speed; }, motion: MOTION.ecgsim });
     barSlot.insertBefore(sp.bar, spd);
     listSlot.appendChild(sp.list);
     pack.appendChild(sp.now);

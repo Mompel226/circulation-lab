@@ -10,12 +10,17 @@
        opts.end     the last moment (s)
        opts.render  render(t) — must be a pure function of t, so any moment can be drawn on demand
        opts.rate    optional: a function returning how fast time runs (1 normal, 2 twice as fast)
-       returns { bar, list, now, paint(t), seek(t), stop(), isStill(), compact(on), end }
-       Play all and a single step both play each step's whole span (there is no Play-all skip in this lab), so each
-       band of the step bar is exactly its step's Play-all time, and a single step stops with its band full (the
+       opts.motion  optional: for each step, the part of its time during which its picture moves (1 = all of it), from
+                    the widget's MOTION list (written and checked by tools/motion.mjs). A single step stops 0.1 s after
+                    its picture's last change, its band full, and Next step comes at once: in some steps the drawing
+                    stood still for up to 3 s before the step stopped (Daniel, 6 Nov 2026, the Inheritance Lab: "allow
+                    you to read things, but they don't make you wait there for ages"; 8 Nov 2026: "Yes, do it here").
+       returns { bar, list, now, paint(t), seek(t), stop(), isStill(), compact(on), end, motion, stopOf(i) }
+       Play all plays each step's whole span, the still part too (there is no Play-all skip in this lab), so each
+       band of the step bar is exactly its step's Play-all time; a single step stops with its band full (the
        Inheritance Lab's rule, 8 Nov 2026: "make sure that the size of the band indicates the time that it's there";
-       "It should be completely to the end … and then I press next step"). tools/bands.mjs proves it, through
-       bar.__sp (these controls, kept on the bar for it).
+       "It should be completely to the end … and then I press next step"), and in Play all the band stays full
+       through the still part. tools/bands.mjs proves it, through bar.__sp (these controls, kept on the bar for it).
        compact(true): the steps become small chips, and the step's words stand in a panel right under
        them, for a widget whose drawing stands in the plate's column (Daniel, 26 Sep: "make the different
        stages smaller, and more compacted ... you can still click them. But you see the text on the right")
@@ -72,11 +77,18 @@
 
     var T = 0, playing = false, raf = null, last = null, started = false, stopAt = null;
     function stepAt(t) { var k = 0; for (var i = 0; i < STEPS.length; i++) if (t >= STEPS[i].t - 1e-6) k = i; return k; }
-    function segEnd(i) { return i + 1 < STEPS.length ? STEPS[i + 1].t - .02 : END; }
+    /* where a single step stops: 0.02 s before the next step's first frame, or sooner, 0.1 s after its picture stops */
+    function segEnd(i) {
+      var e = i + 1 < STEPS.length ? STEPS[i + 1].t - .02 : END, q = opts.motion ? opts.motion[i] : null;
+      return q == null ? e : Math.min(e, STEPS[i].t + q * (stepEnd(i) - STEPS[i].t) + .1);
+    }
+    /* the animation is over once the last step's picture has stopped (a single step stops there; Play all plays on to
+       the end of its time) */
+    function over(t) { return t >= segEnd(STEPS.length - 1) - 1e-3; }
     function atStepEnd() { return started && !playing && stopAt != null && T >= stopAt - 1e-3; }
     function paint(t) {
       render(t);
-      var k = stepAt(t), done = t >= END - 1e-6;
+      var k = stepAt(t), done = over(t);
       Array.prototype.forEach.call(list.children, function (li, i) {
         li.classList.toggle('is-on', started && i === k);
         li.classList.toggle('is-done', started && (i < k || (done && i === k)));
@@ -96,7 +108,7 @@
       sync();
     }
     function sync() {
-      var ended = T >= END - 1e-3, next = atStepEnd() && !ended;
+      var ended = over(T) && !playing, next = atStepEnd() && !ended;
       play.innerHTML = playing ? '<span class="sp__ico" aria-hidden="true">❚❚</span> Pause'
         : ended ? '<span class="sp__ico" aria-hidden="true">↻</span> Play again'
         : !started ? '<span class="sp__ico" aria-hidden="true">▶</span> Play'
@@ -126,12 +138,12 @@
     function goStep(i) { run(STEPS[i].t, segEnd(i)); }
     play.addEventListener('click', function () {
       if (playing) { stop(); paint(T); return; }
-      if (!started || T >= END - 1e-3) { goStep(0); return; }
+      if (!started || over(T)) { goStep(0); return; }
       if (atStepEnd()) { goStep(stepAt(T) + 1); return; }
       run(T, stopAt == null ? segEnd(stepAt(T)) : stopAt);
     });
     all.addEventListener('click', function () {
-      var from = !started || T >= END - 1e-3 ? 0 : atStepEnd() ? STEPS[stepAt(T) + 1].t : T;
+      var from = !started || over(T) ? 0 : atStepEnd() ? STEPS[stepAt(T) + 1].t : T;
       run(from, END);
     });
     /* the words go under the chips, and come back to wherever the widget put them */
@@ -152,7 +164,7 @@
       bar: bar, list: list, now: now, paint: paint, stop: stop, isStill: still, compact: compact,
       time: function () { return T; },
       seek: function (t) { stop(); started = t > 0; stopAt = null; T = Math.max(0, Math.min(END, t)); paint(T); return STEPS.map(function (s) { return s.t; }); },
-      end: END
+      end: END, motion: opts.motion || null, stopOf: segEnd
     };
     bar.__sp = api;
     return api;

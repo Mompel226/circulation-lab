@@ -168,6 +168,8 @@
     { t: 55, h: 'Heart muscle cells die: a heart attack', p: 'After 20 to 40 minutes without oxygen, the heart muscle **cells die**. Dead cells can never contract again, even if blood reaches them later. This is a **heart attack**. On the heart, the dead patch turns grey; the muscle before the blockage still receives blood.' }
   ];
   var AR_END = 66;
+  /* the part of each step's time during which its picture moves: written and checked by tools/motion.mjs (CircLearn.stepper motion) */
+  var MOTION = {"artery":[1,1,1,1,1,0.72,0.74]};
 
   /* the state of the artery at time t */
   function depAt(t) {      /* the deposit's thickness at its centre */
@@ -754,7 +756,7 @@
     }
 
     var R = [0, 16, 28, 43.5, 51.5, 64, 75, 87], M = [0, 12, 22, 35, 40, 46, 55, AR_END], clock = readerClock(R, M);
-    var sp = L.stepper({ steps: readerSteps(AR_STEPS, R), end: R[R.length - 1], render: function (t) { render(clock(t), t); } });
+    var sp = L.stepper({ steps: readerSteps(AR_STEPS, R), end: R[R.length - 1], render: function (t) { render(clock(t), t); }, motion: MOTION.artery });
     box.appendChild(sp.bar);
     var wrap = h('div', 'ar__wrap');
     /* on a wide screen the drawing stands in the plate's column; its read-outs and the steps stay here */
