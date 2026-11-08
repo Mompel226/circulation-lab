@@ -123,6 +123,10 @@
   var HINT = 'Click a part to see what it does · scroll or pinch to zoom';
   function focus(id) {
     if (!draw || !draw.G[id]) return;
+    /* a bench station (Arteries, veins and capillaries: the capillary bed) shows no body, so there is no part to show;
+       and naming one would make the way back (unfocus → showStation) empty the bench. Since 8 Nov 2026 a card opening
+       asks for its part, so this came up on every card of that station: the capillary bed vanished. */
+    if (current && spec(current).bench) return;
     var g = draw.G[id];
     if (hint) hint.textContent = 'Press it again, or Whole body, to see all the parts again';
     var lit = FOCUS_WITH[id] || draw.organVessels(id) || [id];

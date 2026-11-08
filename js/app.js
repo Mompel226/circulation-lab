@@ -1047,6 +1047,13 @@
     return li;
   }
 
+  /* the card that holds an element (or the card itself), opened if it is shut; returns it, or null */
+  function openCardOf(el) {
+    var c = el ? (el.__open ? el : (el.closest ? el.closest('.xcard') : null)) : null;
+    if (c && c.__open && !c.classList.contains('is-open')) c.__open(true);
+    return c;
+  }
+
   /* ---------- a sentence as a card ----------
      The heading is a button; the words under it open on a press, one card at a time in the station. Opening one shows
      its part on the body (its `group`); closing it gives the station's picture back (Plate.unfocus: in this lab
@@ -1141,6 +1148,9 @@
       if (cameFrom && S[cameFrom]) showBackChip(cameFrom, term);
       return;
     }
+    /* the line found may be inside a card (a sentence's, or an animation's): open it, or the page would land on words
+       nobody can see (8 Nov 2026, the cards) */
+    openCardOf(target);
     /* arriving from another station: there is nothing to animate from, so land instantly */
     landOn(target, cameFrom == null);
     target.classList.add('flash');
@@ -1150,11 +1160,17 @@
 
   var backChip = null, whereWeWere = null;
   function jumpTo(el, top) { var prev = el.style.scrollBehavior; el.style.scrollBehavior = 'auto'; el.scrollTop = top; el.style.scrollBehavior = prev || ''; }
-  function markWhereWeAre() { var sc = panelScroller(); whereWeWere = { id: current, top: sc ? sc.scrollTop : 0, tab: tab }; }
+  /* where the reader was, and which card they had open (its place among the station's cards, which a repaint keeps):
+     the way back opens it again, or "← back" would return to a page of closed cards */
+  function markWhereWeAre() {
+    var sc = panelScroller(), cards = document.querySelectorAll('#panelInner .xcard'), was = document.querySelector('#panelInner .xcard.is-open');
+    whereWeWere = { id: current, top: sc ? sc.scrollTop : 0, tab: tab, card: was ? Array.prototype.indexOf.call(cards, was) : -1 };
+  }
   function goBackToMark(id) {
     var w = whereWeWere && whereWeWere.id === id ? whereWeWere : null;
     open(id);
     if (!w) return;
+    if (w.card > -1) openCardOf(document.querySelectorAll('#panelInner .xcard')[w.card]);
     requestAnimationFrame(function () { requestAnimationFrame(function () { var sc = panelScroller(); if (sc) jumpTo(sc, w.top); }); });
   }
   function showBackChip(id, term) {
@@ -1901,6 +1917,7 @@
       open(id);
       var target = document.querySelector('#panelInner ' + sel);
       if (!target) { toStationTop(); return false; }
+      openCardOf(target);                     /* the animation stands in a card of its own: open it first */
       landOn(target, false);
       if (from !== id && S[from]) showBackChip(from, what || S[id].name);
       return true;
