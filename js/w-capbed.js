@@ -321,7 +321,9 @@
       pause.setAttribute('aria-pressed', paused ? 'true' : 'false');
       go();
     });
-    if (reduced) { pause.hidden = true; }
+    /* Reduce motion (Daniel, 9 Nov 2026: "Nothing should disappear"): the loop does not start by itself, and the button
+       stays, so a pupil can choose to play it */
+    if (reduced) { pause.innerHTML = '▶ Play'; pause.setAttribute('aria-pressed', 'true'); }
     var io = global.IntersectionObserver ? new IntersectionObserver(function (en) { onScreen = en.some(function (e) { return e.isIntersecting; }); go(); }) : null;
     if (io) io.observe(svg); else onScreen = true;
     document.addEventListener('visibilitychange', go);

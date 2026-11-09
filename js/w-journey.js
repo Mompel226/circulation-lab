@@ -1595,10 +1595,12 @@
       R.tScale.innerHTML = scaleBar(T.VX + 8, T.VY + T.VH + 15, bar.px, bar.label, 1);
       /* while zooming, say how much */
       var z = '';
-      if (E.tr) {
-        var f = Math.round(E.tr.dir > 0 ? SC[i - 1].F / SC[i].F : SC[i].F / SC[i - 1].F);
-        var zop = Math.min(seg(E.u, 0, .12), 1 - seg(E.u, .85, 1));
-        var txt = (E.tr.dir > 0 ? 'Zooming in ×' : 'Zooming out ×') + f;
+      /* a stage's still (Reduce motion) keeps the words of the zoom that brought it there */
+      var trZ = E.tr || (stillK > 0 && i === stillK ? TR[i] : null);
+      if (trZ) {
+        var f = Math.round(trZ.dir > 0 ? SC[i - 1].F / SC[i].F : SC[i].F / SC[i - 1].F);
+        var zop = E.tr ? Math.min(seg(E.u, 0, .12), 1 - seg(E.u, .85, 1)) : 1;
+        var txt = (trZ.dir > 0 ? 'Zooming in ×' : 'Zooming out ×') + f;
         var w = textW(txt, 12) + 22;
         z = '<g opacity="' + n2(zop) + '"><rect x="' + n1(T.cx - w / 2) + '" y="' + (T.VY + 10) + '" width="' + n1(w) + '" height="22" rx="11" class="jn__zoom"/>' +
             '<text x="' + n1(T.cx) + '" y="' + (T.VY + 25) + '" text-anchor="middle" class="jn__zoomt">' + esc(txt) + '</text></g>';
@@ -1632,7 +1634,7 @@
       /* 2 arteriole — inside */
       L('in', 1, 'red blood cells', 4.6, { x: 132, y: 0, band: [-6, 6] }),
       L('in', 1, function () { var c = ST.bC || 0; return c > .35 ? 'muscle contracts: lumen narrows' : c < -.35 ? 'muscle relaxes: lumen widens' : 'smooth muscle'; }, 5.2,
-        { x: 124, y: function () { return -((ST.bRi || AOL.ri) + ((ST.bRo || AOL.ro) - (ST.bRi || AOL.ri)) * .45); }, band: function () { var ri = ST.bRi || AOL.ri, ro = ST.bRo || AOL.ro; return [-(ri + (ro - ri) * .78), -(ri + (ro - ri) * .2)]; } }),
+        { still: 'muscle contracts: lumen narrows, then muscle relaxes: lumen widens', x: 124, y: function () { return -((ST.bRi || AOL.ri) + ((ST.bRo || AOL.ro) - (ST.bRi || AOL.ri)) * .45); }, band: function () { var ri = ST.bRi || AOL.ri, ro = ST.bRo || AOL.ro; return [-(ri + (ro - ri) * .78), -(ri + (ro - ri) * .2)]; } }),
       /* 2 arteriole — cut across */
       L('x', 1, 'smooth muscle', 3.4, { ring: function () { var q = ST.xb; return q ? (q.en + q.ad) / 2 : 20; }, y: -.55 }),
       L('x', 1, 'endothelium', 4.0, { ring: function () { var q = ST.xb; return q ? q.ri + .4 : 15.4; }, y: -.08 }),
@@ -1654,7 +1656,7 @@
       L('x', 3, 'lumen', 3.2, { lumenE: function () { return [19 * 1.13, 19 * .86]; }, y: .35, lx: .55 }),
       /* 5 vein — inside */
       L('in', 4, function () { var P = ST.eP; return !P || P.dir === 0 ? (P && P.s > .5 ? 'leg muscle contracts: it squeezes the vein' : 'leg muscle, outside the vein') : P.dir > 0 ? 'leg muscle contracts: it squeezes the vein' : 'leg muscle relaxes'; }, 6.0,
-        { x: 5600, y: function () { return legRim(5600) + 270; }, band: function () { var r = legRim(5600); return [r + 60, r + 480]; } }),
+        { still: 'leg muscle, outside the vein, then leg muscle contracts: it squeezes the vein, then leg muscle relaxes', x: 5600, y: function () { return legRim(5600) + 270; }, band: function () { var r = legRim(5600); return [r + 60, r + 480]; } }),
       /* the story: first the two things to tell apart, the leg muscle outside and the vein's own thin wall, while
          the muscle squeezes once; then the wall's label makes way for the valves', which explain the next squeezes.
          (An open valve's pocket lies against the wall, so a valve's label and the wall's would share one level.)
@@ -1684,10 +1686,13 @@
           if (E.i !== lb.stage) {
             if (E.i === lb.stage + 1 && E.tr) op *= 1 - seg(t - STAGES[E.i].t, 0, .35); else op = 0;
           } else if (E.tr) op = 0;
+          /* a stage's still (Reduce motion) names every part the stage names, not only those still standing at its end */
+          if (stillK > -1) op = lb.stage === stillK ? 1 : 0;
           if (op <= .01) return;
           var item = place(lb, view, E);
           if (!item) return;
-          var text = typeof lb.text === 'function' ? lb.text() : lb.text;
+          /* a name that changes with the part's state: its still names every state (`still`) */
+          var text = stillK > -1 && lb.still ? lb.still : typeof lb.text === 'function' ? lb.text() : lb.text;
           item.lines = wrapText(text, V.gw - 10, FONT);
           item.h = item.lines.length * lh; item.op = op; item.ly = item.sy;
           list.push(item);
@@ -1885,10 +1890,13 @@
 
     /* ============================================================
        Playing, one stage at a time (the pollentube rules): each stage plays, then holds its last
-       frame until "Next step". "Play all" runs straight through. With reduced motion, each press
-       shows the next stage as a still, with no timer.
+       frame until "Next step". "Play all" runs straight through. With Reduce motion, each press
+       shows the next stage as ONE still that names every part the stage names; Play all shows the stills in turn.
        ============================================================ */
     var T0 = 0, playing = false, raf = null, last = null, started = false, stopAt = null;
+    /* Reduce motion (Daniel, 9 Nov 2026: "Nothing should disappear"): the stage whose still is drawn (-1: none), and
+       Play all's timer, which shows each stage's still in turn */
+    var stillK = -1, slideT = null, allMode = false;
     function stepEnd(i) { return i + 1 < STAGES.length ? STAGES[i + 1].t : END; }
     function segEnd(i) { return i + 1 < STAGES.length ? STAGES[i + 1].t - .02 : END; }
     function atStepEnd() { return started && !playing && stopAt != null && T0 >= stopAt - 1e-3; }
@@ -1909,9 +1917,16 @@
         : '<span class="jn__ico" aria-hidden="true">▶</span> Resume';
       play.classList.toggle('is-playing', playing);
       play.classList.toggle('is-next', next);
-      all.hidden = still();
     }
-    function stop() { playing = false; if (raf) cancelAnimationFrame(raf); raf = null; }
+    function stop() { playing = false; if (raf) cancelAnimationFrame(raf); raf = null; if (slideT) { clearTimeout(slideT); slideT = null; } }
+    function slides(i) {
+      stillK = i; T0 = segEnd(i); playing = true; paint(T0);
+      slideT = setTimeout(function () {
+        slideT = null;
+        if (!box.isConnected) { stop(); return; }
+        if (i + 1 < STAGES.length) slides(i + 1); else { playing = false; paint(T0); }
+      }, Math.max(1500, (stepEnd(i) - STAGES[i].t) * 1000));
+    }
     function frame(ts) {
       if (!box.isConnected) { stop(); return; }
       if (last == null) last = ts;
@@ -1921,10 +1936,12 @@
       paint(T0);
       raf = requestAnimationFrame(frame);
     }
-    function run(from, to) {
-      stop(); watchSize(); started = true; stopAt = to;
+    function run(from, to, whole) {
+      stop(); watchSize(); started = true; stopAt = to; allMode = !!whole;
       if (!built) build();
-      if (still()) { T0 = to; paint(T0); return; }
+      /* Reduce motion: no movement, but the stage's still (Play all: each stage's still in turn) */
+      if (still()) { if (whole) slides(stepAt(from)); else { T0 = to; stillK = stepAt(to); paint(T0); } return; }
+      stillK = -1;
       T0 = from; playing = true; last = null; paint(T0);
       raf = requestAnimationFrame(frame);
     }
@@ -1933,11 +1950,11 @@
       if (playing) { stop(); paint(T0); return; }
       if (!started || T0 >= END - 1e-3) { goStep(0); return; }
       if (atStepEnd()) { goStep(stepAt(T0) + 1); return; }
-      run(T0, stopAt == null ? segEnd(stepAt(T0)) : stopAt);
+      run(T0, stopAt == null ? segEnd(stepAt(T0)) : stopAt, allMode);
     });
     all.addEventListener('click', function () {
       var from = !started || T0 >= END - 1e-3 ? 0 : atStepEnd() ? STAGES[stepAt(T0) + 1].t : T0;
-      run(from, END);
+      run(from, END, true);
     });
 
     /* ----- sizes: build when the widget has a width; build again when it changes ----- */
@@ -1973,7 +1990,7 @@
     box.__seek = function (t) {
       stop();
       if (!built || Math.abs(Math.floor(plate.getBoundingClientRect().width) - lastW) >= 2) { lastW = 0; fit(); }
-      started = t > 0; T0 = Math.max(0, Math.min(END, t));
+      started = t > 0; T0 = Math.max(0, Math.min(END, t)); stillK = -1;
       stopAt = null;
       STAGES.forEach(function (st, i) { if (Math.abs(segEnd(i) - T0) < .011) stopAt = segEnd(i); });
       paint(T0);

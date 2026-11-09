@@ -1092,8 +1092,13 @@
        RENDER — the whole picture at time t
        ================================================================ */
     var LB = [];                                  /* the labels this frame, collected by each scene */
+    /* Reduce motion (Daniel, 9 Nov 2026: "Nothing should disappear"): drawing a step's still, the step ({ from, to }):
+       every name whose time falls in the step stands at full strength where its part is in the still's view, and
+       none is left out for want of a row (`all`) */
+    var STILL = null;
+    function wv(t, a, b, f) { return STILL ? (a < STILL.to && b > STILL.from ? 1 : 0) : win(t, a, b, f); }
     function lab(text, side, sx, sy, op, cls, alts) {
-      if (op > .01) LB.push({ text: text, side: side, sx: sx, sy: sy, op: op, cls: cls || '', alts: alts, keep: /is-tracer/.test(cls || '') });
+      if (op > .01) LB.push({ text: text, side: side, sx: sx, sy: sy, op: op, cls: cls || '', alts: alts, keep: /is-tracer/.test(cls || ''), all: !!STILL });
     }
     /* Other points for a crowded name (w-common.js moves it there instead of bending its line, 18 Oct 2026), in the
        model: further along its own vessel or organ line, inside its own organ, or in its own heart chamber (the
@@ -1135,8 +1140,8 @@
     var beat = global.CircDraw && global.CircDraw.beatState;
     var lastStep = -1;
 
-    function render(t) {
-      LB = [];
+    function render(t, still) {
+      LB = []; STILL = still || null;
       var lens = lensAt(t), k = ease(lens.k);
       var cam = camA(t);
       var showA = k < .999;
@@ -1173,6 +1178,16 @@
       }
       R.mbg.setAttribute('x', G.VX); R.mbg.setAttribute('y', G.VY); R.mbg.setAttribute('width', G.VW); R.mbg.setAttribute('height', G.VH);
       drawLabels();
+      if (STILL && ALSO[STILL.step]) {
+        var af = Math.round(G.font * .78 * 10) / 10, ax = G.VX + 10, ay = G.VY + 8 + G.font * 1.25 + af * 1.6, head = 'Also in this step:';
+        var also = '<text class="lb__txt bf__also" x="' + n2(ax) + '" y="' + n2(ay) + '" style="font-size:' + af + 'px">' + head + '</text>';
+        ax += textW(head + ' ', af);
+        ALSO[STILL.step].forEach(function (w, i) {
+          also += '<text class="lb__txt bf__also" x="' + n2(ax) + '" y="' + n2(ay) + '" style="font-size:' + af + 'px">' + esc(w) + '</text>';
+          ax += textW(w + (i ? ', ' : ' '), af);
+        });
+        R.labels.innerHTML += also;
+      }
       readings();
       var st = stepAt(t);
       if (st !== lastStep) { lastStep = st; syncBeyond(st); }
@@ -1278,7 +1293,7 @@
 
       /* labels, in the body */
       var li = [];
-      function L2(text, side, x, y, a0, b0, cls, f) { var op = win(t, a0, b0, f || .45) * vis; if (op > .01) li.push([text, side, x, y, op, cls, BODY_ALTS[text] ? BODY_ALTS[text](x, y) : null]); }
+      function L2(text, side, x, y, a0, b0, cls, f) { var op = wv(t, a0, b0, f || .45) * vis; if (op > .01) li.push([text, side, x, y, op, cls, BODY_ALTS[text] ? BODY_ALTS[text](x, y) : null]); }
       L2('left ventricle', 'R', hx(292), hy(372), .3, 8.6);
       L2('aorta', 'R', 689, 806, .5, 8.6);
       L2('hepatic artery', 'R', 622, 848, 1.5, 8.6);
@@ -1317,7 +1332,7 @@
       L2('to the legs', 'L', 611, 1188, 78.6, 81);
       li.forEach(function (q) { var s = toScreen(cam, q[2], q[3]); lab(q[0], q[1], s[0], s[1], q[4], q[5], q[6] && q[6].map(function (a) { return toScreen(cam, a[0], a[1]); })); });
       /* the followed molecules, named where they are */
-      function tl(txt, pos, side, a0, b0) { if (!pos) return; var op = win(t, a0, b0, .4) * vis; var s = toScreen(cam, pos.x, pos.y); lab(txt, side, s[0], s[1], op, 'is-tracer'); }
+      function tl(txt, pos, side, a0, b0) { if (!pos) return; var op = wv(t, a0, b0, .4) * vis; var s = toScreen(cam, pos.x, pos.y); lab(txt, side, s[0], s[1], op, 'is-tracer'); }
       /* two molecules that travel together stand in opposite margins: a few units apart, their names could not
          both have a level line on one side (18 Oct 2026) */
       tl('glucose', g, 'R', 27.4, 34.6); tl('amino acid', a, 'L', 27.4, 34.6);
@@ -1391,7 +1406,7 @@
       });
       /* labels */
       var vis = seg(M.k, .7, 1);
-      function L3(text, side, x, y, a0, b0, cls, alts) { var op = win(t, a0, b0, .4) * vis; if (op > .01) { var s = S2(x, y); lab(text, side, s[0], s[1], op, cls, alts && alts.map(function (a) { return S2(a[0], a[1]); })); } }
+      function L3(text, side, x, y, a0, b0, cls, alts) { var op = wv(t, a0, b0, .4) * vis; if (op > .01) { var s = S2(x, y); lab(text, side, s[0], s[1], op, cls, alts && alts.map(function (a) { return S2(a[0], a[1]); })); } }
       /* other points: the epithelium and the villus further down their own side, the microvilli along the edge,
          the other capillary rungs, the arteriole, the venule and the lacteal further along, the lumen lower down */
       var OP = VIL.outer.pts, tipI = 0;
@@ -1530,7 +1545,7 @@
       if (dT.__u) place(TRC.U.ring, dT.__u[0], dT.__u[1], 12, 0, .9 * seg(t, 47.4, 47.9)); else place(TRC.U.ring, 0, 0, 1, 0, 0);
       /* labels */
       var vis = seg(M.k, .7, 1);
-      function L3(text, side, x, y, a0, b0, cls, alts) { var op = win(t, a0, b0, .4) * vis; if (op > .01) { var s = S2(x, y); lab(text, side, s[0], s[1], op, cls, alts && alts.map(function (a) { return S2(a[0], a[1]); })); } }
+      function L3(text, side, x, y, a0, b0, cls, alts) { var op = wv(t, a0, b0, .4) * vis; if (op > .01) { var s = S2(x, y); lab(text, side, s[0], s[1], op, cls, alts && alts.map(function (a) { return S2(a[0], a[1]); })); } }
       L3('liver cell', 'L', 30, 330, 36, 51.6, '', [[30, 137], [30, 232], [30, 417]]);       /* the other liver cells on this side */
       L3(meal ? 'glucose → glycogen' : 'glycogen → glucose', 'R', FOCUS.gx + 36, FOCUS.gy - 2, 36.6, 43.4);
       L3('glycogen', 'R', FOCUS.gx + 36, FOCUS.gy - 2, 43.4, 51.6);
@@ -1542,7 +1557,8 @@
       if (gop > .01) L3('glucose', 'L', 146, gy, 36.8, 45, 'is-tracer');
       if (chainOn) L3('protein: fibrinogen', 'R', cx + 20, cy - 5, 46.2, 51.6);
       if (dT.__a) L3('amino acid', 'L', dT.__a[0], dT.__a[1], 44, 47.2, 'is-tracer');
-      if (dT.__u) L3('urea', 'L', dT.__u[0], dT.__u[1], 47.4, 51.6, 'is-tracer');
+      /* a still of the step (Reduce motion) cannot show the amino acid becoming urea: the one molecule carries both names */
+      if (dT.__u) L3(STILL && STILL.from < 47.2 && STILL.to > 44 ? 'amino acid, then urea' : 'urea', 'L', dT.__u[0], dT.__u[1], 47.4, 51.6, 'is-tracer');
     }
 
     /* ---------- D: the muscle ---------- */
@@ -1571,7 +1587,7 @@
       place(TRD.co2a, lerp(tg[0] - 4, 156, ec), lerp(tg[1] - 6, tg[1] - 40, ec), 5.6, 0, t > a3 + .2 ? 1 : 0);
       place(TRD.co2b, lerp(tg[0] + 6, 146, ec), lerp(tg[1] + 6, tg[1] - 16, ec), 5.6, 0, t > a3 + .3 ? 1 : 0);
       var vis = seg(M.k, .7, 1);
-      function L3(text, side, x, y, a0, b0, cls, alts) { var op = win(t, a0, b0, .4) * vis; if (op > .01) { var s = S2(x, y); lab(text, side, s[0], s[1], op, cls, alts && alts.map(function (a) { return S2(a[0], a[1]); })); } }
+      function L3(text, side, x, y, a0, b0, cls, alts) { var op = wv(t, a0, b0, .4) * vis; if (op > .01) { var s = S2(x, y); lab(text, side, s[0], s[1], op, cls, alts && alts.map(function (a) { return S2(a[0], a[1]); })); } }
       L3('capillary', 'L', 137, 430, 80.8, 99, '', [250, 320, 380, 470].map(function (y) { return [137, y]; }));            /* clear of the equation along the bottom */
       L3('muscle cell', 'L', 26, 214, 81, 99, '', [150, 280, 350, 420].map(function (y) { return [26, y]; }));
       L3('mitochondrion', 'R', tg[0] + 15, tg[1] + 4, 81.4, 99, '', MUS.mito.filter(function (q) { return q[0] > 200 && q !== tg; }).map(function (q) { return [q[0] + 15, q[1] + 4]; }));
@@ -1624,10 +1640,10 @@
         });
         it.forEach(function (x) { x.lines = wrap(x.text, G.room); x.h = x.lines.length * lh; x.x = x.sx; x.y = x.sy; });
         it = L.placeRows(it, 5, G.H - 5, gap).kept;
-        it.forEach(function (x) { x.sx = x.x; x.sy = x.ly = x.y; });
+        it.forEach(function (x) { x.sx = x.x; x.sy = x.y; if (!x.all || x.ly == null) x.ly = x.y; });   /* a still's name with no level row keeps its own row (CircLearn.placeRows) */
         it.forEach(function (x) {
           var edge = side === 'L' ? G.VX : G.VX + G.VW, dir = side === 'L' ? -1 : 1;
-          var d = 'M' + n2(x.sx) + ' ' + n2(x.sy) + 'L' + n2(edge + dir * 10) + ' ' + n2(x.sy);
+          var d = 'M' + n2(x.sx) + ' ' + n2(x.sy) + (Math.abs(x.ly - x.sy) > .5 ? 'L' + n2(edge) + ' ' + n2(x.sy) + 'L' + n2(edge + dir * 6) + ' ' + n2(x.ly) : '') + 'L' + n2(edge + dir * 10) + ' ' + n2(x.ly);
           var tx = edge + dir * 14, anchor = side === 'L' ? 'end' : 'start', y0 = x.ly - x.h / 2 + F * .86;
           out += '<g class="lb bf__lb ' + x.cls + '" opacity="' + n2(Math.min(1, x.op)) + '">' +
             '<path class="lb__halo" d="' + d + '"/><path class="lb__lead" d="' + d + '"/>' +
@@ -1647,8 +1663,15 @@
        THE CONTROLS
        ================================================================ */
     var STEPS = STEP_DEF.map(function (d) { return { t: d.t, h: d.h, tag: d.tag, p: d.p }; });
+    /* each step's still (Reduce motion): a moment whose view holds every part the step names; else where it stops.
+       Step 2: oxygen and carbon dioxide are both in the villus at 13.5; step 4: the body, before the lens opens on the
+       liver; step 5: oxygen and carbon dioxide both in the liver cell at 38.85 */
+    var STILLS = { 1: 13.5, 3: 31, 4: 38.85 };
+    /* a name of the body that a step names before its lens opens, which its still (the lens open) cannot show: listed in
+       one line at the top of the still (step 10: the blood goes to the legs, then a leg muscle, magnified) */
+    var ALSO = { 9: ['to the legs'] };
     function stepAt(t) { var k = 0; for (var i = 0; i < STEPS.length; i++) if (t >= STEPS[i].t - 1e-6) k = i; return k; }
-    var sp = L.stepper({ steps: STEPS, end: END, render: render, onStart: function () { watchSize(); } });
+    var sp = L.stepper({ steps: STEPS, end: END, render: render, stills: function (i) { return STILLS[i]; }, onStart: function () { watchSize(); } });
     /* each step's "Beyond the syllabus" line, closed until opened, under its paragraph */
     var beyondEls = [];
     Array.prototype.forEach.call(sp.list.children, function (li, i) {

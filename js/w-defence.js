@@ -430,7 +430,7 @@
     var gEnz = q('.ph__enz'), gBac = q('.ph__bac'), gProd = q('.ph__prod'), memo = q('.ph__memo'), memi = q('.ph__memi'), gAg = q('.ph__ag');
     var lay = null;
 
-    function render(t) {
+    function render(t, still) {
       var St = phState(t), i;
       cx0 = St.cx;
       var sacs = SACS.map(function (s, k) { return sacAt(k, St); });
@@ -593,13 +593,15 @@
         if (t > 42.6 && t < 55 && prodPos[0]) add('pro', 'soluble products', prodPos[0][0], prodPos[0][1], 'R', clamp01((t - 42.6) / .8) * clamp01((55 - t) / .8), proAlts);
         if (agShown && agShown[2] > 0) add('ag', 'antigen from the bacterium', agShown[0], agShown[1], 'R', agShown[2], agAll);
       }
+      /* a still (Reduce motion) keeps every name, never leaving one out for want of a row */
+      if (still) items.forEach(function (it) { it.all = true; });
       gLab.innerHTML = drawLabels(lay, items, { enz: 1.5, pro: 1.3, chem: 1.5, ag: 1.5 });
       var state = t < 11 ? ['free in the tissue', 'warn'] : t < 21.6 ? ['being surrounded', 'warn'] : t < 37.6 ? ['in a vacuole', 'ok'] : t < 44.5 ? ['being digested', 'ok'] : t < 54.5 ? ['digested', 'ok'] : ['digested; its antigens displayed', 'ok'];
       S.pill('bac', state[0], state[1]);
     }
 
     var R = [0, 13.5, 23.5, 33.5, 42, 50, 60, 78], M = [0, 11, 20, 29, 37, 45, 54, PH_END], clock = readerClock(R, M);
-    var sp = L.stepper({ steps: readerSteps(PH_STEPS, R), end: R[R.length - 1], render: function (t) { render(clock(t)); } });
+    var sp = L.stepper({ steps: readerSteps(PH_STEPS, R), end: R[R.length - 1], render: function (t, still) { render(clock(t), still); } });
     return mount(S, sp, 'ph', [
       ['The phagocyte drawn is a neutrophil, the commonest phagocyte in blood: its nucleus has several lobes, and its cytoplasm is full of small granules. A real one is about 11 µm across, and the bacterium about 2 µm long. The sacs of enzymes are drawn larger than real, and the chemicals, enzymes, products and antigens far larger than real molecules. You see a thin slice, so the extensions look like two arms: in the whole cell they are a cup.'],
       ['<b>Beyond 0610.</b> Moving towards the chemicals is called chemotaxis. The sacs of enzymes are called lysosomes. Step 6, what happens to the products, goes beyond the syllabus.', 'ph__fence'],

@@ -516,15 +516,20 @@
       view.play(beatPlan(flowReal), { loop: true, from: STAGES[2].correct, onStep: function (k) { paintStages(k); } });
     }
     /* a stage pressed in the list: the beat stops there, on the end of that stage, until Play */
+    var flowK = 0;
     function flowStill(i) {
       if (!view) return;
+      flowK = i;
       view.reseed(STAGES[i].key);
       view.play([seg(i, STAGES[i].correct, SLOW[i], true)], { still: true, from: STAGES[(i + 2) % 3].correct });
       paintStages(i); flowPaused = true; syncFlowBtn();
     }
-    function syncFlowBtn() { flPlay.innerHTML = flowPaused ? '▶ Play' : '❚❚ Pause'; flPlay.hidden = still(); }
+    /* Reduce motion (Daniel, 9 Nov 2026: "Nothing should disappear"): the beat does not run by itself; the button stays,
+       and shows the next stage's still */
+    function syncFlowBtn() { flPlay.innerHTML = still() ? '▶ Next stage' : flowPaused ? '▶ Play' : '❚❚ Pause'; }
     flPlay.addEventListener('click', function () {
       if (!view) return;
+      if (still()) { flowStill((flowK + 1) % STAGES.length); return; }
       flowPaused = !flowPaused; syncFlowBtn();
       if (flowPaused) view.pause(); else if (view.playing && !view.playing()) { startFlow(); } else view.resume();
     });
@@ -614,14 +619,16 @@
       bPlay.innerHTML = steps.playing ? '<span aria-hidden="true">❚❚</span> Pause' : ended ? '<span aria-hidden="true">↻</span> Play again' :
         !steps.started ? '<span aria-hidden="true">▶</span> Play' : '<span aria-hidden="true">▶</span> Next step';
       bPlay.classList.toggle('is-next', steps.started && !steps.playing && !ended);
-      bAll.hidden = still();
       bCount.textContent = steps.started ? 'Step ' + (k + 1) + ' of ' + STAGES.length : STAGES.length + ' steps';
       Array.prototype.forEach.call(bSteps.children, function (li, i) {
         li.classList.toggle('is-on', steps.started && i === k);
         li.classList.toggle('is-done', steps.started && i < k);
       });
     }
-    function stopSteps() { if (steps.playing && view) view.stop(); steps.playing = false; steps.all = false; syncSteps(); }
+    /* Play all with Reduce motion: each step's still in turn, 2.5 s each; nothing moves inside a still */
+    var slideT = null;
+    function stopSlides() { if (slideT) { clearTimeout(slideT); slideT = null; } }
+    function stopSteps() { stopSlides(); if (steps.playing && view) view.stop(); steps.playing = false; steps.all = false; syncSteps(); }
     function goStep(i) {
       if (!view && !flat) return;
       steps.started = true; steps.k = i; steps.playing = !still();
@@ -633,7 +640,10 @@
         if (i === 0) view.reseed('A');
         view.play(stagePlan(i, vs), { from: STAGES[(i + 2) % 3].correct, still: still(), onDone: function () {
           steps.playing = false;
-          if (steps.all && steps.k < STAGES.length - 1) { goStep(steps.k + 1); return; }
+          if (steps.all && steps.k < STAGES.length - 1) {
+            if (still()) { steps.playing = true; slideT = setTimeout(function () { slideT = null; if (steps.all) goStep(steps.k + 1); }, 2500); return; }
+            goStep(steps.k + 1); return;
+          }
           steps.all = false; syncSteps();
         } });
         view.labels(labelList());
@@ -642,6 +652,7 @@
       syncSteps();
     }
     bPlay.addEventListener('click', function () {
+      if (slideT) { stopSlides(); steps.all = false; steps.playing = false; syncSteps(); return; }
       if (steps.playing) { if (view) view.pause(); steps.playing = false; steps.paused = true; syncSteps(); return; }
       if (steps.paused && view) { steps.paused = false; steps.playing = true; view.resume(); syncSteps(); return; }
       var ended = steps.started && steps.k === STAGES.length - 1;

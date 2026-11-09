@@ -162,7 +162,7 @@
       }
     });
     var lastSound = -1, lastT = 0;
-    function render(t) {
+    function render(t, still) {
       var st = stateAt(t), p = HA.paths(st);
       HA.update(node, p);
       /* the cells: each path moves only while blood is flowing along it */
@@ -180,6 +180,9 @@
       });
       /* the sounds, marked where the valves close */
       var lub = seg(t, 6.05, 6.35) * (1 - seg(t, 7.2, 7.6)), dub = seg(t, 11.15, 11.45) * (1 - seg(t, 12.3, 12.7));
+      /* Reduce motion: a step's still shows the sound its step makes, at full strength (Daniel, 9 Nov 2026: "Nothing
+         should disappear") */
+      if (still) { lub = still.from < 7.6 && still.to > 6.05 ? 1 : 0; dub = still.from < 12.7 && still.to > 11.15 ? 1 : 0; }
       gMarks.innerHTML =
         (lub > 0 ? mark(206, 268, 'lub', lub) : '') + (dub > 0 ? mark(200, 180, 'dub', dub) : '') +
         '<text class="cy__state" x="' + ((narrow ? NV.x : VB.x) + 22) + '" y="' + (VB.y + VB.h - 22) + '" style="font-size:' + fontPx + 'px">' + esc(phaseWords(t)) + '</text>';
