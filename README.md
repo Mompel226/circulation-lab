@@ -33,7 +33,7 @@ questions that say right or wrong — never the answer.
 | ▶️ **Animations that wait** | one heartbeat, valve by valve, with the two heart sounds; a journey from artery to vein; a real heart in 3D; blood after a meal, from the gut through the liver; why the heart rate rises in exercise; a blocked coronary artery; a phagocyte at work; a cut clotting — every step holds until **Next step** |
 | 🧭 **Trace the route** | the same body again: click the vessels, chambers and organs in the order the blood passes through them, from a kidney to the lungs or from the small intestine to the heart |
 | 📝 **The gym investigation, not done for them** | the station says what the task is (the four steps, the A4 notes page written in the gym, the 60-minute write-up from memory), the six parts of the report in order, and how each is marked: press a part to see its criterion, what the mark scheme asks of it and where to learn it. It gives the rules for a perfect results table (and, as practice, a graph), links every part to the Write-Up Lab, and its questions ask where to find each thing — but it writes no research question, method, table or graph for them, because those are the assessment |
-| 📖 **A shared glossary** | one wording per term, the same in every lab |
+| 📖 **A shared glossary** | one wording per term, the same in every lab; press 한국어, 中文 or 日本語 to see each word's name in Korean, Chinese or Japanese (the definitions stay in English) |
 
 > [!NOTE]
 > **The right answers are stored only as scrambled fingerprints.** The lab can tell a student they

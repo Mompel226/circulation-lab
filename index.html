@@ -26,15 +26,15 @@
 <link rel="stylesheet" media="print" onload="this.media='all'"
       href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500&display=swap">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500&display=swap"></noscript>
-<link rel="stylesheet" href="css/app.css?v=1794146603">
-  <link rel="stylesheet" href="css/w-journey.css?v=1794146603">
-  <link rel="stylesheet" href="css/w-capbed.css?v=1794146603">
-  <link rel="stylesheet" href="css/w-monitor.css?v=1794146603">
-  <link rel="stylesheet" href="css/w-ecgsim.css?v=1794146603">
-  <link rel="stylesheet" href="css/w-chd.css?v=1794146603">
-  <link rel="stylesheet" href="css/w-defence.css?v=1794146603">
-  <link rel="stylesheet" href="css/w-bodyflow.css?v=1794146603">
-  <link rel="stylesheet" href="css/w-heart3d.css?v=1794146603">
+<link rel="stylesheet" href="css/app.css?v=1794204577">
+  <link rel="stylesheet" href="css/w-journey.css?v=1794204577">
+  <link rel="stylesheet" href="css/w-capbed.css?v=1794204577">
+  <link rel="stylesheet" href="css/w-monitor.css?v=1794204577">
+  <link rel="stylesheet" href="css/w-ecgsim.css?v=1794204577">
+  <link rel="stylesheet" href="css/w-chd.css?v=1794204577">
+  <link rel="stylesheet" href="css/w-defence.css?v=1794204577">
+  <link rel="stylesheet" href="css/w-bodyflow.css?v=1794204577">
+  <link rel="stylesheet" href="css/w-heart3d.css?v=1794204577">
 </head>
 <body>
 <div class="app">
@@ -61,7 +61,7 @@
         <b><span id="stDone">0</span>/<span id="stTotal">12</span></b> <span class="stat__lbl">stations</span>
       </span>
       <button class="hbtn hbtn--save tip tip--right" id="btnSubmit" hidden data-tip="Signed in, your work is sent to Dr Mompel’s records on its own as you go. Press to see, or to sign in.">Saves as you go</button>
-      <button class="hbtn" id="btnGloss" title="Every word the labs use, with its definition"><span class="hbtn__long">Glossary</span><span class="hbtn__short" aria-hidden="true">A–Z</span></button>
+      <button class="hbtn" id="btnGloss" title="Every word the labs use, with its definition"><span class="hbtn__long">Glossary <span class="gl-btn"><span lang="ko">용어집</span> <span lang="zh-Hans">词汇表</span></span></span><span class="hbtn__short" aria-hidden="true">A–Z <span class="gl-btn"><span lang="ko">용어집</span> <span lang="zh-Hans">词汇表</span></span></span></button>
       <button class="hbtn" id="btnHelp"><span class="hbtn__long">How to use</span><span class="hbtn__short" aria-hidden="true">?</span></button>
       <button class="hbtn" id="btnReset" title="Start every station again"><span class="hbtn__long">Reset</span><span class="hbtn__short" aria-hidden="true">↺ Reset</span></button>
     </div>
@@ -147,6 +147,7 @@
       <li>Each station has two tabs: <b>Learn</b> — what you must know, with something to press, drag or watch in every section — and <b>Practise</b>, the questions.</li>
       <li><b>Check as often as you like.</b> You are told which parts are wrong, <b>never the answer</b> — you have to work it out. Keep going until it is all right.</li>
       <li>An underlined word can be clicked: <b>🔍</b> opens a picture there and then, <b>↗</b> jumps to the station that explains it and brings you back, <b>↓</b> takes you to its card in Key words, at the bottom of the station, and a faint dotted line opens the definition.</li>
+      <li>The <b>Glossary</b> (<span lang="ko">용어집</span> · <span lang="zh-Hans">词汇表</span>) lists every word with its definition. Choose <b lang="ko">한국어</b>, <b lang="zh-Hans">中文</b> or <b lang="ja">日本語</b> at its top to see the name of each word in that language. The definitions stay in English, the language of the exam.</li>
       <li>Your work is kept <b>in this browser</b> and, once you sign in with your school account, sent to Dr&nbsp;Mompel&rsquo;s records on its own as you go &mdash; there is nothing to hand in. Signed in, it follows you to another computer.</li>
     </ul>
     <p class="fineprint">The answers are never shown. Sign in with your school Google account so Dr&nbsp;Mompel knows whose work it is. Anyone else is welcome to use the lab &mdash; their work simply stays in their own browser.</p>
@@ -193,47 +194,49 @@
 </div>
 
 <script src="https://accounts.google.com/gsi/client?hl=en-GB" async defer></script>
-<script src="js/config.js?v=1794146603" defer></script>
-<script src="js/data/glossary.js?v=1794146603" defer></script>
-<script src="js/data/syllabus.js?v=1794146603" defer></script>
-<script src="js/data/stations.js?v=1794146603" defer></script>
-<script src="js/data/photos.js?v=1794146603" defer></script>
-<script src="js/body-art.js?v=1794146603" defer></script>
-<script src="js/heart-art.js?v=1794146603" defer></script>
-<script src="js/circ-art.js?v=1794146603" defer></script>
-<script src="js/circ-flow.js?v=1794146603" defer></script>
-<script src="js/circ-mesentery.js?v=1794146603" defer></script>
-<script src="js/circ-gut.js?v=1794146603" defer></script>
-<script src="js/circ-labelpts.js?v=1794146603" defer></script>
-<script src="js/circ-draw.js?v=1794146603" defer></script>
-<script src="js/terms.js?v=1794146603" defer></script>
-<script src="js/say.js?v=1794146603" defer></script>
-<script src="js/marking.js?v=1794146603" defer></script>
-<script src="js/sync.js?v=1794146603" defer></script>
-<script src="js/signin.js?v=1794146603" defer></script>
-<script src="js/homework.js?v=1794146603" defer></script>
-<script src="js/engine.js?v=1794146603" defer></script>
-<script src="js/syllabus.js?v=1794146603" defer></script>
-<script src="js/widgets.js?v=1794146603" defer></script>
-<script src="js/learn.js?v=1794146603" defer></script>
-<script src="js/w-common.js?v=1794146603" defer></script>
-<script src="js/w-heart.js?v=1794146603" defer></script>
-  <script src="js/w-task.js?v=1794146603" defer></script>
-  <script src="js/w-route.js?v=1794146603" defer></script>
-  <script src="js/w-exercise.js?v=1794146603" defer></script>
-  <script src="js/w-journey.js?v=1794146603" defer></script>
-  <script src="js/w-capbed.js?v=1794146603" defer></script>
-  <script src="js/w-monitor.js?v=1794146603" defer></script>
-  <script src="js/ecg-cells.js?v=1794146603" defer></script>
-  <script src="js/w-ecgsim.js?v=1794146603" defer></script>
-  <script src="js/data/chd-heart.js?v=1794146603" defer></script>
-  <script src="js/w-chd.js?v=1794146603" defer></script>
-  <script src="js/w-defence.js?v=1794146603" defer></script>
-  <script src="js/w-bodyflow.js?v=1794146603" defer></script>
-  <script src="js/w-heart3d.js?v=1794146603" defer></script>
-<script src="js/engine-ext.js?v=1794146603" defer></script>
-<script src="js/plate.js?v=1794146603" defer></script>
-<script src="js/app.js?v=1794146603" defer></script>
+<script src="js/config.js?v=1794204577" defer></script>
+<script src="js/data/glossary.js?v=1794204577" defer></script>
+<script src="js/data/glossary-tr.js?v=1794204577" defer></script>
+<script src="js/data/syllabus.js?v=1794204577" defer></script>
+<script src="js/data/stations.js?v=1794204577" defer></script>
+<script src="js/data/photos.js?v=1794204577" defer></script>
+<script src="js/body-art.js?v=1794204577" defer></script>
+<script src="js/heart-art.js?v=1794204577" defer></script>
+<script src="js/circ-art.js?v=1794204577" defer></script>
+<script src="js/circ-flow.js?v=1794204577" defer></script>
+<script src="js/circ-mesentery.js?v=1794204577" defer></script>
+<script src="js/circ-gut.js?v=1794204577" defer></script>
+<script src="js/circ-labelpts.js?v=1794204577" defer></script>
+<script src="js/circ-draw.js?v=1794204577" defer></script>
+<script src="js/terms.js?v=1794204577" defer></script>
+<script src="js/say.js?v=1794204577" defer></script>
+<script src="js/marking.js?v=1794204577" defer></script>
+<script src="js/sync.js?v=1794204577" defer></script>
+<script src="js/signin.js?v=1794204577" defer></script>
+<script src="js/homework.js?v=1794204577" defer></script>
+<script src="js/engine.js?v=1794204577" defer></script>
+<script src="js/syllabus.js?v=1794204577" defer></script>
+<script src="js/widgets.js?v=1794204577" defer></script>
+<script src="js/learn.js?v=1794204577" defer></script>
+<script src="js/w-common.js?v=1794204577" defer></script>
+<script src="js/w-heart.js?v=1794204577" defer></script>
+  <script src="js/w-task.js?v=1794204577" defer></script>
+  <script src="js/w-route.js?v=1794204577" defer></script>
+  <script src="js/w-exercise.js?v=1794204577" defer></script>
+  <script src="js/w-journey.js?v=1794204577" defer></script>
+  <script src="js/w-capbed.js?v=1794204577" defer></script>
+  <script src="js/w-monitor.js?v=1794204577" defer></script>
+  <script src="js/ecg-cells.js?v=1794204577" defer></script>
+  <script src="js/w-ecgsim.js?v=1794204577" defer></script>
+  <script src="js/data/chd-heart.js?v=1794204577" defer></script>
+  <script src="js/w-chd.js?v=1794204577" defer></script>
+  <script src="js/w-defence.js?v=1794204577" defer></script>
+  <script src="js/w-bodyflow.js?v=1794204577" defer></script>
+  <script src="js/w-heart3d.js?v=1794204577" defer></script>
+<script src="js/engine-ext.js?v=1794204577" defer></script>
+<script src="js/plate.js?v=1794204577" defer></script>
+<script src="js/app.js?v=1794204577" defer></script>
+<script src="js/glossary-lang.js?v=1794204577" defer></script>
 <!-- The lab offline. The worker lives at this lab's root, so on Pages its scope is exactly
      /<lab>/. It fetches the HTML network-first, so a deploy always reaches an online student
      and the cache is only the fall-back for when the wifi is not there. -->
