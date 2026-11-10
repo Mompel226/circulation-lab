@@ -1757,7 +1757,7 @@
       '<span class="bf__ki">' + glyph('o2') + 'oxygen</span>' +
       '<span class="bf__ki">' + glyph('co2', 4.4) + 'carbon dioxide</span>' +
       '<span class="bf__ki">' + glyph('fat') + 'fat</span>' +
-      '<span class="bf__ki bf__ki--note"><i class="bf__beyondname">name in grey italics</i> beyond the syllabus</span>';
+      '<span class="bf__ki bf__ki--note"><i class="bf__beyondname">name in purple italics</i> beyond the syllabus</span>';
 
     /* the layout: the drawing, its readings and key on the left, the steps on the right */
     var wrapEl = h('div', 'bf__wrap');

@@ -4,13 +4,13 @@
    red squared paper.
    ============================================================ */
 /* the whole widget is beyond the syllabus, and looks it from edge to edge (Daniel, 25 Sep: "make sure that the background
-   colour ... more purplish so that it's clear that the whole thing is beyond the syllabus"). Since 8 Nov 2026 in the grey
-   of a step's Beyond line, no longer purple: purple now reads as IB (Daniel, 8 Nov 2026; the Immunity Lab's fence the
-   same). The boxes inside it stay white. */
-.widget.es{background:#FAFAF7;border-color:#C9C9C4;border-left:5px solid #8A8A85}
-.es .widget__h{color:#4A4A4A}
-.es .widget__h .widget__try{background:#5A5A5A}
-.es__beyond{margin:6px 0 10px;padding:8px 12px;font-size:13.5px;line-height:1.45;color:#3F3F3F;background:#F1F1EE;border:1px solid #C9C9C4;border-left:4px solid #5A5A5A;border-radius:10px}
+   colour ... more purplish so that it's clear that the whole thing is beyond the syllabus"). Grey from 8 Nov 2026 ("purple reads
+   as IB"); since 10 Nov 2026 the ONE extension violet again, for IB and beyond alike (Daniel, "One violet"). The boxes
+   inside it stay white. */
+.widget.es{background:var(--ext-wash);border-color:var(--ext-rule);border-left:5px solid var(--ext)}
+.es .widget__h{color:var(--ext)}
+.es .widget__h .widget__try{background:var(--ext)}
+.es__beyond{margin:6px 0 10px;padding:8px 12px;font-size:13.5px;line-height:1.45;color:#3F3F3F;background:var(--ext-wash);border:1px solid var(--ext-rule);border-left:4px solid var(--ext);border-radius:10px}
 .es__rule{display:flex;flex-direction:column;gap:4px;margin:0 0 12px;padding:10px 14px;background:#fff;border:1.5px solid var(--edge);border-radius:var(--r,10px);font-size:14px;line-height:1.45}
 .es__rule > b{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--k-heart,#A3213A);margin-bottom:2px}
 .es__rule i{display:inline-block;width:20px;font-style:normal;text-align:center;margin-right:4px}

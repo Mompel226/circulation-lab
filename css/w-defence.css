@@ -23,7 +23,7 @@
 .ph__pill.is-warn i,.cl__pill.is-warn i{color:#8A5A0E}
 .ph__pill.is-bad,.cl__pill.is-bad{border-color:#E2B9A9;background:#FBEFEA}
 .ph__pill.is-bad i,.cl__pill.is-bad i{color:#A3213A}
-.ph__fence,.cl__fence{border-left:3px solid var(--line);padding-left:9px}
+.ph__fence,.cl__fence{border-left:3px solid var(--ext);background:var(--ext-tint);color:#4A4A4A;padding:4px 9px 5px;border-radius:0 7px 7px 0}
 
 /* ---------- phagocyte: the drawing ---------- */
 .ph__bg{fill:#0D1A22}

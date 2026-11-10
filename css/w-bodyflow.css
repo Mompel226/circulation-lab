@@ -25,7 +25,7 @@
 .bf__tagline text{fill:#E6EEF2;font-family:var(--sans,Inter,system-ui,sans-serif);font-weight:500;letter-spacing:.02em;text-anchor:middle}
 
 /* labels: the lab's .lb classes, and two of this widget's own kinds */
-.bf__lb.is-beyond .lb__txt{fill:#A9BAC6;font-style:italic}
+.bf__lb.is-beyond .lb__txt{fill:var(--ext-lit,#B388FF);font-style:italic}
 .bf__lb.is-tracer .lb__txt{fill:#FFE9A8}
 .bf__lb.is-tracer .lb__lead{stroke:#FFE9A8}
 
@@ -60,7 +60,7 @@
 .bf__sw--deo{background:#3F72D6}
 .bf__sw--por{background:#23A99D}
 .bf__ki--note{color:var(--grey)}
-.bf__beyondname{font-style:italic;color:#6B7C88;margin-right:3px}
+.bf__beyondname{font-style:italic;color:var(--ext);margin-right:3px}
 
 /* the statement numbers: only on the step on screen, so the closed steps stay one line each */
 .bf .sp__step:not(.is-on) .sp__tag{display:none}
@@ -68,12 +68,12 @@
 /* ---------- each step's "Beyond the syllabus" line: only under the step on screen ---------- */
 .bf__beyond{display:none;margin:4px 0 2px 42px;font-size:12.5px;line-height:1.45;color:#4A4A4A}
 .sp__step.is-on .bf__beyond{display:block}
-.bf__beyond summary{cursor:pointer;display:inline-block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--red,#B03A2E);
-  border:1px solid #E6B7AE;border-radius:var(--r-pill);padding:1px 9px;background:var(--red-tint,#FAECE9);list-style:none}
+.bf__beyond summary{cursor:pointer;display:inline-block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ext);
+  border:1px solid var(--ext-rule);border-radius:var(--r-pill);padding:1px 9px;background:var(--ext-tint);list-style:none}
 .bf__beyond summary::-webkit-details-marker{display:none}
 .bf__beyond summary::before{content:"+ ";font-weight:700}
 .bf__beyond[open] summary::before{content:"− "}
-.bf__beyond p{margin:6px 0 0;padding:7px 10px;border-left:3px solid var(--red,#B03A2E);background:var(--red-tint,#FAECE9);border-radius:0 var(--r-sm) var(--r-sm) 0}
+.bf__beyond p{margin:6px 0 0;padding:7px 10px;border-left:3px solid var(--ext);background:var(--ext-tint);border-radius:0 var(--r-sm) var(--r-sm) 0}
 
 .bf__note{margin-top:12px}
 @media (max-width:540px){ .bf__meter{grid-template-columns:minmax(104px,auto) minmax(0,1fr)} .bf__beyond{margin-left:6px} }

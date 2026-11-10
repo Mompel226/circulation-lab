@@ -22,7 +22,7 @@
 .ar__pill.is-warn i{color:#8A5A0E}
 .ar__pill.is-bad{border-color:#E2B9A9;background:#FBEFEA}
 .ar__pill.is-bad i{color:#A3213A}
-.ar__fence{border-left:3px solid var(--line);padding-left:9px}
+.ar__fence{border-left:3px solid var(--ext);background:var(--ext-tint);color:#4A4A4A;padding:4px 9px 5px;border-radius:0 7px 7px 0}
 
 /* ---------- artery: the drawing ---------- */
 .ar__bg{fill:#0D1A22}
@@ -137,8 +137,8 @@
 .ar.ar--staged .ar__wrap{grid-template-columns:minmax(0,1fr)}
 .sim > .ar__pack .ar__fig{margin:0}
 /* while the view follows the piece of clot (step 5): extension, and less common */
-.ar__extpill rect{fill:#F4F1EA;stroke:#9A9A9A;stroke-width:1;stroke-dasharray:3 2}
-.ar__extpill text{fill:#5A5A5A;font-family:var(--sans,Inter,system-ui,sans-serif);font-weight:700;letter-spacing:.08em}
+.ar__extpill rect{fill:var(--ext-tint);stroke:var(--ext-rule);stroke-width:1;stroke-dasharray:3 2}
+.ar__extpill text{fill:var(--ext);font-family:var(--sans,Inter,system-ui,sans-serif);font-weight:700;letter-spacing:.08em}
 .ar .sp__tag{background:#F4F1EA;color:#5A5A5A;border:1px dashed #9A9A9A}
 /* the heart muscle beyond the ring, magnified: cardiac muscle cells with a capillary between them. Colours that
    change (the cells, their bands, nuclei and discs) are set by the drawing itself, so no fill or stroke for them here */
