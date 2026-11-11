@@ -3,7 +3,7 @@
 
    · Four inks, one per part of the story: HEART (crimson) for the pump, its chambers and
      valves; VESSEL (amber) for the arteries, veins and capillaries and the routes they take;
-     BLOOD (violet) for what blood is made of and what it does; HEALTH (teal) for exercise,
+     BLOOD (navy; violet until 11 Nov 2026, when violet came to mean extension) for what blood is made of and what it does; HEALTH (teal) for exercise,
      measuring the heart and coronary heart disease.
    · Red and blue are NOT inks here: on the plate they mean oxygenated and deoxygenated blood,
      and a word printed in red would say something about oxygen that the sentence does not.
