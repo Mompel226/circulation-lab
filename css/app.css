@@ -1347,12 +1347,16 @@ picture{display:block;line-height:0}
 /* lit and dimmed: a station's parts glow, the rest step back */
 
 /* ---------- the colour language of the Learn tab ----------
-   Four inks, one per part of the story, each dark enough to read on paper (all clear WCAG AA
-   on the paper and the card). Not red and not blue: those belong to the blood on the plate. Since 11 Nov 2026 blood is
-   navy, darker than the plate's blue (it was violet): violet means extension on every site (Daniel, 10 Nov 2026, "One violet"); he chose this colour on 11 Nov. */
-:root{ --k-heart:#A3213A; --k-vessel:#8A5A0E; --k-blood:#1F4E8C; --k-health:#0B6A5A; }
+   Three inks, the T9 summary's and the other labs' (js/terms.js; Daniel, 28 Nov 2026): green structures, orange
+   processes, rose substances, each clear of WCAG AA on the paper and the card. Inside a step's IGCSE line (.sp__lv,
+   a pale green band) structures and processes take the darker -band inks, as in the Membrane Lab.
+   --k-heart, --k-vessel, --k-blood and --k-health were the four word inks until 28 Nov 2026; they stay as the widgets'
+   own accents (the 3D heart, the monitor, the journey, the heart-disease widget) and colour no word. */
+:root{ --k-heart:#A3213A; --k-vessel:#8A5A0E; --k-blood:#1F4E8C; --k-health:#0B6A5A;
+  --k-struct:#1B7A43; --k-proc:#B5530F; --k-subst:#B4285F; --k-struct-band:#17693A; --k-proc-band:#9A4509; }
 .t{font-weight:700}
-.t--heart{color:var(--k-heart)} .t--vessel{color:var(--k-vessel)} .t--blood{color:var(--k-blood)} .t--health{color:var(--k-health)}
+.t--struct{color:var(--k-struct)} .t--proc{color:var(--k-proc)} .t--subst{color:var(--k-subst)}
+.sp__lv .t--struct{color:var(--k-struct-band)} .sp__lv .t--proc{color:var(--k-proc-band)}
 .kw dt .t{font-weight:700}
 .exam-list > li{line-height:1.62}
 .legend__intro{font-size:13px;color:#4A4A4A;margin:0 0 10px;line-height:1.5}
@@ -1369,7 +1373,9 @@ picture{display:block;line-height:0}
 .later__ref{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.03em;color:#fff;background:var(--k-blood);
   border-radius:var(--r-pill);padding:2px 9px;margin-right:8px;white-space:nowrap;vertical-align:1px}
 .chip--k{background:var(--k-heart)}
-.chip--heart{background:var(--k-heart)} .chip--vessel{background:var(--k-vessel)} .chip--blood{background:var(--k-blood)} .chip--health{background:var(--k-health)}
+/* a station's section chips ("9.1 · Core") wore the four word inks until 28 Nov 2026; the words have three inks now, so
+   the chips take one slate and their words say the section */
+.chip--heart,.chip--vessel,.chip--blood,.chip--health{background:#475569}
 .chip--skill{background:#3C3C3C}
 
 /* ============================================================

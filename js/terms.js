@@ -1,14 +1,18 @@
 /* ============================================================
    terms.js — the colour language of the Learn tab, for Topic 9, Transport in animals.
 
-   · Four inks, one per part of the story: HEART (crimson) for the pump, its chambers and
-     valves; VESSEL (amber) for the arteries, veins and capillaries and the routes they take;
-     BLOOD (navy; violet until 11 Nov 2026, when violet came to mean extension) for what blood is made of and what it does; HEALTH (teal) for exercise,
-     measuring the heart and coronary heart disease.
-   · Red and blue are NOT inks here: on the plate they mean oxygenated and deoxygenated blood,
-     and a word printed in red would say something about oxygen that the sentence does not.
-   · Green is the app's own colour and means nothing in the text.
-   · A word with a definition but no colour of its own carries the quiet dotted rule.
+   · Three inks, the T9 revision summary's own and the other labs' (Daniel, 28 Nov 2026: "if you standardize some color
+     coding in one place, it should be standardized in all of the places"): green bold = structures (the heart, its
+     chambers and valves, the vessels, the blood cells), orange bold = processes (diffusion, clotting, the cardiac cycle),
+     rose bold = substances (plasma, oxygen, glucose, fibrinogen). Each word sits where the summary puts it; a word the
+     summary does not colour follows the same rule.
+   · Until 28 Nov 2026 the inks were four parts of the topic, the heart in crimson and blood in navy: a red and a blue,
+     on a page where red and blue mean oxygenated and deoxygenated blood, so "oxygenated" itself was printed in blue.
+     Daniel's yes to the change: 28 Nov 2026 ("Yes, fix all four").
+   · Red and blue are NOT inks here: on the plate they mean oxygenated and deoxygenated blood. "oxygenated",
+     "deoxygenated" and "blood" itself carry no ink.
+   · A word with a definition but no colour of its own carries the quiet dotted rule: measuring the heart, heart
+     disease and the words of an investigation are among them.
    Same API as the other labs' terms.js, so app.js is the same code.
 
    What a mark promises — Daniel's rule, the same in every lab:
@@ -35,35 +39,35 @@
   'use strict';
 
   var CATS = {
-    heart:  { n: '', label: 'The heart', chip: false },
-    vessel: { n: '', label: 'Blood vessels and routes', chip: false },
-    blood:  { n: '', label: 'Blood', chip: false },
-    health: { n: '', label: 'Exercise, measuring and health', chip: false },
+    struct: { n: '', label: 'Structures', chip: false },
+    proc:   { n: '', label: 'Processes', chip: false },
+    subst:  { n: '', label: 'Substances', chip: false },
     plain:  { n: '', label: 'Words used across the labs', chip: false }
   };
 
   var CHIP_WORDS = {};
 
   var PLAIN_WORDS = {
-    heart:  ['heart', 'hearts', 'atrium', 'atria', 'left atrium', 'right atrium', 'ventricle', 'ventricles', 'left ventricle', 'right ventricle',
+    struct: ['heart', 'hearts', 'atrium', 'atria', 'left atrium', 'right atrium', 'ventricle', 'ventricles', 'left ventricle', 'right ventricle',
              'septum', 'muscular wall', 'cardiac muscle', 'valve', 'valves', 'one-way valve', 'one-way valves', 'atrioventricular valve', 'atrioventricular valves',
-             'semilunar valve', 'semilunar valves', 'cardiac cycle', 'systole', 'diastole', 'pacemaker', 'sinoatrial node',
-             'circulatory system', 'single circulation', 'double circulation', 'pump', 'gills'],
-    vessel: ['artery', 'arteries', 'vein', 'veins', 'capillary', 'capillaries', 'arteriole', 'arterioles', 'venule', 'venules', 'lumen', 'elastic fibres',
+             'semilunar valve', 'semilunar valves', 'pacemaker', 'sinoatrial node', 'circulatory system', 'pump', 'gills',
+             'artery', 'arteries', 'vein', 'veins', 'capillary', 'capillaries', 'arteriole', 'arterioles', 'venule', 'venules', 'lumen', 'elastic fibres',
              'aorta', 'vena cava', 'pulmonary artery', 'pulmonary arteries', 'pulmonary vein', 'pulmonary veins', 'renal artery', 'renal arteries', 'renal vein', 'renal veins',
              'hepatic artery', 'hepatic vein', 'hepatic veins', 'hepatic portal vein', 'coronary artery', 'coronary arteries', 'blood vessel', 'blood vessels',
-             'blood pressure', 'tissue fluid'],
-    blood:  ['blood', 'plasma', 'red blood cell', 'red blood cells', 'white blood cell', 'white blood cells', 'platelet', 'platelets', 'haemoglobin', 'oxyhaemoglobin',
-             'lymphocyte', 'lymphocytes', 'phagocyte', 'phagocytes', 'phagocytosis', 'antibody', 'antibodies', 'antigen', 'antigens',
-             'clotting', 'blood clot', 'blood clots', 'clot', 'clots', 'fibrinogen', 'fibrin', 'scab', 'oxygenated', 'deoxygenated', 'photomicrograph', 'photomicrographs'],
-    health: ['heart rate', 'pulse', 'pulse rate', 'ECG', 'electrocardiogram', 'stethoscope', 'physical activity', 'exercise',
-             'coronary heart disease', 'CHD', 'atheroma', 'plaque', 'thrombus', 'risk factor', 'risk factors', 'genetic predisposition', 'cholesterol', 'saturated fat', 'saturated fats',
-             'lactic acid', 'oxygen debt', 'aerobic respiration', 'anaerobic respiration',
+             'red blood cell', 'red blood cells', 'white blood cell', 'white blood cells', 'platelet', 'platelets',
+             'lymphocyte', 'lymphocytes', 'phagocyte', 'phagocytes', 'blood clot', 'blood clots', 'clot', 'clots', 'scab', 'thrombus',
+             'nucleus', 'nuclei', 'cell membrane', 'mitochondrion', 'mitochondria', 'organ', 'organs', 'tissue', 'tissues'],
+    proc:   ['cardiac cycle', 'systole', 'diastole', 'single circulation', 'double circulation', 'phagocytosis', 'clotting',
+             'diffusion', 'diffuse', 'diffuses', 'respiration', 'respire', 'respires', 'aerobic respiration', 'anaerobic respiration', 'anaerobically'],
+    subst:  ['plasma', 'haemoglobin', 'oxyhaemoglobin', 'antibody', 'antibodies', 'antigen', 'antigens', 'fibrinogen', 'fibrin',
+             'glucose', 'oxygen', 'carbon dioxide', 'urea', 'hormone', 'hormones', 'adrenaline', 'ion', 'ions', 'nutrient', 'nutrients',
+             'enzyme', 'enzymes', 'cholesterol', 'saturated fat', 'saturated fats', 'lactic acid', 'tissue fluid'],
+    plain:  ['blood', 'oxygenated', 'deoxygenated', 'photomicrograph', 'photomicrographs', 'blood pressure',
+             'heart rate', 'pulse', 'pulse rate', 'ECG', 'electrocardiogram', 'stethoscope', 'physical activity', 'exercise',
+             'coronary heart disease', 'CHD', 'atheroma', 'plaque', 'risk factor', 'risk factors', 'genetic predisposition', 'oxygen debt',
              'independent variable', 'dependent variable', 'control variable', 'control variables', 'controlled variable', 'controlled variables',
-             'hypothesis', 'research question', 'method', 'trial', 'trials', 'anomalous result', 'anomalous results', 'mean', 'range', 'results table', 'line graph', 'bar chart', 'risk assessment'],
-    plain:  ['diffusion', 'diffuse', 'diffuses', 'concentration gradient', 'respiration', 'respire', 'respires', 'glucose', 'oxygen', 'carbon dioxide', 'urea', 'hormone', 'hormones',
-             'ion', 'ions', 'nutrient', 'nutrients', 'pathogen', 'pathogens', 'nucleus', 'nuclei', 'cell membrane', 'mitochondrion', 'mitochondria', 'surface area',
-             'organ', 'organs', 'tissue', 'tissues', 'enzyme', 'enzymes', 'vertebrate', 'vertebrates', 'mammal', 'mammals', 'fish',
+             'hypothesis', 'research question', 'method', 'trial', 'trials', 'anomalous result', 'anomalous results', 'mean', 'range', 'results table', 'line graph', 'bar chart', 'risk assessment',
+             'concentration gradient', 'pathogen', 'pathogens', 'surface area', 'vertebrate', 'vertebrates', 'mammal', 'mammals', 'fish',
              'standard deviation', 'accuracy', 'precision', 'reliability', 'validity', 'systematic error', 'random error', 'resolution']
   };
 
@@ -284,8 +288,8 @@
   }
 
   function legend() {
-    var out = '<p class="legend__intro">Each ink is one part of the circulatory system. On the body, red is oxygenated blood and blue is deoxygenated blood.</p><div class="legend">';
-    ['heart', 'vessel', 'blood', 'health'].forEach(function (c) {
+    var out = '<p class="legend__intro">Each colour is one part of the topic. On the body, red is oxygenated blood and blue is deoxygenated blood.</p><div class="legend">';
+    ['struct', 'proc', 'subst'].forEach(function (c) {
       out += '<span class="legend__i"><b class="t t--' + c + '">' + CATS[c].label + '</b></span>';
     });
     out += '</div>';

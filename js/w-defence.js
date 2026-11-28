@@ -284,10 +284,10 @@
     { t: 0,  h: 'A phagocyte moves towards a bacterium', p: [['ig', 'A bacterium, a pathogen, is in the tissue. It releases chemicals, which diffuse away from it. A phagocyte is attracted by the chemicals and moves towards the bacterium. The phagocyte is several times larger than the bacterium.']] },
     { t: 11, h: 'The phagocyte surrounds the bacterium', p: [['ig', 'The cytoplasm of the phagocyte flows round the bacterium. Extensions of the cell spread round it on both sides. The cell membrane stays whole all the time.']] },
     { t: 20, h: 'The bacterium is engulfed', p: [['ig', 'The ends of the extensions meet and join. The bacterium is now inside the phagocyte, enclosed in a vacuole. This is phagocytosis: the phagocyte engulfs the pathogen.']] },
-    { t: 29, h: 'Enzymes are released into the vacuole', p: [['ib', 'Small sacs in the cytoplasm contain digestive enzymes. The sacs join with the vacuole and release their enzymes into it.']] },
+    { t: 29, h: 'Enzymes are released into the vacuole', p: [['ib', 'Small sacs in the cytoplasm contain **digestive enzymes**. The sacs **join with the vacuole** and release their enzymes into it.']] },
     { t: 37, h: 'The enzymes digest the bacterium', p: [['ig', 'The enzymes digest the bacterium. They break down its large molecules into small, soluble molecules. The pathogen is destroyed.']] },
-    { t: 45, h: 'The products are absorbed', p: [['bey', 'The small, soluble products are harmless. They are absorbed into the cytoplasm, or released from the cell. The vacuole becomes smaller, and the phagocyte can engulf another pathogen.']] },
-    { t: 54, h: 'The phagocyte displays the antigens', p: [['ib', 'Pieces of the bacterium\'s antigens are kept. Small sacs carry them to the cell membrane, and proteins in the membrane hold them on its outer surface. The phagocyte now displays the antigens (antigen presentation). A helper T-cell, a lymphocyte whose receptor fits these antigens, can bind to them. This helps to start antibody production against this pathogen.']] }
+    { t: 45, h: 'The products are absorbed', p: [['bey', 'The small, soluble products are **harmless**. They are absorbed into the cytoplasm, or released from the cell. The vacuole becomes smaller, and the phagocyte can **engulf another pathogen**.']] },
+    { t: 54, h: 'The phagocyte displays the antigens', p: [['ib', 'Pieces of the bacterium\'s antigens are kept. Small sacs carry them to the cell membrane, and proteins in the membrane hold them on its outer surface. The phagocyte now displays the antigens (**antigen presentation**). A **helper T-cell**, a lymphocyte whose receptor fits these antigens, can bind to them. This helps to start **antibody production** against this pathogen.']] }
   ];
   var PH_END = 64;
   /* The antigens: on the bacterium, triangles on its surface, in its own frame (x, y, the angle they point);
@@ -627,13 +627,13 @@
   var CL_STEPS = [
     { t: 0,  h: 'A cut breaks the skin and a blood vessel', p: [['ig', 'A cut breaks the skin and the wall of a small blood vessel. Blood is lost through the wound.']] },
     { t: 8,  h: 'Platelets stick at the wound', p: [['ig', '**Platelets** are fragments of cells, much smaller than red blood cells. At the wound they stick to the damaged tissue and to each other, and collect at the break in the vessel.'],
-                                                         ['ib', 'Chemicals from the platelets and the damaged tissue start a chain of reactions.']] },
+                                                         ['ib', 'Chemicals from the platelets and the damaged tissue start a **chain of reactions**.']] },
     { t: 18, h: 'Fibrinogen is converted into fibrin', tag: 'Supplement', p: [['ig', 'Plasma carries a **soluble** protein, **fibrinogen**. At the wound it is **converted** into **fibrin**, which is **insoluble**. Fibrin threads grow from the platelets and the damaged tissue across the wound.'],
-          ['ib', 'The enzyme that converts it is thrombin, made by the chain of reactions.']] },
+          ['ib', 'The enzyme that converts it is **thrombin**, made by the chain of reactions.']] },
     { t: 27, h: 'A mesh traps the cells: a clot', tag: 'Supplement', p: [['ig', 'The fibrin threads form a **mesh** across the wound. The mesh **traps red blood cells** and platelets, forming a clot. The clot **prevents blood loss**.']] },
     { t: 36, h: 'The clot becomes a scab', p: [['ig', 'The clot dries and hardens into a **scab**. The scab **prevents the entry of pathogens** into the body.']] },
     { t: 44, h: 'New skin grows under the scab', tag: 'Mitosis: 17.2.2 (Supplement)', p: [['ig', 'Under the scab, skin cells near the wound divide by mitosis, and the new cells grow across the wound.'],
-                                                                                         ['bey', 'Below, the clot is broken down and replaced by new tissue, and the wall of the blood vessel is repaired. Then the scab separates from the new skin.']] }
+                                                                                         ['bey', 'Below, the clot is broken down and **replaced by new tissue**, and the wall of the blood vessel is repaired. Then the **scab** separates from the new skin.']] }
   ];
   var CL_END = 55;
   /* the two sides of the cut, surface to vessel, when it is fully open */
