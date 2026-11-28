@@ -608,7 +608,7 @@
       ['<b>Step 7 is IB Biology C3.2, Defence against disease.</b> The 0610 syllabus does not list it, but two 0610 mark schemes gave a mark for it in questions on phagocytes (Paper 32, June 2014, Q4(d)(ii); Paper 42, June 2017, Q6(c)(ii)). Antigens are presented mostly by macrophages, larger phagocytes in the tissues, and by dendritic cells; a neutrophil, the cell drawn, does it only in some conditions (Vono et al. 2017).', 'ph__fence']
     ], function (D, narrow) {
       var tall = !!narrow;
-      lay = frameOf(svg, bg, model, cr, tall ? { x0: 22, x1: 584, y0: 16, y1: 284 } : { x0: 0, x1: 620, y0: 8, y1: 292 }, tall, D, 9, 9, 118, 118);
+      lay = frameOf(svg, bg, model, cr, tall ? { x0: 22, x1: 584, y0: 16, y1: 284 } : { x0: 0, x1: 620, y0: 8, y1: 292 }, tall, D, 11, 9, 118, 118);   /* 11: "phagocyte" and "cytoplasm" reached past the left edge in short windows (28 Nov 2026) */
       S.box.classList.toggle('ph--tall', tall);
     });
   }

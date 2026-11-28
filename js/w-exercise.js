@@ -262,7 +262,7 @@
       return '<g class="mx__hud">' +
         '<rect x="' + (cx - 170) + '" y="' + (cy - 36) + '" width="340" height="72" rx="36" fill="#13242E" stroke="#2E4A58" stroke-width="1.5"/>' +
         '<g transform="translate(' + (cx - 118) + ',' + cy + ') scale(' + n2(s) + ')"><path d="M0 14 C-22 -2 -24 -18 -12 -22 C-5 -24 -1 -19 0 -15 C1 -19 5 -24 12 -22 C24 -18 22 -2 0 14 Z" fill="#E24A47" stroke="#FF9C8E" stroke-width="1.5"/></g>' +
-        '<text x="' + (cx - 84) + '" y="' + (cy - 6) + '" class="mx__hudk">heart rate</text>' +
+        '<text x="' + (cx - 84) + '" y="' + (cy - 9) + '" class="mx__hudk">heart rate</text>' +   /* clear of the number's line box in a larger column (28 Nov 2026) */
         '<text x="' + (cx - 84) + '" y="' + (cy + 24) + '" class="mx__hudv">' + b + ' <tspan class="mx__hudu">beats per minute</tspan></text>' +
         '</g>';
     }

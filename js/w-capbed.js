@@ -150,7 +150,7 @@
     var title = h('p', 'stg__title cb__title', esc(spec.title || 'How arteries, capillaries and veins join'));
     var svg = document.createElementNS(NS, 'svg');
     svg.setAttribute('class', 'cb__svg'); svg.setAttribute('role', 'img');
-    svg.setAttribute('viewBox', '-150 -34 700 664');
+    svg.setAttribute('viewBox', '-150 -46 700 676');   /* -46: room above for "from the heart" and "to the heart" once the picture fills its frame's height (28 Nov 2026) */
     svg.setAttribute('aria-label', 'A capillary bed: an artery on the left branches into arterioles, which branch into capillaries running between the tissue cells; the capillaries join into venules, which join a vein on the right. Red blood cells flow through, and the blood turns from red to blue in the capillaries.');
     stage.appendChild(title); stage.appendChild(svg);
     stage.appendChild(h('figcaption', 'cb__key', '<span class="cb__sw cb__sw--o"></span>oxygenated <span class="cb__sw cb__sw--d"></span>deoxygenated · <span class="cb__arr cb__arr--o">→</span> oxygen and glucose out to the cells · <span class="cb__arr cb__arr--c">←</span> carbon dioxide in. Not to scale: a capillary is 5–10 µm across, an artery millimetres.'));
@@ -274,7 +274,7 @@
     }
     function labels() {
       var D = svg.getBoundingClientRect().width || 700, fl = fitLab(D), f = fl.f;
-      svg.setAttribute('viewBox', n1(-fl.mL) + ' -34 ' + n1(DW + fl.mL + fl.mR) + ' 664');
+      svg.setAttribute('viewBox', n1(-fl.mL) + ' -46 ' + n1(DW + fl.mL + fl.mR) + ' 676');
       /* `alts`: other points on the same part, where a crowded name moves instead of bending its line (w-common.js,
          18 Oct 2026): the artery and the vein further along their straight tubes, the other two arterioles and
          venules, other tissue cells, the same capillary in the other two beds */

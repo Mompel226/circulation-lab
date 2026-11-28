@@ -570,7 +570,9 @@
     var G = null, FONT = 13;
     function layout() {
       var W = Math.floor(plate.getBoundingClientRect().width || root.getBoundingClientRect().width || 700);
-      var narrow = W < 600, pad = narrow ? 16 : 24;
+      /* standing in the plate's column the two drawings stay one above the other at any width: the column is tall, and side by
+         side they would be shorter and smaller (28 Nov 2026, when the column became as wide as the lab's pictures can use) */
+      var narrow = W < 600 || box.classList.contains('jn--staged'), pad = narrow ? 16 : 24;
       var PW = Math.max(260, W - pad);
       FONT = PW < 420 ? 12 : 13;
       var g = { W: W, PW: PW, narrow: narrow };
@@ -1964,8 +1966,9 @@
       if (!w || Math.abs(w - lastW) < 2) return;
       lastW = w;
       try { var fam = getComputedStyle(document.documentElement).getPropertyValue('--font').trim(); if (fam) FAMILY = fam; } catch (e) {}
-      root.classList.toggle('jn--narrow', w < 600);
-      pack.classList.toggle('jn--narrow', w < 600);      /* the drawings keep their layout when they stand in the plate's column */
+      var one = w < 600 || box.classList.contains('jn--staged');   /* one above the other: a narrow widget, or one standing in the column */
+      root.classList.toggle('jn--narrow', one);
+      pack.classList.toggle('jn--narrow', one);      /* the drawings keep their layout when they stand in the plate's column */
       build();
       paint(T0);
     }
